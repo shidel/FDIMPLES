@@ -45,10 +45,10 @@ const
     Frame : TPoint = (X:5; Y:4);
     Grps : TPoint = (X:18; Y:8);
     NoScroll = 1;
-{    ALLPackages = '..\FDI\SETTINGS\PKG_ALL.LST';
-    BASEPackages = '..\FDI\SETTINGS\PKG_BASE.LST'; }
-    ALLPackages = 'FDPLALL.LST';
-    BASEPackages = 'FDPLBASE.LST';
+    ALLPackages = '..\FDI\SETTINGS\PKG_ALL.LST';
+    BASEPackages = '..\FDI\SETTINGS\PKG_BASE.LST';
+{    ALLPackages = 'FDPLALL.LST';
+    BASEPackages = 'FDPLBASE.LST'; }
 
 
 type
@@ -155,6 +155,44 @@ begin
     end;
 end;
 
+procedure SortList(var First, Last : PItem);
+var
+    P, N, L : PItem;
+begin
+    P := First;
+    L := nil;
+    while assigned(P) do begin
+        N := P^.Next;
+        P^.Next := nil;
+        P^.Prev := nil;
+        if assigned(L) then begin
+            while assigned(L^.Prev) and (P^.NAME < L^.NAME) do
+                L := L^.Prev;
+            while assigned(L^.Next) and (P^.NAME > L^.NAME) do
+                L := L^.Next;
+            if P^.Name < L^.Name then begin
+                P^.Next := L;
+                P^.Prev := L^.Prev;
+                if assigned(L^.Prev) then
+                    L^.Prev^.Next := P;
+                L^.Prev := P;
+            end else begin
+                P^.Prev := L;
+                P^.Next := L^.Next;
+                if assigned(L^.Next) then
+                    L^.Next^.Prev := P;
+                L^.Next := P;
+            end;
+        end;
+        L := P;
+        P := N;
+    end;
+    First := L;
+    While assigned(First^.Prev) do First := First^.Prev;
+    Last := L;
+    While assigned(Last^.Next) do Last := Last^.Next;
+end;
+
 procedure Init;
 var
    S : TSearchRec;
@@ -188,12 +226,23 @@ begin
         end;
         FindNext(S);
     end;
+    SortList(GroupFirst, GroupLast);
     P := GroupFirst;
     while Assigned(P) do begin
         CS := 0;
         NS := 0;
         PackageFirst := nil;
         PackageLast := nil;
+        if (P^.Name = 'BASE') and CheckDefault('BASE\WELCOME') then begin
+            J := New(PItem);
+            J^.Name := 'WELCOME';
+            J^.Items := nil;
+            J^.Next := nil;
+            J^.Title := nil;
+            J^.State := 1;
+            PackageFirst := J;
+            PackageLast := J;
+        end;
         FindFirst(GetEnv('FMEDIA') + '\' + P^.NAME + '\*.ZIP', faAnyFile, S);
 
         while DosError = 0 do begin
@@ -229,6 +278,7 @@ begin
         J := P;
         P := P^.Next;
         if Assigned(PackageFirst) then begin
+            SortList(PackageFirst, PackageLast);
             J^.Items := PackageFirst;
         end else begin
             if assigned(J^.Prev) then
@@ -318,6 +368,8 @@ begin
         P := P^.Next;
         Inc(Y);
     end;
+    TextColor(F);
+    TextBackground(B);
     while (Y <= Grps.Y) do begin
         Write(RSpace('', Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         Inc(Y);
