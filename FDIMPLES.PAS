@@ -283,11 +283,35 @@ begin
     DrawGroups;
 end;
 
+procedure FileToggle;
+begin
+end;
+
 procedure GroupUp(T:integer);
 begin
 end;
 
 procedure GroupDown(T:integer);
+begin
+end;
+
+procedure FileUp(T:integer);
+begin
+end;
+
+procedure FileDown(T:integer);
+begin
+end;
+
+procedure TextUp(T:integer);
+begin
+end;
+
+procedure TextDown(T:integer);
+begin
+end;
+
+procedure MakeList;
 begin
 end;
 
@@ -317,15 +341,23 @@ begin
                 $001b : Halt(1); { Esacpe }
                 $4800 : case Tab of
                     0: GroupUp(1);
+                    1: FileUp(1);
+                    2: TextUp(1);
                 end;
                 { $4900 : page up }
                 $5000 : case Tab of
                     0: GroupDown(1);
+                    1: FileDown(1);
+                    2: TextDown(1);
                 end;
                 { $5100 : page down }
                 $0020, $000A, $000D : case Tab of
                     0: GroupToggle;
-                    3: Quit := True;
+                    1, 2 : FileToggle;
+                    3: begin
+                        MakeList;
+                        Quit := True;
+                    end;
                     4: Halt(1); { Canceled }
                 end;
                 $0009 : begin
