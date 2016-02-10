@@ -183,16 +183,17 @@ end;
 
 procedure DrawPackage;
 var
-    P : PItem;
     Y : integer;
 begin
     TextColor(F);
     TextBackground(B);
     Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
     ClrScr;
-    P := Package;
-    if Assigned(P) then begin
-    end;
+    if Tab = 2 then
+        TextAttr := C;
+    if assigned(Package) then
+        Write(RSpace(' ' + Package^.Name + ' - No information', Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
 end;
 
@@ -205,8 +206,16 @@ begin
     TextBackground(B);
     Window (Frame.X + 4 + Grps.X - NoScroll, Frame.Y + 1, Lo(ScreenMax) - Frame.X, Frame.Y + Grps.Y);
     { ClrScr; }
-    P := Group;
-    if Assigned(P) then P := P^.Items;
+    if not assigned(PackageFirst) then begin
+        Package := Group^.Items;
+        PackageFirst := Package;
+        PackageTop := Package;
+        PackageLast := Package;
+        while Assigned(PackageLast^.Next) do
+            PackageLast := PackageLast^.Next;
+    end;
+    P := PackageTop;
+    PackageBottom := nil;
     Y := 1;
     while Assigned(P) and (Y <= Grps.Y) do begin
         GotoXY(1,Y);
@@ -233,7 +242,12 @@ begin
         Write(']');
         if P <> Package then TextColor(F);
         Write(RSpace(' ' + P^.Name, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+        PackageBottom := P;
         P := P^.Next;
+        Inc(Y);
+    end;
+    while (Y <= Grps.Y) do begin
+        Write(RSpace('', Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         Inc(Y);
     end;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
@@ -338,36 +352,64 @@ end;
 
 procedure FileToggle;
 begin
+    if not assigned(Package) then exit;
+    Inc(Package^.State);
+    if Package^.State > 1 then Package^.State := 0;
+    DrawFiles;
 end;
 
 procedure GroupUp(T:integer);
 begin
-    if (Group = GroupFirst)  then exit;
-    if GroupTop = Group then begin
-        GroupTop := GroupTop^.Prev;
-        GroupBottom := GroupBottom^.Prev;
+    While (T > 0) and (Group <> GroupFirst) do begin
+        Dec(T);
+        if GroupTop = Group then begin
+            GroupTop := GroupTop^.Prev;
+            GroupBottom := GroupBottom^.Prev;
+        end;
+        Group := Group^.Prev;
     end;
-    Group := Group^.Prev;
+    PackageFirst := nil;
     DrawGroups;
 end;
 
 procedure GroupDown(T:integer);
 begin
-    if (Group = GroupLast)  then exit;
-    if GroupBottom = Group then begin
-        GroupTop := GroupTop^.Next;
-        GroupBottom := GroupBottom^.Next;
+    While (T > 0) and (Group <> GroupLast) do begin
+        Dec(T);
+        if GroupBottom = Group then begin
+            GroupTop := GroupTop^.Next;
+            GroupBottom := GroupBottom^.Next;
+        end;
+        Group := Group^.Next;
     end;
-    Group := Group^.Next;
+    PackageFirst := nil;
     DrawGroups;
 end;
 
 procedure FileUp(T:integer);
 begin
+    While (T > 0) and (Package <> PackageFirst) do begin
+        Dec(T);
+        if PackageTop = Package then begin
+            PackageTop := PackageTop^.Prev;
+            PackageBottom := PackageBottom^.Prev;
+        end;
+        Package := Package^.Prev;
+    end;
+    DrawFiles;
 end;
 
 procedure FileDown(T:integer);
 begin
+    While (T > 0) and (Package <> PackageLast) do begin
+        Dec(T);
+        if PackageBottom = Package then begin
+            PackageTop := PackageTop^.Next;
+            PackageBottom := PackageBottom^.Next;
+        end;
+        Package := Package^.Next;
+    end;
+    DrawFiles;
 end;
 
 procedure TextUp(T:integer);
@@ -409,13 +451,21 @@ begin
                     1: FileUp(1);
                     2: TextUp(1);
                 end;
-                { $4900 : page up }
+                $4900 : case Tab of
+                    0: GroupUp(Grps.Y - 1);
+                    1: FileUp(Grps.Y - 1);
+                    2: TextUp(Grps.Y - 1);
+                end;
                 $5000 : case Tab of
                     0: GroupDown(1);
                     1: FileDown(1);
                     2: TextDown(1);
                 end;
-                { $5100 : page down }
+                $5100 : case Tab of
+                    0: GroupDown(Grps.Y - 1);
+                    1: FileDown(Grps.Y - 1);
+                    2: TextDown(Grps.Y - 1);
+                end;
                 $0020, $000A, $000D : case Tab of
                     0: GroupToggle;
                     1, 2 : FileToggle;
@@ -445,6 +495,7 @@ end;
 
 begin
     CheckScroll := False;
+    CheckCursor := False;
     Init;
     DrawSelector;
     Main;
