@@ -274,23 +274,66 @@ begin
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
 end;
 
+
+procedure GroupToggle;
+begin
+    if not Assigned(Group) then exit;
+    Inc(Group^.State);
+    if Group^.State > 1 then Group^.State := 0;
+    DrawGroups;
+end;
+
+procedure Main;
 var
-    K : Char;
+    E : TEvent;
+    LTab : integer;
+    Quit : boolean;
+begin
+    LTab := -1;
+    Quit := False;
+    PurgeEvents;
+    repeat
+        if LTab <> Tab then begin
+            DrawGroups;
+            DrawFiles;
+            DrawPackage;
+            DrawButtons;
+            LTab := Tab;
+        end;
+        Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+        ClearEvent(E);
+        While E.What = evNothing do GetEvent(E);
+        if E.What and evKeyDown = evKeyDown then
+            case E.KeyCode of
+                $001b : begin
+                    Quit := True;
+                end;
+                $0020, $000A, $000D : begin
+                    case Tab of
+                        0: GroupToggle;
+                        3: Quit := True;
+                        4: Quit := True;
+                    end;
+                end;
+                $0009 : begin
+                    if Tab >= 4 then
+                        Tab := 0
+                    else
+                        Inc(Tab);
+                end;
+                $0F00 : begin
+                    if Tab <= 0 then
+                        Tab := 4
+                    else
+                        Dec(Tab);
+                end;
+            end;
+    until Quit;
+end;
+
 begin
     CheckScroll := False;
-    While Keypressed do ReadKey;
     Init;
     DrawSelector;
-    repeat
-        DrawGroups;
-        DrawFiles;
-        DrawPackage;
-        DrawButtons;
-        Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
-        While not Keypressed do;
-        K := ReadKey;
-        While Keypressed do ReadKey;
-        Inc(Tab);
-        if Tab = 5 then Tab := 0;
-    until K = #27;
+    Main;
 end.
