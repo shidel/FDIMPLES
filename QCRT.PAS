@@ -113,6 +113,7 @@ interface
     Red           = 4;
     Magenta       = 5;
     Brown         = 6;
+    Gray          = 7;
     LightGray     = 7;
 
   { Foreground color/attribute constants }

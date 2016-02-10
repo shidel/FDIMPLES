@@ -2,8 +2,8 @@
 
 (*
 
-	This project and related files are subject to either the terms
-	specified in the included LICENSE.TXT file or the GNU GPLv2.0.
+    This project and related files are subject to either the terms
+    specified in the included LICENSE.TXT file or the GNU GPLv2.0.
 
 *)
 
@@ -109,7 +109,7 @@ interface
   function ReduceStr(S : String; Max : integer) : String;
 
 type
-	PString = ^String;
+    PString = ^String;
 
 function  StrPtr(const S : String) : PString;
 function  PtrStr(const P : PString) : String;
@@ -139,16 +139,16 @@ implementation
 
   function LastPos ( SubStr : String; S : String ) : byte;
   var
-  	Temp, P : byte;
+    Temp, P : byte;
   begin
-  	Temp := 0;
+    Temp := 0;
     P := 0;
-  	repeat
-  		Inc(P);
-  		P := NextPos(SubStr, S, P);
-  		if P > 0 then Temp := P;
-  	until P = 0;
-  	LastPos := Temp;
+    repeat
+        Inc(P);
+        P := NextPos(SubStr, S, P);
+        if P > 0 then Temp := P;
+    until P = 0;
+    LastPos := Temp;
   end;
 
 {----------------------------------------------------------------------------}
@@ -206,7 +206,7 @@ implementation
     begin
       Str := LCase(Str);
       asm
-      	XOR		BL, BL
+        XOR     BL, BL
         CLD
         LEA     SI, Str
         LES     DI, @Result
@@ -221,13 +221,13 @@ implementation
         JB      @2
         CMP     AL, 'z'
         JA      @2
-        CMP		BL, 0
-        JNE		@3
-        INC 	BL
+        CMP     BL, 0
+        JNE     @3
+        INC     BL
         SUB     AL, 20h
-        JMP		@3
+        JMP     @3
       @2:
-      	XOR 	BL, BL
+        XOR     BL, BL
       @3:
         STOSB
         LOOP    @1
@@ -243,7 +243,7 @@ implementation
         MOV     BL, C
         LEA     SI, Str
         LES     DI, @Result
-        PUSH 	DI
+        PUSH    DI
         SEGSS   LODSB
         STOSB
         XOR     AH, AH
@@ -251,16 +251,16 @@ implementation
         JCXZ    @4
       @1:
         SEGSS   LODSB
-        CMP 	AL, BL
-        JE 		@3
+        CMP     AL, BL
+        JE      @3
       @2:
-      	INC     AH
+        INC     AH
         STOSB
       @3:
         LOOP    @1
       @4:
-      	POP 	DI
-      	MOV 	ES:[DI], AH
+        POP     DI
+        MOV     ES:[DI], AH
       end;
     end;
 {----------------------------------------------------------------------------}
@@ -313,10 +313,10 @@ implementation
   begin
       asm
         CLD
-		XOR		BL, BL
+        XOR     BL, BL
         LEA     SI, Str
         LES     DI, @Result
-        PUSH 	DI
+        PUSH    DI
         SEGSS   LODSB
         STOSB
         XOR     AH, AH
@@ -324,19 +324,19 @@ implementation
         JCXZ    @4
       @1:
         SEGSS   LODSB
-      	INC     AH
-        CMP 	AL, 20h
-        JE		@2
-        CMP 	AL, 09h
-        JE		@2
-		MOV		BL, AH
+        INC     AH
+        CMP     AL, 20h
+        JE      @2
+        CMP     AL, 09h
+        JE      @2
+        MOV     BL, AH
       @2:
         STOSB
       @3:
         LOOP    @1
       @4:
-      	POP 	DI
-      	MOV 	ES:[DI], BL
+        POP     DI
+        MOV     ES:[DI], BL
       end;
   end;
 
@@ -344,10 +344,10 @@ implementation
   begin
       asm
         CLD
-        MOV 	BL, False
+        MOV     BL, False
         LEA     SI, Str
         LES     DI, @Result
-        PUSH 	DI
+        PUSH    DI
         SEGSS   LODSB
         STOSB
         XOR     AH, AH
@@ -355,22 +355,22 @@ implementation
         JCXZ    @5
       @1:
         SEGSS   LODSB
-        CMP 	BL, True
-        JE 		@3
-        CMP 	AL, 20h
-        JE		@4
-        CMP 	AL, 09h
-        JE		@4
+        CMP     BL, True
+        JE      @3
+        CMP     AL, 20h
+        JE      @4
+        CMP     AL, 09h
+        JE      @4
       @2:
-      	MOV		BL, True
+        MOV     BL, True
       @3:
-      	INC     AH
+        INC     AH
         STOSB
       @4:
         LOOP    @1
       @5:
-      	POP 	DI
-      	MOV 	ES:[DI], AH
+        POP     DI
+        MOV     ES:[DI], AH
       end;
   end;
 
@@ -378,10 +378,10 @@ implementation
   begin
       asm
         CLD
-        MOV 	BL, False
+        MOV     BL, False
         LEA     SI, Str
         LES     DI, @Result
-        PUSH 	DI
+        PUSH    DI
         SEGSS   LODSB
         STOSB
         XOR     AH, AH
@@ -389,37 +389,37 @@ implementation
         JCXZ    @5
       @1:
         SEGSS   LODSB
-        CMP 	BL, True
-        JE 		@3
-        CMP 	AL, 20h
-        JE		@4
-        CMP 	AL, 09h
-        JE		@4
+        CMP     BL, True
+        JE      @3
+        CMP     AL, 20h
+        JE      @4
+        CMP     AL, 09h
+        JE      @4
       @2:
-      	MOV		BL, True
+        MOV     BL, True
       @3:
-      	INC     AH
+        INC     AH
         STOSB
       @4:
         LOOP    @1
       @5:
-      	POP 	DI
-      	XOR 	BH, BH
-      	MOV 	BL, AH
+        POP     DI
+        XOR     BH, BH
+        MOV     BL, AH
       @6:
-      	CMP		BX, 0h
-      	JE		@8
-      	MOV		AL, ES:[DI + BX]
-      	CMP		AL, 20h
-      	JE		@7
-      	CMP		AL, 09h
-      	JNE		@8
+        CMP     BX, 0h
+        JE      @8
+        MOV     AL, ES:[DI + BX]
+        CMP     AL, 20h
+        JE      @7
+        CMP     AL, 09h
+        JNE     @8
       @7:
-      	DEC		BL
-      	DEC		AH
-      	JMP		@6
+        DEC     BL
+        DEC     AH
+        JMP     @6
       @8:
-      	MOV 	ES:[DI], AH
+        MOV     ES:[DI], AH
       end;
    end;
 
@@ -486,12 +486,12 @@ implementation
 
  function CropStr( Str : String; N : Byte ) : String;
  begin
- 	if Length(Str) > N then
-	  	if N < 1 then
- 			Str := ''
-	 	else
-			Delete(Str, N + 1, Length(Str) - N );
-	CropStr := Str;
+    if Length(Str) > N then
+        if N < 1 then
+            Str := ''
+        else
+            Delete(Str, N + 1, Length(Str) - N );
+    CropStr := Str;
  end;
 
 {----------------------------------------------------------------------------}
@@ -571,32 +571,32 @@ implementation
       IntStr := S;
     end;
 
-	function BinStr (D : LongInt ) : String;
-	var
-		Temp : String;
-	begin
-		Temp := '';
-		repeat
-			if Odd(D) then
-				Temp := '1' + Temp
-			else
-				Temp := '0' + Temp;
-			D := D shr 1;
-		until D = 0;
-		BinStr := Temp;
-	end;
+    function BinStr (D : LongInt ) : String;
+    var
+        Temp : String;
+    begin
+        Temp := '';
+        repeat
+            if Odd(D) then
+                Temp := '1' + Temp
+            else
+                Temp := '0' + Temp;
+            D := D shr 1;
+        until D = 0;
+        BinStr := Temp;
+    end;
 
-	function HexStr (I : LongInt) : String;
-	var
-		Temp : string;
-	begin
-		Temp := '';
-		repeat
-			Temp := HEXByte(I) + Temp;
-			I := I shr 8;
-		until I = 0;
-		HexStr := Temp;
-	end;
+    function HexStr (I : LongInt) : String;
+    var
+        Temp : string;
+    begin
+        Temp := '';
+        repeat
+            Temp := HEXByte(I) + Temp;
+            I := I shr 8;
+        until I = 0;
+        HexStr := Temp;
+    end;
 
   function RealStr ( R : {$IFOPT N+} Extended {$ELSE} Real {$ENDIF}; P : byte ) : Str40;
     var
@@ -646,9 +646,9 @@ implementation
   function  StrBool(S : String) : Boolean;
   { Converts a String to a Boolean. True, On, Ok, Yes, T and Y return true }
   begin
-  	S := UCase(Trim(S));
-  	StrBool := (S = 'TRUE') or (S = 'ON') or (S = 'YES') or (S = 'OK') or
-  		(S = 'T') or (S = 'Y');
+    S := UCase(Trim(S));
+    StrBool := (S = 'TRUE') or (S = 'ON') or (S = 'YES') or (S = 'OK') or
+        (S = 'T') or (S = 'Y');
   end;
 
   function StrInt(S : String) : integer;
@@ -657,60 +657,60 @@ implementation
   begin
     Val(S, Temp, Err);
     if Err <> 0 then Temp := 0;
-  	StrInt := Temp;
+    StrInt := Temp;
   end;
 
 function HexToStr(AStr : String) : String;
 var
-	I : integer;
-	S, T, O : String;
+    I : integer;
+    S, T, O : String;
 begin
-	O := '';
-	S := AStr;
-	while (S <> '') do begin
-		I := Pos('$', S);
-		if I > 0 then begin
-			T := Copy(S, 1, I - 1);
-			Delete(S, 1, I);
-		end else begin
-			T := S;
-			S := '';
-		end;
-		if T <> '' then begin
-			O := O + Char(StrInt('$' + T));
-		end;
-	end;
-	HexToStr := O;
+    O := '';
+    S := AStr;
+    while (S <> '') do begin
+        I := Pos('$', S);
+        if I > 0 then begin
+            T := Copy(S, 1, I - 1);
+            Delete(S, 1, I);
+        end else begin
+            T := S;
+            S := '';
+        end;
+        if T <> '' then begin
+            O := O + Char(StrInt('$' + T));
+        end;
+    end;
+    HexToStr := O;
 end;
 
 
   function StrHex(S : String; PascalStyle : boolean) : String;
-	var
-		I : integer;
-		T : String;
-	begin
-		T := '';
-		if PascalStyle then begin
-			for I := 1 to Length(S) do
-				T := T + '#$' + HexStr(Byte(S[I]));
-		end else begin
-			for I := 1 to Length(S) do
-				T := T + '$' + HexStr(Byte(S[I]));
-		end;
-		StrHex := T;
-	end;
+    var
+        I : integer;
+        T : String;
+    begin
+        T := '';
+        if PascalStyle then begin
+            for I := 1 to Length(S) do
+                T := T + '#$' + HexStr(Byte(S[I]));
+        end else begin
+            for I := 1 to Length(S) do
+                T := T + '$' + HexStr(Byte(S[I]));
+        end;
+        StrHex := T;
+    end;
 
   function WhichStr (B : boolean; FalseStr, TrueStr : String) : String;
   begin
-  	if B then
-  		WhichStr := TrueStr
-  	else
-  		WhichStr := FalseStr;
+    if B then
+        WhichStr := TrueStr
+    else
+        WhichStr := FalseStr;
   end;
 
   function PluralStr(I : LongInt) : String;
   begin
-  	PluralStr := WhichStr(I = 1, 's', '');
+    PluralStr := WhichStr(I = 1, 's', '');
   end;
 
   procedure AddChar ( var S : String; C : Char );
@@ -731,161 +731,161 @@ end;
 
 function StrPtr(const S : String) : PString;
 var
-	P : PString;
+    P : PString;
 begin
-	if MaxAvail < Length(S) + 1 then Halt(8);
-	GetMem(P, Length(S) + 1);
-	Move(S, P^, Length(S) + 1);
-	StrPtr := P;
+    if MaxAvail < Length(S) + 1 then Halt(8);
+    GetMem(P, Length(S) + 1);
+    Move(S, P^, Length(S) + 1);
+    StrPtr := P;
 end;
 
 function PtrStr(const P : PString) : String;
 var
-	S : String;
+    S : String;
 begin
-	if Assigned(P) then
-		Move(P^, S, Length(P^) + 1)
-	else
-		S := '';
-	PtrStr := S;
+    if Assigned(P) then
+        Move(P^, S, Length(P^) + 1)
+    else
+        S := '';
+    PtrStr := S;
 end;
 
 procedure FreeStr(var P : PString);
 begin
-	if Assigned(P) then
-		FreeMem(P, Length(P^) + 1);
-	P := nil;
+    if Assigned(P) then
+        FreeMem(P, Length(P^) + 1);
+    P := nil;
 end;
 
 function PullStr(SubStr : String; var S : String) : String;
 var
-	P : integer;
+    P : integer;
 begin
-	P := Pos(SubStr, S);
-	if P = 0 then begin
-		PullStr := S;
-		S := '';
-	end else begin
-		PullStr := Copy(S, 1, P - 1);
-		S := Copy(S, P + Length(SubStr), Length(S));
-	end;
+    P := Pos(SubStr, S);
+    if P = 0 then begin
+        PullStr := S;
+        S := '';
+    end else begin
+        PullStr := Copy(S, 1, P - 1);
+        S := Copy(S, P + Length(SubStr), Length(S));
+    end;
 end;
 
 function PullChars(Count : Integer; var S : String) : String;
 begin
-	if Count = 0 then
-		exit
-	else if Count >= Length(S) then begin
-		PullChars := S;
-		S := '';
-	end else begin
-		PullChars := Copy(S, 1, Count);
-		S := Copy(S, Count + 1, Length(S));
-	end;
+    if Count = 0 then
+        exit
+    else if Count >= Length(S) then begin
+        PullChars := S;
+        S := '';
+    end else begin
+        PullChars := Copy(S, 1, Count);
+        S := Copy(S, Count + 1, Length(S));
+    end;
 end;
 
 function PascalStr(const AsciiZ) : String;
 type
-	AsciiZStr = array[0..$FF] of char;
+    AsciiZStr = array[0..$FF] of char;
 var
-	I : integer;
-	S : String;
+    I : integer;
+    S : String;
 begin
-	PascalStr := '';
-	I := 0;
-	while (I <= 254) and (AsciiZStr(AsciiZ)[I] <> #0) do Inc(I);
-	if I <= 254 then begin
-		Move(AsciiZ, S[1], I);
-		S[0] := Chr(I);
-		PascalStr := S;
-	end;
+    PascalStr := '';
+    I := 0;
+    while (I <= 254) and (AsciiZStr(AsciiZ)[I] <> #0) do Inc(I);
+    if I <= 254 then begin
+        Move(AsciiZ, S[1], I);
+        S[0] := Chr(I);
+        PascalStr := S;
+    end;
 end;
 
 function ReduceStr(S : String; Max : integer) : String;
 const
-	Vowels : String = 'aeiouy';
-	Keepers : String = '_-+=';
+    Vowels : String = 'aeiouy';
+    Keepers : String = '_-+=';
 var
-	I : Integer;
-	T : String;
-	F, P : boolean;
+    I : Integer;
+    T : String;
+    F, P : boolean;
 begin
-	{ Strip spaces }
-	S := FilterChar(WCase(S), ' ');
+    { Strip spaces }
+    S := FilterChar(WCase(S), ' ');
 
-	{Strip lower case vowels on at a time}
-	I := 0;
-	while (Length(S) > Max) and (I < Length(Vowels)) do begin
-		Inc(I);
-		S := FilterChar(S, Vowels[I]);
-	end;
+    {Strip lower case vowels on at a time}
+    I := 0;
+    while (Length(S) > Max) and (I < Length(Vowels)) do begin
+        Inc(I);
+        S := FilterChar(S, Vowels[I]);
+    end;
 
-	{ remove all special chars }
-	I := Length(S);
-	while (I > 0) and (Length(S) > Max) do begin
-		if (S[I] > #$81) or (S[I] < #$20) then
-			Delete(S, I, 1);
-		Dec(I);
-	end;
+    { remove all special chars }
+    I := Length(S);
+    while (I > 0) and (Length(S) > Max) do begin
+        if (S[I] > #$81) or (S[I] < #$20) then
+            Delete(S, I, 1);
+        Dec(I);
+    end;
 
-	{ remove all non letters }
-	I := Length(S);
-	while (I > 0) and (Length(S) > Max) do begin
-		if ((UCase(S[I]) > 'Z') or (UCase(S[I]) < 'A')) and
-		((Pos(S[I], Keepers) < 1) or ((I = 1) or (I = Length(S)))) then
-			Delete(S, I, 1);
-		Dec(I);
-	end;
+    { remove all non letters }
+    I := Length(S);
+    while (I > 0) and (Length(S) > Max) do begin
+        if ((UCase(S[I]) > 'Z') or (UCase(S[I]) < 'A')) and
+        ((Pos(S[I], Keepers) < 1) or ((I = 1) or (I = Length(S)))) then
+            Delete(S, I, 1);
+        Dec(I);
+    end;
 
-	{ remove repeating letters }
-	I := Length(S);
-	while (Length(S) > Max) and (I > 1) do begin
-		Dec(I);
-		if UCase(S[I]) = UCase(S[I + 1]) then
-			Delete(S, I, 1);
-	end;
+    { remove repeating letters }
+    I := Length(S);
+    while (Length(S) > Max) and (I > 1) do begin
+        Dec(I);
+        if UCase(S[I]) = UCase(S[I + 1]) then
+            Delete(S, I, 1);
+    end;
 
-	{ remove lowercase letters from words one at a time }
-	F := True;
-	while (Length(S) > Max) and F do begin
-		F := False;
-		I := Length(S);
-		P := True;
-		while I >2 do begin
-			Dec(I);
-			if S[I] = UCase(S[I]) then
-				P := True
-			else if P then begin
-				P := False;
-				F := True;
-				Delete(S, I, 1);
-			end;
-		end;
-	end;
+    { remove lowercase letters from words one at a time }
+    F := True;
+    while (Length(S) > Max) and F do begin
+        F := False;
+        I := Length(S);
+        P := True;
+        while I >2 do begin
+            Dec(I);
+            if S[I] = UCase(S[I]) then
+                P := True
+            else if P then begin
+                P := False;
+                F := True;
+                Delete(S, I, 1);
+            end;
+        end;
+    end;
 
-	{Strip upper case vowels on at a time}
-	T := UCase(Vowels);
-	I := 0;
-	while (Length(S) > Max) and (I < Length(T)) do begin
-		Inc(I);
-		S := FilterChar(S, T[I]);
-	end;
+    {Strip upper case vowels on at a time}
+    T := UCase(Vowels);
+    I := 0;
+    while (Length(S) > Max) and (I < Length(T)) do begin
+        Inc(I);
+        S := FilterChar(S, T[I]);
+    end;
 
    { remove repeating letters }
     P := True;
     while P do begin
-    	P := False;
-		I := Length(S);
-		while (Length(S) > Max) and (I > 1) do begin
-			Dec(I);
-			if UCase(S[I]) = UCase(S[I + 1]) then begin
-				Delete(S, I, 1);
-				P := True;
-			end;
-		end;
-	end;
+        P := False;
+        I := Length(S);
+        while (Length(S) > Max) and (I > 1) do begin
+            Dec(I);
+            if UCase(S[I]) = UCase(S[I + 1]) then begin
+                Delete(S, I, 1);
+                P := True;
+            end;
+        end;
+    end;
 
-	ReduceStr := Copy(UCase(S), 1, 8);
+    ReduceStr := Copy(UCase(S), 1, 8);
 end;
 
 end.
