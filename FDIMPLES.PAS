@@ -45,7 +45,9 @@ const
     Frame : TPoint = (X:5; Y:4);
     Grps : TPoint = (X:18; Y:8);
     NoScroll = 1;
-    PackageDefaults = '..\FDI\SETTINGS\PKG_ALL.LST';
+    ALLPackages = '..\FDI\SETTINGS\PKG_ALL.LST';
+{    PackageDefaults = 'FDPLBASE.LST';}
+    BASEPackages = '..\FDI\SETTINGS\PKG_BASE.LST';
 {    PackageDefaults = 'FDPLBASE.LST';}
 
 
@@ -113,7 +115,11 @@ var
 begin
     Defaults := nil;
     FileMode := 0; { not needed }
-    Assign(F, PackageDefaults);
+    if FileExists(ALLPackages) then
+        Assign(F, ALLPackages)
+    else if FileExists(BASEPackages) then
+        Assign(F, BASEPackages)
+    else exit;
     Reset(F);
     L := nil;
     while Not EOF(F) do begin
@@ -409,19 +415,47 @@ begin
 end;
 
 procedure GroupToggle;
+var
+    P : PItem;
 begin
     if not Assigned(Group) then exit;
     Inc(Group^.State);
     if Group^.State > 1 then Group^.State := 0;
+    P := Group^.Items;
+    while assigned(P) do begin
+        P^.State := Group^.State;
+        P := P^.Next;
+    end;
     DrawGroups;
 end;
 
 procedure FileToggle;
+var
+    P : PItem;
+    NS, CS : integer;
 begin
     if not assigned(Package) then exit;
     Inc(Package^.State);
     if Package^.State > 1 then Package^.State := 0;
-    DrawFiles;
+    P := Group^.Items;
+    NS := 0;
+    CS := 0;
+    while assigned(P) do begin
+         if P^.State > 0 then begin
+            inc(CS);
+         end else
+            inc(NS);
+        P := P^.Next;
+    end;
+    if CS = 0 then
+        Group^.State := 0
+    else begin
+        if NS = 0 then
+            Group^.State := 1
+        else
+            Group^.State := 2;
+    end;
+    DrawGroups;
 end;
 
 procedure GroupUp(T:integer);
@@ -487,7 +521,25 @@ begin
 end;
 
 procedure MakeList;
+var
+    P, J : PItem;
+    F : Text;
+    S : String;
 begin
+    FileMode := 2;
+    Assign(F, GetEnv('TEMP') + '\FDIMPLES.LST');
+    Rewrite(F);
+    P := GroupFirst;
+    while assigned(P) do begin
+        J := P^.Items;
+        while assigned(J) do begin
+            if J^.State <> 0 then
+                WriteLn(F, lcase(P^.Name + '\' + J^.Name));
+            J := J^.Next;
+        end;
+        P := P^.Next;
+    end;
+    Close(F);
 end;
 
 procedure Main;
@@ -564,6 +616,6 @@ begin
     CheckCursor := False;
     Init;
     DrawSelector;
-    WriteLn(MaxAvail);
+   { WriteLn(MaxAvail); }
     Main;
 end.
