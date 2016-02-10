@@ -43,13 +43,13 @@ uses QCrtNM, QDos, QStrings;
 
 const
     Frame : TPoint = (X:5; Y:4);
-    Grps : TPoint = (X:18; Y:10);
+    Grps : TPoint = (X:18; Y:8);
     NoScroll = 1;
 
 type
     PItem = ^TItem;
     TItem = record
-        Next, Items : PItem;
+        Prev, Next, Items : PItem;
         Name : Str12;
         State : integer;
         Title : PString;
@@ -57,7 +57,8 @@ type
 
 var
     Tab : integer;
-    Group, Groups, Package : PItem;
+    Group, GroupFirst, GroupTop, GroupBottom, GroupLast,
+    Package, PackageFirst, PackageTop, PackageBottom, PackageLast : PItem;
     F, B, C, H : integer;
 
 
@@ -98,20 +99,22 @@ end;
 procedure Init;
 var
    S : TSearchRec;
-   P, L: PItem;
+   P, J : PItem;
 begin
     F := ValueOf('TFF', White);
     H := ValueOf('TFH', LightGreen);
     B := ValueOf('TFB', Red);
     C := ValueOf('TFC', $1e);
     Tab := 0;
-    Groups := nil;
+    GroupLast := nil;
+    GroupFirst := nil;
     FindFirst(GetEnv('FMEDIA') + '\*.*', faAnyFile, S);
     while DosError = 0 do begin
         if (S.Attr and faDirectory = faDirectory) and (S.Name <> '.') and
         (S.Name <> '..') then begin
             P := New(PItem);
             P^.Name := S.Name;
+            P^.Prev := GroupLast;
             P^.Items := nil;
             P^.Next := nil;
             P^.Title := nil;
@@ -119,55 +122,76 @@ begin
             if Ucase(S.Name) = 'BASE' then P^.State := 1;
             if Ucase(S.Name) = 'ARCHIVER' then P^.State := 2;
             if Ucase(S.Name) = 'UTIL' then P^.State := 2;
-            if not Assigned(Groups) then
-                Groups := P
+            if not Assigned(GroupFirst) then
+                GroupFirst := P
             else
-                L^.Next := P;
-            L := P;
+                GroupLast^.Next := P;
+            GroupLast := P;
         end;
         FindNext(S);
     end;
-    Group := Groups;
+    P := GroupFirst;
+    while Assigned(P) do begin
+        PackageFirst := nil;
+        PackageLast := nil;
+        FindFirst(GetEnv('FMEDIA') + '\' + P^.NAME + '\*.ZIP', faAnyFile, S);
+
+        while DosError = 0 do begin
+            if (S.Attr and faDirectory <> faDirectory) and (S.Name <> '.') then begin
+                J := New(PItem);
+                J^.Name := Copy(S.Name, 1, Length(S.Name) - 4);
+                J^.Prev := PackageLast;
+                J^.Items := nil;
+                J^.Next := nil;
+                J^.Title := nil;
+                J^.State := 0;
+                if Ucase(P^.Name) = 'BASE' then J^.State := 1;
+                if not Assigned(PackageFirst) then
+                    PackageFirst := J
+                else
+                    PackageLast^.Next := J;
+                PackageLast := J;
+            end;
+            FindNext(S);
+        end;
+        J := P;
+        P := P^.Next;
+        if Assigned(PackageFirst) then begin
+            J^.Items := PackageFirst;
+        end else begin
+            if assigned(J^.Prev) then
+                J^.Prev^.Next := J^.Next
+            else
+                GroupFirst := J^.Next;
+            if assigned(J^.Next) then
+                J^.Next^.Prev := J^.Prev
+            else
+                GroupLast := J^.Prev;
+            Dispose(J);
+        end;
+    end;
+
+    Group := GroupFirst;
+    GroupTop := GroupFirst;
+    GroupBottom := nil;
+    Package := nil;
+    PackageFirst := nil;
+    PackageTop := nil;
+    PackageLast := nil;
+    PackageBottom := nil;
 end;
 
-procedure DrawGroups;
+procedure DrawPackage;
 var
     P : PItem;
     Y : integer;
 begin
     TextColor(F);
-    TextBackground(B + 1);
-    Window (Frame.X + 2, Frame.Y + 1, Frame.X + 2 - NoScroll + Grps.X, Frame.Y + Grps.Y);
-    { ClrScr; }
-    P := Groups;
-    Y := 1;
-    while Assigned(P) and (Y <= Grps.Y) do begin
-        GotoXY(1,Y);
-        TextBackground(B);
-        if P <> Group then
-            TextColor(F)
-        else begin
-            if Tab <> 0 then
-                TextColor(H)
-            else
-                TextAttr := C;
-        end;
-        Write(' ');
-        if P <> Group then TextColor(DarkGray);
-        Write('[');
-        if P <> Group then TextColor(Yellow);
-        case P^.State of
-            1 : Write('X');
-            2 : Write('+');
-        else
-            Write(#32);
-        end;
-        if P <> Group then TextColor(DarkGray);
-        Write(']');
-        if P <> Group then TextColor(F);
-        Write(RSpace(' ' + P^.Name, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
-        P := P^.Next;
-        Inc(Y);
+    TextBackground(B);
+    Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
+    ClrScr;
+    P := Package;
+    if Assigned(P) then begin
     end;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
 end;
@@ -213,22 +237,52 @@ begin
         Inc(Y);
     end;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+    DrawPackage;
 end;
 
-
-procedure DrawPackage;
+procedure DrawGroups;
 var
     P : PItem;
     Y : integer;
 begin
     TextColor(F);
-    TextBackground(B);
-    Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
-    ClrScr;
-    P := Package;
-    if Assigned(P) then begin
+    TextBackground(B + 1);
+    Window (Frame.X + 2, Frame.Y + 1, Frame.X + 2 - NoScroll + Grps.X, Frame.Y + Grps.Y);
+    { ClrScr; }
+    P := GroupTop;
+    Y := 1;
+    GroupBottom := nil;
+    while Assigned(P) and (Y <= Grps.Y) do begin
+        GotoXY(1,Y);
+        TextBackground(B);
+        if P <> Group then
+            TextColor(F)
+        else begin
+            if Tab <> 0 then
+                TextColor(H)
+            else
+                TextAttr := C;
+        end;
+        Write(' ');
+        if P <> Group then TextColor(DarkGray);
+        Write('[');
+        if P <> Group then TextColor(Yellow);
+        case P^.State of
+            1 : Write('X');
+            2 : Write('+');
+        else
+            Write(#32);
+        end;
+        if P <> Group then TextColor(DarkGray);
+        Write(']');
+        if P <> Group then TextColor(F);
+        Write(RSpace(' ' + P^.Name, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+        GroupBottom := P;
+        P := P^.Next;
+        Inc(Y);
     end;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+    DrawFiles;
 end;
 
 procedure DrawButtons;
@@ -274,7 +328,6 @@ begin
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
 end;
 
-
 procedure GroupToggle;
 begin
     if not Assigned(Group) then exit;
@@ -289,10 +342,24 @@ end;
 
 procedure GroupUp(T:integer);
 begin
+    if (Group = GroupFirst)  then exit;
+    if GroupTop = Group then begin
+        GroupTop := GroupTop^.Prev;
+        GroupBottom := GroupBottom^.Prev;
+    end;
+    Group := Group^.Prev;
+    DrawGroups;
 end;
 
 procedure GroupDown(T:integer);
 begin
+    if (Group = GroupLast)  then exit;
+    if GroupBottom = Group then begin
+        GroupTop := GroupTop^.Next;
+        GroupBottom := GroupBottom^.Next;
+    end;
+    Group := Group^.Next;
+    DrawGroups;
 end;
 
 procedure FileUp(T:integer);
@@ -327,8 +394,6 @@ begin
     repeat
         if LTab <> Tab then begin
             DrawGroups;
-            DrawFiles;
-            DrawPackage;
             DrawButtons;
             LTab := Tab;
         end;
