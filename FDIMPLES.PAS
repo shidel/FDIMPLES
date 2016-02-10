@@ -283,6 +283,14 @@ begin
     DrawGroups;
 end;
 
+procedure GroupUp(T:integer);
+begin
+end;
+
+procedure GroupDown(T:integer);
+begin
+end;
+
 procedure Main;
 var
     E : TEvent;
@@ -305,15 +313,20 @@ begin
         While E.What = evNothing do GetEvent(E);
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
-                $001b : begin
-                    Quit := True;
+                $03 : Halt(200); { CTRL-C }
+                $001b : Halt(1); { Esacpe }
+                $4800 : case Tab of
+                    0: GroupUp(1);
                 end;
-                $0020, $000A, $000D : begin
-                    case Tab of
-                        0: GroupToggle;
-                        3: Quit := True;
-                        4: Quit := True;
-                    end;
+                { $4900 : page up }
+                $5000 : case Tab of
+                    0: GroupDown(1);
+                end;
+                { $5100 : page down }
+                $0020, $000A, $000D : case Tab of
+                    0: GroupToggle;
+                    3: Quit := True;
+                    4: Halt(1); { Canceled }
                 end;
                 $0009 : begin
                     if Tab >= 4 then
@@ -327,6 +340,8 @@ begin
                     else
                         Dec(Tab);
                 end;
+{                else
+                    writeln(HexStr(E.KeyCode)); }
             end;
     until Quit;
 end;
