@@ -45,6 +45,9 @@ const
     Frame : TPoint = (X:5; Y:4);
     Grps : TPoint = (X:18; Y:8);
     NoScroll = 1;
+    PackageDefaults = '..\FDI\SETTINGS\PKG_ALL.LST';
+{    PackageDefaults = 'FDPLBASE.LST';}
+
 
 type
     PItem = ^TItem;
@@ -54,9 +57,15 @@ type
         State : integer;
         Title : PString;
     end;
+    PText = ^TText;
+    TText = record
+        Next : PText;
+        Str : PString;
+    end;
 
 var
     Tab : integer;
+    Defaults : PText;
     Group, GroupFirst, GroupTop, GroupBottom, GroupLast,
     Package, PackageFirst, PackageTop, PackageBottom, PackageLast : PItem;
     F, B, C, H : integer;
@@ -96,11 +105,57 @@ begin
     StrOf := S;
 end;
 
+procedure ReadDefaults;
+var
+    F : Text;
+    S : String;
+    L, P : PText;
+begin
+    Defaults := nil;
+    FileMode := 0; { not needed }
+    Assign(F, PackageDefaults);
+    Reset(F);
+    L := nil;
+    while Not EOF(F) do begin
+        ReadLn(F, S);
+        S := Trim(Ucase(S));
+        if S[1] = ';' then S := '';
+        if S <> '' then begin
+            P := New(PText);
+            P^.Next := nil;
+            P^.Str := StrPtr(S);
+            if assigned(L) then
+                L^.Next := P
+            else
+                Defaults := P;
+            L := P;
+        end;
+    end;
+    Close(F);
+end;
+
+function CheckDefault(S : String) : boolean;
+var
+    P : PText;
+begin
+    CheckDefault := false;
+    P := Defaults;
+    while assigned(P) do begin
+        if PtrStr(P^.Str) = S then begin
+            CheckDefault := true;
+            exit;
+        end;
+        P := P^.Next;
+    end;
+end;
+
 procedure Init;
 var
    S : TSearchRec;
    P, J : PItem;
+   CS, NS : integer;
 begin
+    ReadDefaults;
     F := ValueOf('TFF', White);
     H := ValueOf('TFH', LightGreen);
     B := ValueOf('TFB', Red);
@@ -119,9 +174,6 @@ begin
             P^.Next := nil;
             P^.Title := nil;
             P^.State := 0;
-            if Ucase(S.Name) = 'BASE' then P^.State := 1;
-            if Ucase(S.Name) = 'ARCHIVER' then P^.State := 2;
-            if Ucase(S.Name) = 'UTIL' then P^.State := 2;
             if not Assigned(GroupFirst) then
                 GroupFirst := P
             else
@@ -132,6 +184,8 @@ begin
     end;
     P := GroupFirst;
     while Assigned(P) do begin
+        CS := 0;
+        NS := 0;
         PackageFirst := nil;
         PackageLast := nil;
         FindFirst(GetEnv('FMEDIA') + '\' + P^.NAME + '\*.ZIP', faAnyFile, S);
@@ -145,7 +199,11 @@ begin
                 J^.Next := nil;
                 J^.Title := nil;
                 J^.State := 0;
-                if Ucase(P^.Name) = 'BASE' then J^.State := 1;
+                if CheckDefault(Ucase(P^.Name) + '\' + Ucase(J^.Name)) then begin
+                    J^.State := 1;
+                    inc(CS);
+                end else
+                    inc(NS);
                 if not Assigned(PackageFirst) then
                     PackageFirst := J
                 else
@@ -153,6 +211,14 @@ begin
                 PackageLast := J;
             end;
             FindNext(S);
+        end;
+        if CS = 0 then
+            P^.State := 0
+        else begin
+            if NS = 0 then
+                P^.State := 1
+            else
+                P^.State := 2;
         end;
         J := P;
         P := P^.Next;
@@ -498,5 +564,6 @@ begin
     CheckCursor := False;
     Init;
     DrawSelector;
+    WriteLn(MaxAvail);
     Main;
 end.
