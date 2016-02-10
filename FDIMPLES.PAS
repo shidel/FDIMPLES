@@ -45,10 +45,10 @@ const
     Frame : TPoint = (X:5; Y:4);
     Grps : TPoint = (X:18; Y:8);
     NoScroll = 1;
-    ALLPackages = '..\FDI\SETTINGS\PKG_ALL.LST';
-    BASEPackages = '..\FDI\SETTINGS\PKG_BASE.LST';
-{    ALLPackages = 'FDPLALL.LST';
-    BASEPackages = 'FDPLBASE.LST'; }
+{    ALLPackages = '..\FDI\SETTINGS\PKG_ALL.LST';
+    BASEPackages = '..\FDI\SETTINGS\PKG_BASE.LST'; }
+    ALLPackages = 'FDPLALL.LST';
+    BASEPackages = 'FDPLBASE.LST';
 
 
 type
