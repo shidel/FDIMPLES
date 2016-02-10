@@ -44,6 +44,22 @@ uses QCrtNM, QDos, QStrings;
 const
     Frame : TPoint = (X:5; Y:4);
     Grps : TPoint = (X:18; Y:10);
+    NoScroll = 1;
+
+type
+    PItem = ^TItem;
+    TItem = record
+        Next, Items : PItem;
+        Name : Str12;
+        State : integer;
+        Title : PString;
+    end;
+
+var
+    Tab : integer;
+    Group, Groups, Package : PItem;
+    F, B, C, H : integer;
+
 
 function ValueOf(S:String; D : integer) : Integer;
 const
@@ -79,23 +95,16 @@ begin
     StrOf := S;
 end;
 
-type
-    PItem = ^TItem;
-    TItem = record
-        Next, Items : PItem;
-        Name : Str12;
-        Checked : boolean;
-        Title : PString;
-    end;
-
-var
-    Groups : PItem;
-
 procedure Init;
 var
    S : TSearchRec;
    P, L: PItem;
 begin
+    F := ValueOf('TFF', White);
+    H := ValueOf('TFH', LightGreen);
+    B := ValueOf('TFB', Red);
+    C := ValueOf('TFC', $1e);
+    Tab := 0;
     Groups := nil;
     FindFirst(GetEnv('FMEDIA') + '\*.*', faAnyFile, S);
     while DosError = 0 do begin
@@ -106,7 +115,10 @@ begin
             P^.Items := nil;
             P^.Next := nil;
             P^.Title := nil;
-            P^.Checked := Ucase(S.Name) = 'BASE';
+            P^.State := 0;
+            if Ucase(S.Name) = 'BASE' then P^.State := 1;
+            if Ucase(S.Name) = 'ARCHIVER' then P^.State := 2;
+            if Ucase(S.Name) = 'UTIL' then P^.State := 2;
             if not Assigned(Groups) then
                 Groups := P
             else
@@ -115,41 +127,125 @@ begin
         end;
         FindNext(S);
     end;
+    Group := Groups;
 end;
 
 procedure DrawGroups;
 var
     P : PItem;
-    F, B : integer;
     Y : integer;
 begin
-    F := ValueOf('TFF', White);
-    B := ValueOf('TFB', Red);
     TextColor(F);
-    TextBackground(B);
-    Window (Frame.X + 2, Frame.Y + 1, Frame.X + 1 + Grps.X, Frame.Y + Grps.Y);
-    ClrScr;
+    TextBackground(B + 1);
+    Window (Frame.X + 2, Frame.Y + 1, Frame.X + 2 - NoScroll + Grps.X, Frame.Y + Grps.Y);
+    { ClrScr; }
     P := Groups;
     Y := 1;
     while Assigned(P) and (Y <= Grps.Y) do begin
         GotoXY(1,Y);
-        TextColor(F);
+        TextBackground(B);
+        if P <> Group then
+            TextColor(F)
+        else begin
+            if Tab <> 0 then
+                TextColor(H)
+            else
+                TextAttr := C;
+        end;
         Write(' ');
-        TextColor(DarkGray);
+        if P <> Group then TextColor(DarkGray);
         Write('[');
-        TextColor(Yellow);
-        if P^.Checked then
-            Write('X')
+        if P <> Group then TextColor(Yellow);
+        case P^.State of
+            1 : Write('X');
+            2 : Write('+');
         else
             Write(#32);
-        TextColor(DarkGray);
+        end;
+        if P <> Group then TextColor(DarkGray);
         Write(']');
-        TextColor(F);
-        Write(RSpace(' ' + P^.Name, Grps.X - WhereX + 1));
+        if P <> Group then TextColor(F);
+        Write(RSpace(' ' + P^.Name, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         P := P^.Next;
         Inc(Y);
     end;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+end;
+
+procedure DrawFiles;
+var
+    P : PItem;
+    Y : integer;
+begin
+    TextColor(F);
+    TextBackground(B);
+    Window (Frame.X + 4 + Grps.X - NoScroll, Frame.Y + 1, Lo(ScreenMax) - Frame.X, Frame.Y + Grps.Y);
+    { ClrScr; }
+    P := Group;
+    if Assigned(P) then P := P^.Items;
+    Y := 1;
+    while Assigned(P) and (Y <= Grps.Y) do begin
+        GotoXY(1,Y);
+        TextBackground(B);
+        if P <> Package then
+            TextColor(F)
+        else begin
+            if Tab <> 1 then
+                TextColor(H)
+            else
+                TextAttr := C;
+        end;
+        Write(' ');
+        if P <> Package then TextColor(DarkGray);
+        Write('[');
+        if P <> Package then TextColor(Yellow);
+        case P^.State of
+            1 : Write('X');
+            2 : Write('+');
+        else
+            Write(#32);
+        end;
+        if P <> Package then TextColor(DarkGray);
+        Write(']');
+        if P <> Package then TextColor(F);
+        Write(RSpace(' ' + P^.Name, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+        P := P^.Next;
+        Inc(Y);
+    end;
+    Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+end;
+
+
+procedure DrawPackage;
+var
+    P : PItem;
+    Y : integer;
+begin
+    TextColor(F);
+    TextBackground(B);
+    Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
+    ClrScr;
+    P := Package;
+    if Assigned(P) then begin
+    end;
+    Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+end;
+
+procedure DrawButtons;
+begin
+    Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+    Gotoxy (Lo(ScreenMax) - Frame.X - 25, Hi(ScreenMax)- Frame.Y + 1);
+    TextColor(F);
+    TextBackground(B);
+    if Tab = 3 then
+        TextAttr := C;
+    Write( CSpace('OK', 10));
+    GotoXY (WhereX + 5, WhereY);
+    TextColor(F);
+    TextBackground(B);
+    if Tab = 4 then
+        TextAttr := C;
+    Write( CSpace('Cancel', 10));
 end;
 
 procedure DrawSelector;
@@ -162,8 +258,8 @@ begin
     ClrScr;
     { Window Box }
     TextChar := #32;
-    TextColor(ValueOf('TFF', White));
-    TextBackground(ValueOf('TFB', Red));
+    TextColor(F);
+    TextBackground(B);
     Window(Frame.X, Frame.Y, Lo(ScreenMax) + 2 - Frame.X, Hi(ScreenMax) + 2 - Frame.Y);
     ClrScr;
     Window(1,1,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
@@ -172,19 +268,29 @@ begin
     if Pos('DOUBLE', StrOf('TFS', 'double shadow')) = 0 then
         DrawBox(Frame.X + 1, Frame.Y, Lo(ScreenMax) + 1 - Frame.X, Hi(ScreenMax) + 2 - Frame.Y, bxSingle);
     DrawLine(Frame.X + 1, Frame.Y + Grps.Y + 1, Lo(ScreenMax) - Frame.X * 2 + 1, lnSingle or lnHorizontal);
-    DrawLine(Frame.X + Grps.X + 3, Frame.Y, Grps.Y + 2, lnSingle or lnVertical);
+    DrawLine(Frame.X + Grps.X + 3 - NoScroll, Frame.Y, Grps.Y + 2, lnSingle or lnVertical);
     if Pos('SHADOW', StrOf('TFS', 'double shadow')) > 0 then
         DrawShadow(Frame.X + 1, Frame.Y, Lo(ScreenMax) + 2 - Frame.X, Hi(ScreenMax) + 2 - Frame.Y, bsDoubleWide);
-    DrawGroups;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
 end;
 
+var
+    K : Char;
 begin
     CheckScroll := False;
     While Keypressed do ReadKey;
     Init;
     DrawSelector;
-    While not Keypressed do;
-    While Keypressed do ReadKey;
-
+    repeat
+        DrawGroups;
+        DrawFiles;
+        DrawPackage;
+        DrawButtons;
+        Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+        While not Keypressed do;
+        K := ReadKey;
+        While Keypressed do ReadKey;
+        Inc(Tab);
+        if Tab = 5 then Tab := 0;
+    until K = #27;
 end.
