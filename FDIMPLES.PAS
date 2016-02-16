@@ -34,7 +34,7 @@
         errorlevel 0, ok, and %TEMP%\FDIMPLES.LST contains package list.
 }
 
-{$M 50000,102400,102400} (* Memory: Largest Stack, 100K Minimum / Maximum *)
+{$M 50000,102400,204800} (* Memory: Largest Stack, 100K Minimum / Maximum *)
 
 {$I QCRT.DEF}
 program Test;
@@ -42,14 +42,16 @@ program Test;
 uses QCrtNM, QDos, QStrings;
 
 const
+    AppName = 'FDIMPLES';
+    AppVersion = '0.2.0';
+    AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Frame : TPoint = (X:5; Y:4);
-    Grps : TPoint = (X:18; Y:8);
+    Grps : TPoint = (X:16; Y:8);
     NoScroll = 1;
 {    ALLPackages = '..\FDI\SETTINGS\PKG_ALL.LST';
     BASEPackages = '..\FDI\SETTINGS\PKG_BASE.LST'; }
     ALLPackages = 'FDPLALL.LST';
     BASEPackages = 'FDPLBASE.LST';
-
 
 type
     PItem = ^TItem;
@@ -58,6 +60,7 @@ type
         Name : Str12;
         State : integer;
         Title : PString;
+        First : boolean;
     end;
     PText = ^TText;
     TText = record
@@ -71,7 +74,20 @@ var
     Group, GroupFirst, GroupTop, GroupBottom, GroupLast,
     Package, PackageFirst, PackageTop, PackageBottom, PackageLast : PItem;
     F, B, C, H : integer;
+    FMedia : String;
+    FDIMode : boolean;
+    StartCursor : word;
 
+procedure CleanUp;
+begin
+    if FDIMode then exit;
+    TextAttr := 7;
+    window(1,1,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+    CheckCursor := True;
+    CheckScroll := True;
+    ClrScr;
+    SetCursor(StartCursor);
+end;
 
 function ValueOf(S:String; D : integer) : Integer;
 const
@@ -112,32 +128,54 @@ var
     F : Text;
     S : String;
     L, P : PText;
+    D : TSearchRec;
 begin
     Defaults := nil;
     FileMode := 0; { not needed }
-    if FileExists(ALLPackages) then
-        Assign(F, ALLPackages)
-    else if FileExists(BASEPackages) then
-        Assign(F, BASEPackages)
-    else exit;
-    Reset(F);
-    L := nil;
-    while Not EOF(F) do begin
-        ReadLn(F, S);
-        S := Trim(Ucase(S));
-        if S[1] = ';' then S := '';
-        if S <> '' then begin
-            P := New(PText);
-            P^.Next := nil;
-            P^.Str := StrPtr(S);
-            if assigned(L) then
-                L^.Next := P
-            else
-                Defaults := P;
-            L := P;
+    if FDIMode then begin
+        if FileExists(ALLPackages) then
+            Assign(F, ALLPackages)
+        else if FileExists(BASEPackages) then
+            Assign(F, BASEPackages)
+        else exit;
+        Reset(F);
+        L := nil;
+        while Not EOF(F) do begin
+            ReadLn(F, S);
+            S := Trim(Ucase(S));
+            if S[1] = ';' then S := '';
+            if S <> '' then begin
+                P := New(PText);
+                P^.Next := nil;
+                P^.Str := StrPtr(S);
+                if assigned(L) then
+                    L^.Next := P
+                else
+                    Defaults := P;
+                L := P;
+            end;
+        end;
+        Close(F);
+    end else begin
+        S := Trim(UCase(GetEnv('DOSDIR')));
+        if (S = '') then exit;
+        FindFirst(S + '\APPINFO\*.LSM', faAnyFile, D);
+        L := nil;
+        while DosError = 0 do begin
+            if (D.Attr and faDirectory <> faDirectory) then begin
+                P := New(PText);
+                P^.Next := nil;
+                P^.Str := StrPtr('\' + copy(D.Name, 1, length(D.Name) - 4));
+                if assigned(L) then
+                    L^.Next := P
+                else
+                    Defaults := P;
+                L := P;
+
+            end;
+            FindNext(D);
         end;
     end;
-    Close(F);
 end;
 
 function CheckDefault(S : String) : boolean;
@@ -146,12 +184,22 @@ var
 begin
     CheckDefault := false;
     P := Defaults;
-    while assigned(P) do begin
-        if PtrStr(P^.Str) = S then begin
-            CheckDefault := true;
-            exit;
+    if FDIMode then begin
+        while assigned(P) do begin
+            if PtrStr(P^.Str) = S then begin
+                CheckDefault := true;
+                exit;
+            end;
+            P := P^.Next;
         end;
-        P := P^.Next;
+    end else begin
+        while assigned(P) do begin
+            if PtrStr(P^.Str) = Copy(S, Pos('\', S), Length(S)) then begin
+                CheckDefault := true;
+                exit;
+            end;
+            P := P^.Next;
+        end;
     end;
 end;
 
@@ -193,12 +241,142 @@ begin
     While assigned(Last^.Next) do Last := Last^.Next;
 end;
 
+procedure AddCustomItems(P : PItem; B, N : String);
+var
+  J : PItem;
+  F : boolean;
+begin
+    if not FDIMode then exit;
+
+    if not assigned(P) then exit;
+
+    if not (P^.Name = B) then exit;
+
+    if not CheckDefault(B + '\' + N) then exit;
+
+    J := New(PItem);
+    J^.Name := N;
+    J^.Items := nil;
+    J^.Next := nil;
+    J^.Title := nil;
+    J^.First := true;
+    J^.State := 1;
+    PackageFirst := J;
+    PackageLast := J;
+end;
+
+procedure AddLine(var P : PItem; S : String; NewLine : boolean);
+{ Later add line appending }
+var
+    N, L, H : PItem;
+    W, M : integer;
+begin
+    if MaxAvail < 10240 then exit;
+    N := New(PItem);
+    N^.Next := nil;
+    N^.Prev := nil;
+    N^.Name := '';
+    W := Lo(ScreenMax) - Frame.X * 2 - 3;
+    if Length(S) > W then begin
+        M := LastPos(' ', copy(S, 1, W));
+        if M > 0 then W := M;
+        N^.Title := StrPtr(copy(S, 1, W));
+        Delete(S, 1, W);
+    end else begin
+        N^.Title := StrPtr(S);
+        S := '';
+    end;
+    if not assigned(P^.Items) then
+        P^.Items := N
+    else begin
+        L := P^.Items;
+        while Assigned(L) do begin
+            H := L;
+            L := L^.Next;
+        end;
+        H^.Next := N;
+        N^.Prev := H;
+    end;
+    if S <> '' then AddLine(P, S, NewLine);
+end;
+
+procedure CacheGroup;
+var
+    Name, Ver, Desc, MD5 : String;
+    P : Longint;
+    F : File;
+    C, E, D : integer;
+    B : String;
+    X : PItem;
+
+    procedure ReadFile;
+    begin
+        P := FilePos(F);
+        BlockRead(F, B[1], Sizeof(B) - 1, C);
+        B[0] := chr(C);
+        E := Pos(#$0d, B);
+        D := Pos(#$0a, B);
+        if (E <> 0) and (E <= Ord(B[0])) then B[0] := Chr(E - 1);
+        if (D <> 0) and (D <= Ord(B[0])) then B[0] := Chr(D - 1);
+        Seek(F, P + 1 + Ord(B[0]));
+    end;
+
+begin
+    if MaxAvail < 51200 then exit;
+
+    if not Group^.First then exit;
+
+    Group^.First := False;
+    Name := FMedia + '\' + Group^.Name + '\INDEX.LST';
+    if not FileExists(Name) then exit;
+
+    FileMode := 0;
+    Assign(F, Name);
+    Reset(F, 1);
+    repeat
+        ReadFile;
+        if Trim(B) <> '' then begin
+            Name := Trim(PullStr(#$09, B));
+            Ver := Trim(PullStr(#$09, B));
+            Desc := Trim(PullStr(#$09, B));
+            MD5 := Trim(PullStr(#$09, B));
+            if Ucase(Name) = 'FD-REPOV1' then begin
+                Group^.Title := StrPtr(WCase(Desc));
+            end;
+            X := Group^.Items;
+            while assigned(X) do begin
+                if UCase(Name) = UCase(X^.Name) then begin
+                    X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Frame.X * 2 - Grps.X - 16));
+                    AddLine(X, Name + ' (' + ver + ')', True);
+                    AddLine(X, '', True);
+                    AddLine(X, Desc, E or D <> 0);
+                    while (C <> 0) and (E or D = 0) do begin
+                        ReadFile;
+                        AddLine(X, '++' + B, E or D <> 0);
+                    end;
+                    X := nil;
+                end else
+                    X := X^.Next;
+            end;
+        end;
+    until (C = 0);
+    Close(F);
+end;
+
 procedure Init;
 var
    S : TSearchRec;
    P, J : PItem;
    CS, NS : integer;
+
 begin
+    FMedia := GetEnv('FMEDIA');
+    { FMedia := '\packages\all'; }
+    FDIMode := Ucase(ParamStr(1)) = '/FDI';
+    if not FDIMode then begin
+        StartCursor := GetCursor;
+        HideCursor;
+    end;
     ReadDefaults;
     F := ValueOf('TFF', White);
     H := ValueOf('TFH', LightGreen);
@@ -207,7 +385,7 @@ begin
     Tab := 0;
     GroupLast := nil;
     GroupFirst := nil;
-    FindFirst(GetEnv('FMEDIA') + '\*.*', faAnyFile, S);
+    FindFirst(FMedia + '\*.*', faAnyFile, S);
     while DosError = 0 do begin
         if (S.Attr and faDirectory = faDirectory) and (S.Name <> '.') and
         (S.Name <> '..') then begin
@@ -217,6 +395,7 @@ begin
             P^.Items := nil;
             P^.Next := nil;
             P^.Title := nil;
+            P^.First := True;
             P^.State := 0;
             if not Assigned(GroupFirst) then
                 GroupFirst := P
@@ -233,26 +412,22 @@ begin
         NS := 0;
         PackageFirst := nil;
         PackageLast := nil;
-        if (P^.Name = 'BASE') and CheckDefault('BASE\WELCOME') then begin
-            J := New(PItem);
-            J^.Name := 'WELCOME';
-            J^.Items := nil;
-            J^.Next := nil;
-            J^.Title := nil;
-            J^.State := 1;
-            PackageFirst := J;
-            PackageLast := J;
-        end;
-        FindFirst(GetEnv('FMEDIA') + '\' + P^.NAME + '\*.ZIP', faAnyFile, S);
+
+        AddCustomItems(P, 'BASE', 'WELCOME');
+        AddCustomItems(P, 'UTIL', 'V8POWER');
+
+        FindFirst(FMedia + '\' + P^.NAME + '\*.ZIP', faAnyFile, S);
 
         while DosError = 0 do begin
-            if (S.Attr and faDirectory <> faDirectory) and (S.Name <> '.') then begin
+            if (S.Attr and faDirectory <> faDirectory) and (S.Name <> '.') and
+            ((S.Name <> 'V8POWER.ZIP') or (Not FDIMode)) then begin
                 J := New(PItem);
                 J^.Name := Copy(S.Name, 1, Length(S.Name) - 4);
                 J^.Prev := PackageLast;
                 J^.Items := nil;
                 J^.Next := nil;
                 J^.Title := nil;
+                J^.First := True;
                 J^.State := 0;
                 if CheckDefault(Ucase(P^.Name) + '\' + Ucase(J^.Name)) then begin
                     J^.State := 1;
@@ -301,21 +476,39 @@ begin
     PackageTop := nil;
     PackageLast := nil;
     PackageBottom := nil;
+    CacheGroup;
 end;
 
 procedure DrawPackage;
 var
     Y : integer;
+    P : PItem;
 begin
     TextColor(F);
     TextBackground(B);
-    Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
-    ClrScr;
+    TextColor(F);
     if Tab = 2 then
         TextAttr := C;
-    if assigned(Package) then
-        Write(RSpace(' ' + Package^.Name + ' - No information', Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
-
+    Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
+    ClrScr;
+    if assigned(Package) then begin
+        if not assigned(Package^.Items) then
+            FWrite(RSpace(' ' + Package^.Name + ' - No information',
+            Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll))
+        else begin
+            P := Package^.Items;
+            Y := 1;
+            while Assigned(P) and (Y <= Hi(WindMax) - Hi(WindMin) + 1)  do begin
+                GotoXY(2,Y);
+                if Tab <> 2 then begin
+                    if Y = 1 then TextColor(H) else TextColor(F);
+                end;
+                FWrite(PtrStr(P^.Title));
+                Inc(Y);
+                P := P^.Next;
+            end;
+        end;
+    end;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
 end;
 
@@ -323,6 +516,7 @@ procedure DrawFiles;
 var
     P : PItem;
     Y : integer;
+    S : String;
 begin
     TextColor(F);
     TextBackground(B);
@@ -350,20 +544,24 @@ begin
             else
                 TextAttr := C;
         end;
-        Write(' ');
+        FWrite(' ');
         if P <> Package then TextColor(DarkGray);
-        Write('[');
+        FWrite('[');
         if P <> Package then TextColor(Yellow);
         case P^.State of
-            1 : Write('X');
-            2 : Write('+');
+            1 : FWrite('X');
+            2 : FWrite('+');
         else
-            Write(#32);
+            FWrite(#32);
         end;
         if P <> Package then TextColor(DarkGray);
-        Write(']');
+        FWrite(']');
         if P <> Package then TextColor(F);
-        Write(RSpace(' ' + P^.Name, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+        S := P^.Name;
+        if assigned(P^.Title) then
+            S := Trim(Copy(RSpace(P^.Name, 9) + ' ' + PtrStr(P^.Title), 1,
+            Lo(WindMax) - Lo(WindMin) - WhereX + NoScroll));
+        FWrite(RSpace(' ' + S, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         PackageBottom := P;
         P := P^.Next;
         Inc(Y);
@@ -371,7 +569,7 @@ begin
     TextColor(F);
     TextBackground(B);
     while (Y <= Grps.Y) do begin
-        Write(RSpace('', Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+        FWrite(RSpace('', Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         Inc(Y);
     end;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
@@ -382,6 +580,7 @@ procedure DrawGroups;
 var
     P : PItem;
     Y : integer;
+    S : String;
 begin
     TextColor(F);
     TextBackground(B + 1);
@@ -390,6 +589,7 @@ begin
     P := GroupTop;
     Y := 1;
     GroupBottom := nil;
+    if Assigned(Group) and (Group^.First) then CacheGroup;
     while Assigned(P) and (Y <= Grps.Y) do begin
         GotoXY(1,Y);
         TextBackground(B);
@@ -401,20 +601,23 @@ begin
             else
                 TextAttr := C;
         end;
-        Write(' ');
+        FWrite(' ');
         if P <> Group then TextColor(DarkGray);
-        Write('[');
+        FWrite('[');
         if P <> Group then TextColor(Yellow);
         case P^.State of
-            1 : Write('X');
-            2 : Write('+');
+            1 : FWrite('X');
+            2 : FWrite('+');
         else
-            Write(#32);
+            FWrite(#32);
         end;
         if P <> Group then TextColor(DarkGray);
-        Write(']');
+        FWrite(']');
         if P <> Group then TextColor(F);
-        Write(RSpace(' ' + P^.Name, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+        S := P^.Name;
+        if assigned(P^.Title) then
+            S := Trim(Copy(PtrStr(P^.Title), 1, Lo(WindMax) - Lo(WindMin) - WhereX + NoScroll));
+        FWrite(RSpace(' ' + S, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         GroupBottom := P;
         P := P^.Next;
         Inc(Y);
@@ -431,13 +634,13 @@ begin
     TextBackground(B);
     if Tab = 3 then
         TextAttr := C;
-    Write( CSpace('OK', 10));
+    FWrite( CSpace('OK', 10));
     GotoXY (WhereX + 5, WhereY);
     TextColor(F);
     TextBackground(B);
     if Tab = 4 then
         TextAttr := C;
-    Write( CSpace('Cancel', 10));
+    FWrite( CSpace('Cancel', 10));
 end;
 
 procedure DrawSelector;
@@ -464,6 +667,20 @@ begin
     if Pos('SHADOW', StrOf('TFS', 'double shadow')) > 0 then
         DrawShadow(Frame.X + 1, Frame.Y, Lo(ScreenMax) + 2 - Frame.X, Hi(ScreenMax) + 2 - Frame.Y, bsDoubleWide);
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+end;
+
+procedure DrawTitle;
+begin
+    if FDIMode then exit;
+    TextAttr := $4F;
+    GotoXY(1,1);
+    ClrEol;
+    GotoXY(40 - (Length(AppTitle + ' ' + AppVersion + ' ()' + AppName ) div 2), 1);
+    FWrite(AppTitle + ' ');
+    TextAttr := $4E;
+    FWrite(AppVersion);
+    TextAttr := $4F;
+    FWrite(' (' + AppName + ')');
 end;
 
 procedure GroupToggle;
@@ -580,7 +797,7 @@ var
 begin
     FileMode := 2;
     Assign(F, GetEnv('TEMP') + '\FDIMPLES.LST');
-    Rewrite(F);
+    Write(F);
     P := GroupFirst;
     while assigned(P) do begin
         J := P^.Items;
@@ -610,12 +827,24 @@ begin
             LTab := Tab;
         end;
         Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+        if not FDIMode then begin
+            gotoXY(1,Hi(WindMax));
+            TextAttr := $47;
+            Write(' ', MaxAvail, '/', MemAvail, ' ');
+            ClrEol;
+        end;
         ClearEvent(E);
         While E.What = evNothing do GetEvent(E);
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
-                $03 : Halt(200); { CTRL-C }
-                $001b : Halt(1); { Esacpe }
+                $03 : begin
+                    CleanUp;
+                    Halt(200); { CTRL-C }
+                end;
+                $001b : begin
+                    CleanUp;
+                    Halt(1); { Esacpe }
+                end;
                 $4800 : case Tab of
                     0: GroupUp(1);
                     1: FileUp(1);
@@ -643,22 +872,27 @@ begin
                         MakeList;
                         Quit := True;
                     end;
-                    4: Halt(1); { Canceled }
+                    4: begin
+                        CleanUp;
+                        Halt(1); { Canceled }
+                    end;
                 end;
-                $0009 : begin
+                $0009, $4d00 : begin
                     if Tab >= 4 then
                         Tab := 0
                     else
                         Inc(Tab);
                 end;
-                $0F00 : begin
+                $0F00, $4b00 : begin
                     if Tab <= 0 then
                         Tab := 4
                     else
                         Dec(Tab);
                 end;
 {                else
-                    writeln(HexStr(E.KeyCode)); }
+                    GotoXY(1, Hi(WindMax) - 1);
+                    write(HexStr(E.KeyCode));
+                    ClrEol; }
             end;
     until Quit;
 end;
@@ -667,7 +901,9 @@ begin
     CheckScroll := False;
     CheckCursor := False;
     Init;
+    DrawTitle;
     DrawSelector;
    { WriteLn(MaxAvail); }
     Main;
+    CleanUp;
 end.
