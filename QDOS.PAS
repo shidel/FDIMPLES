@@ -48,6 +48,9 @@ interface
   { Offset for DOS Date Time Functions }
 	DosYear = 1980;
 
+  { File and Path Delimiter }
+    Delimiter = '\';
+
   { File attributes constants }
 	faReadOnly	 = $01;
 	faHidden	 = $02;
@@ -1075,14 +1078,14 @@ uses QStrings;
   { Other Functions }
   function PathOf(AFileName : String) : String;
   begin
-	PathOf := Trim(UCase(Copy(AFileName, 1, LastPos('\', AFileName))));
+	PathOf := Trim(UCase(Copy(AFileName, 1, LastPos(Delimiter, AFileName))));
   end;
 
   function GetExeName : string;
   var
 	P : integer;
   begin
-	P:= LastPos('\', ParamStr(0));
+	P:= LastPos(Delimiter, ParamStr(0));
 	if P = 0 then
 		GetEXEName := ''
 	else
@@ -1104,7 +1107,7 @@ uses QStrings;
 
   function GetExePath : string;
   begin
-	GetExePath := Copy(ParamStr(0), 1, LastPos('\', ParamStr(0)));
+	GetExePath := Copy(ParamStr(0), 1, LastPos(Delimiter, ParamStr(0)));
   end;
 
   function FileExpand(AFileName : String) : String;
@@ -1115,23 +1118,23 @@ uses QStrings;
 	if AFileName = '' then begin
 		GetDir(0, AFileName);
 	end else begin
-		if (AFileName[1] = '\') then begin
+		if (AFileName[1] = Delimiter) then begin
 			AFileName := Chr(GetCurDisk + 64) + ':' + AFileName;
 		end else
 		if (Length(AFileName) > 2) and (AFileName[2] <> ':') then begin
 			GetDir(0, Temp);
-			AFileName := Temp + '\' + AFileName;
+			AFileName := Temp + Delimiter + AFileName;
 		end else
-		if ((Length(AFileName) > 3) and (AFileName[3] <> '\')) or
+		if ((Length(AFileName) > 3) and (AFileName[3] <> Delimiter)) or
 		((Length(AFileName) = 2) and (AFileName[2] = ':')) then begin
 			Temp := UCase(AFileName[1]);
 			GetDir(Ord(Temp[1]) - 64, Temp);
-			AFileName := Temp + '\' + Copy(AFileName, 3, Length(AFileName));
+			AFileName := Temp + Delimiter + Copy(AFileName, 3, Length(AFileName));
 		end;
 		Temp := UCase(AFileName);
 		AFileName := '';
 		while Temp <> '' do begin
-			I := Pos('\', Temp);
+			I := Pos(Delimiter, Temp);
 			if I > 0 then begin
 				S := Copy(Temp, 1, I - 1);
 				Temp := Copy(Temp, I + 1, Length(Temp));
@@ -1143,12 +1146,12 @@ uses QStrings;
 				{ ignore }
 			end else
 			if S = '..' then begin
-				I := LastPos('\', AFileName);
+				I := LastPos(Delimiter, AFileName);
 				if (I > 0) then
 					AFileName := Copy(AFileName, 1, I - 1);
 			end else
 			if Length(AFileName) > 0 then
-				AFileName := AFileName + '\' + S
+				AFileName := AFileName + Delimiter + S
 			else
 				AFileName := S;
 		end;
@@ -1189,7 +1192,7 @@ uses QStrings;
 	ADir := Dir(ADir);
 	Work := '';
 	while ADir <> '' do begin
-		I := Pos('\', ADir);
+		I := Pos(Delimiter, ADir);
 		if I > 0 then begin
 			S := Copy(ADir, 1, I - 1);
 			ADir := Copy(ADir, I + 1, Length(ADir));
@@ -1198,7 +1201,7 @@ uses QStrings;
 			ADir := '';
 		end;
 		If Length(Work) > 0 then
-			Work := Work + '\' + S
+			Work := Work + Delimiter + S
 		else
 			Work := S;
 		if Not DirExists(Work) then begin
@@ -1215,8 +1218,8 @@ uses QStrings;
 function Dir(ADirName : String) : String;
 begin
 	ADirName := FileExpand(ADirName);
-	if (ADirName[Length(ADirName)] <> '\') then
-		Dir := ADirName + '\'
+	if (ADirName[Length(ADirName)] <> Delimiter) then
+		Dir := ADirName + Delimiter
 	else
 		Dir := ADirName;
 end;
@@ -1500,7 +1503,7 @@ end;
 
 function NoTailDelim(APath : String) : String;
 begin
-	if (Length(APath) > 0) and (APath[Length(APath)] <> '\') then
+	if (Length(APath) > 0) and (APath[Length(APath)] <> Delimiter) then
 		NoTailDelim := APath
 	else
 		NoTailDelim := Copy(APath, 1, Length(APath) -1 );
@@ -1508,10 +1511,10 @@ end;
 
 function TailDelim(APath : String) : String;
 begin
-	if (Length(APath) > 0) and (APath[Length(APath)] = '\') then
+	if (Length(APath) > 0) and (APath[Length(APath)] = Delimiter) then
 		TailDelim := APath
 	else
-		TailDelim := APath + '\';
+		TailDelim := APath + Delimiter;
 end;
 
 begin

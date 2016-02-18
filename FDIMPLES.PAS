@@ -157,15 +157,15 @@ begin
         end;
         Close(F);
     end else begin
-        S := Trim(UCase(GetEnv('DOSDIR')));
+        S := Trim(UCase(TailDelim(GetEnv('DOSDIR'))));
         if (S = '') then exit;
-        FindFirst(S + '\APPINFO\*.LSM', faAnyFile, D);
+        FindFirst(S + TailDelim('APPINFO') + '*.LSM', faAnyFile, D);
         L := nil;
         while DosError = 0 do begin
             if (D.Attr and faDirectory <> faDirectory) then begin
                 P := New(PText);
                 P^.Next := nil;
-                P^.Str := StrPtr('\' + copy(D.Name, 1, length(D.Name) - 4));
+                P^.Str := StrPtr(Delimiter + copy(D.Name, 1, length(D.Name) - 4));
                 if assigned(L) then
                     L^.Next := P
                 else
@@ -194,7 +194,7 @@ begin
         end;
     end else begin
         while assigned(P) do begin
-            if PtrStr(P^.Str) = Copy(S, Pos('\', S), Length(S)) then begin
+            if PtrStr(P^.Str) = Copy(S, Pos(Delimiter, S), Length(S)) then begin
                 CheckDefault := true;
                 exit;
             end;
@@ -252,7 +252,7 @@ begin
 
     if not (P^.Name = B) then exit;
 
-    if not CheckDefault(B + '\' + N) then exit;
+    if not CheckDefault(TailDelim(B) + N) then exit;
 
     J := New(PItem);
     J^.Name := N;
@@ -327,7 +327,7 @@ begin
     if not Group^.First then exit;
 
     Group^.First := False;
-    Name := FMedia + '\' + Group^.Name + '\INDEX.LST';
+    Name := FMedia + TailDelim(Group^.Name) + 'INDEX.LST';
     if not FileExists(Name) then exit;
 
     FileMode := 0;
@@ -370,7 +370,7 @@ var
    CS, NS : integer;
 
 begin
-    FMedia := GetEnv('FMEDIA');
+    FMedia := TailDelim(GetEnv('FMEDIA'));
     { FMedia := '\packages\all'; }
     FDIMode := Ucase(ParamStr(1)) = '/FDI';
     if not FDIMode then begin
@@ -385,7 +385,7 @@ begin
     Tab := 0;
     GroupLast := nil;
     GroupFirst := nil;
-    FindFirst(FMedia + '\*.*', faAnyFile, S);
+    FindFirst(FMedia + '*.*', faAnyFile, S);
     while DosError = 0 do begin
         if (S.Attr and faDirectory = faDirectory) and (S.Name <> '.') and
         (S.Name <> '..') then begin
@@ -416,7 +416,7 @@ begin
         AddCustomItems(P, 'BASE', 'WELCOME');
         AddCustomItems(P, 'UTIL', 'V8POWER');
 
-        FindFirst(FMedia + '\' + P^.NAME + '\*.ZIP', faAnyFile, S);
+        FindFirst(FMedia + TailDelim(P^.NAME) + '*.ZIP', faAnyFile, S);
 
         while DosError = 0 do begin
             if (S.Attr and faDirectory <> faDirectory) and (S.Name <> '.') and
@@ -429,7 +429,7 @@ begin
                 J^.Title := nil;
                 J^.First := True;
                 J^.State := 0;
-                if CheckDefault(Ucase(P^.Name) + '\' + Ucase(J^.Name)) then begin
+                if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
                     J^.State := 1;
                     inc(CS);
                 end else
@@ -796,14 +796,14 @@ var
     S : String;
 begin
     FileMode := 2;
-    Assign(F, GetEnv('TEMP') + '\FDIMPLES.LST');
+    Assign(F, TailDelim(GetEnv('TEMP')) + 'FDIMPLES.LST');
     Write(F);
     P := GroupFirst;
     while assigned(P) do begin
         J := P^.Items;
         while assigned(J) do begin
             if J^.State <> 0 then
-                WriteLn(F, lcase(P^.Name + '\' + J^.Name));
+                WriteLn(F, lcase(P^.Name + Delimiter + J^.Name));
             J := J^.Next;
         end;
         P := P^.Next;
