@@ -318,7 +318,7 @@ var
         D := Pos(#$0a, B);
         if (E <> 0) and (E <= Ord(B[0])) then B[0] := Chr(E - 1);
         if (D <> 0) and (D <= Ord(B[0])) then B[0] := Chr(D - 1);
-        Seek(F, P + 1 + Ord(B[0]));
+        Seek(F, P + 1 + Ord(B[0]))
     end;
 
 begin
@@ -352,7 +352,7 @@ begin
                     AddLine(X, Desc, E or D <> 0);
                     while (C <> 0) and (E or D = 0) do begin
                         ReadFile;
-                        AddLine(X, '++' + B, E or D <> 0);
+                        AddLine(X, B, E or D <> 0);
                     end;
                     X := nil;
                 end else
@@ -372,14 +372,20 @@ var
 begin
     if Trim(GetEnv('FMEDIA')) <> '' then
         FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))))
-    else
+    else begin
         FMedia := TailDelim(Dir('\'));
+    end;
     { FMedia := '\packages\all'; }
     FDIMode := Ucase(ParamStr(1)) = '/FDI';
     if not FDIMode then begin
         StartCursor := GetCursor;
         HideCursor;
-    end;
+        if Not FileExists(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE') then begin
+            WriteLn('unable to located package manager FDINST.');
+            Halt(100);
+        end;
+        Write('Please standby...');
+     end;
     ReadDefaults;
     F := ValueOf('TFF', White);
     H := ValueOf('TFH', LightGreen);
@@ -481,12 +487,21 @@ begin
     PackageLast := nil;
     PackageBottom := nil;
     CacheGroup;
+    if not FDIMode then begin
+        GotoXY(1,WhereY);
+        ClrEol;
+    end;
+end;
+
+procedure FetchData;
+begin
 end;
 
 procedure DrawPackage;
 var
     Y : integer;
     P : PItem;
+    D : PText;
 begin
     TextColor(F);
     TextBackground(B);
@@ -500,6 +515,9 @@ begin
             FWrite(RSpace(' ' + Package^.Name + ' - No information',
             Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll))
         else begin
+            if Package^.First then begin
+                FetchData;
+            end;
             P := Package^.Items;
             Y := 1;
             while Assigned(P) and (Y <= Hi(WindMax) - Hi(WindMin) + 1)  do begin
@@ -824,10 +842,6 @@ var
     C : boolean;
 begin
     CleanUp;
-    if Not FileExists(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE') then begin
-        WriteLn('unable to located package manager FDINST.');
-        Halt(100);
-    end;
     P := GroupFirst;
     while assigned(P) do begin
         J := P^.Items;
@@ -885,6 +899,7 @@ begin
     Quit := False;
     PurgeEvents;
     repeat
+        if Group = nil then Tab := 4;
         if LTab <> Tab then begin
             DrawGroups;
             DrawButtons;
