@@ -43,7 +43,7 @@ uses QCrtNM, QDos, QStrings;
 
 const
     AppName = 'FDIMPLES';
-    AppVersion = '0.2.0';
+    AppVersion = '0.3.0';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Frame : TPoint = (X:5; Y:4);
     Grps : TPoint = (X:16; Y:8);
