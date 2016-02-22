@@ -370,7 +370,10 @@ var
    CS, NS : integer;
 
 begin
-    FMedia := TailDelim(GetEnv('FMEDIA'));
+    if Trim(GetEnv('FMEDIA')) <> '' then
+        FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))))
+    else
+        FMedia := TailDelim(Dir('\'));
     { FMedia := '\packages\all'; }
     FDIMode := Ucase(ParamStr(1)) = '/FDI';
     if not FDIMode then begin
@@ -818,16 +821,54 @@ procedure RunList;
 var
     P, J : PItem;
     S : String;
+    C : boolean;
 begin
-
     CleanUp;
-    FileMode := 2;
+    if Not FileExists(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE') then begin
+        WriteLn('unable to located package manager FDINST.');
+        Halt(100);
+    end;
     P := GroupFirst;
     while assigned(P) do begin
         J := P^.Items;
         while assigned(J) do begin
-            if J^.State <> 0 then
-                WriteLn(lcase(P^.Name + Delimiter + J^.Name));
+            C := FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or
+                FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
+            if J^.State = 0 then begin
+                if C then begin
+                    TextAttr := $4F;
+                    write (' remove ', J^.Name);
+                    ClrEOl;
+                    TextAttr := $07;
+                    WriteLn;
+                    SwapIntVecs;
+                    Exec(GetEnv('COMSPEC'),'/C FDINST.EXE remove ' + J^.Name);
+                    SwapIntVecs;
+                    InitQCrt;
+                    if DosError <> 0 then begin
+                        WriteLn('Aborted.');
+                        Halt(100);
+                    end;
+                end;
+            end else begin
+                if not C then begin
+                    TextAttr := $1F;
+                    write('install ', lcase(TailDelim(P^.Name) + J^.Name));
+                    ClrEOl;
+                    TextAttr := $07;
+                    WriteLn;
+                    SwapIntVecs;
+                    Exec(GetEnv('COMSPEC'), '/C FDINST.EXE install ' +
+                    TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
+                    SwapIntVecs;
+                    InitQCrt;
+
+                    if DosError <> 0 then begin
+                        WriteLn('Aborted.');
+                        Halt(100);
+                    end;
+                end;
+            end;
             J := J^.Next;
         end;
         P := P^.Next;
