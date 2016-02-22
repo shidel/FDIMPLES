@@ -385,6 +385,7 @@ begin
     Tab := 0;
     GroupLast := nil;
     GroupFirst := nil;
+    Group := nil;
     FindFirst(FMedia + '*.*', faAnyFile, S);
     while DosError = 0 do begin
         if (S.Attr and faDirectory = faDirectory) and (S.Name <> '.') and
@@ -521,6 +522,7 @@ begin
     TextColor(F);
     TextBackground(B);
     Window (Frame.X + 4 + Grps.X - NoScroll, Frame.Y + 1, Lo(ScreenMax) - Frame.X, Frame.Y + Grps.Y);
+    if not Assigned(Group) then exit;
     { ClrScr; }
     if not assigned(PackageFirst) then begin
         Package := Group^.Items;
@@ -797,7 +799,7 @@ var
 begin
     FileMode := 2;
     Assign(F, TailDelim(GetEnv('TEMP')) + 'FDIMPLES.LST');
-    Write(F);
+    Rewrite(F);
     P := GroupFirst;
     while assigned(P) do begin
         J := P^.Items;
