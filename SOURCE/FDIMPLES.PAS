@@ -811,6 +811,27 @@ begin
         P := P^.Next;
     end;
     Close(F);
+    CleanUp;
+end;
+
+procedure RunList;
+var
+    P, J : PItem;
+    S : String;
+begin
+
+    CleanUp;
+    FileMode := 2;
+    P := GroupFirst;
+    while assigned(P) do begin
+        J := P^.Items;
+        while assigned(J) do begin
+            if J^.State <> 0 then
+                WriteLn(lcase(P^.Name + Delimiter + J^.Name));
+            J := J^.Next;
+        end;
+        P := P^.Next;
+    end;
 end;
 
 procedure Main;
@@ -871,7 +892,10 @@ begin
                     0: GroupToggle;
                     1, 2 : FileToggle;
                     3: begin
-                        MakeList;
+                        if FDIMode then
+                            MakeList
+                        else
+                            RunList;
                         Quit := True;
                     end;
                     4: begin
@@ -907,5 +931,4 @@ begin
     DrawSelector;
    { WriteLn(MaxAvail); }
     Main;
-    CleanUp;
 end.

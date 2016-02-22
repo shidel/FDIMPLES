@@ -6,10 +6,17 @@ if exist %DOSDIR%\LINKS\%TPC%.BAT set TPC=call %TPC%
 
 call MKCLEAN.BAT
 
+cd SOURCE
+
 :TPRetry
 %TPC% /b FDIMPLES.PAS
 if not exist FDIMPLES.EXE goto TPFailed
-dir *.exe
+
+if not exist ..\BIN\NUL mkdir ..\BIN>NUL
+copy FDIMPLES.EXE ..\BIN\ >NUL
+
+dir ..\BIN\*.exe
+
 goto DONE
 
 :TPFailed
@@ -25,3 +32,4 @@ goto Done
 :DONE
 set TPC=
 set TPV=
+cd ..
