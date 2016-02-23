@@ -882,7 +882,7 @@ begin
             if J^.State = 0 then begin
                 if C then begin
                     TextAttr := $4F;
-                    write (' remove ', J^.Name);
+                    write ('remove ', J^.Name);
                     ClrEOl;
                     TextAttr := $07;
                     WriteLn;
@@ -917,7 +917,6 @@ begin
                     {$ENDIF}
                     SwapIntVecs;
                     InitQCrt;
-
                     if DosError <> 0 then begin
                         WriteLn('Aborted.');
                         Halt(100);
