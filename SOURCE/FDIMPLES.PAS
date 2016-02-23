@@ -863,9 +863,11 @@ begin
                     TextAttr := $07;
                     WriteLn;
                     SwapIntVecs;
-{                    Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'remove ' + J^.Name);}
-                     Exec(GetEnv('COMSPEC'),'/C FDINST.EXE remove ' + J^.Name);
-{                    Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\vecho.com', '"remove ' + J^.Name + '"');}
+                    {$IFDEF DosBOX}
+                        Exec(GetEnv('COMSPEC'),'/C FDINST.EXE remove ' + J^.Name);
+                    {$ELSE}
+                        Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'remove ' + J^.Name);
+                    {$ENDIF}
                     SwapIntVecs;
                     InitQCrt;
                     if DosError <> 0 then begin
@@ -881,10 +883,13 @@ begin
                     TextAttr := $07;
                     WriteLn;
                     SwapIntVecs;
-                    Exec(GetEnv('COMSPEC'), '/C FDINST.EXE install ' +
-                    TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
-{                    Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'install ' +
-                    TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');}
+                    {$IFDEF DosBOX}
+                        Exec(GetEnv('COMSPEC'), '/C FDINST.EXE install ' +
+                        TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
+                    {$ELSE}
+                        Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'install ' +
+                        TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
+                    {$ENDIF}
                     SwapIntVecs;
                     InitQCrt;
 

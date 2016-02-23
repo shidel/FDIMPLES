@@ -1125,13 +1125,13 @@ uses QStrings;
 		end else
 		if (Length(AFileName) > 2) and (AFileName[2] <> ':') then begin
 			GetDir(0, Temp);
-			AFileName := Temp + Delimiter + AFileName;
+			AFileName := TailDelim(Temp) + AFileName;
 		end else
 		if ((Length(AFileName) > 3) and (AFileName[3] <> Delimiter)) or
 		((Length(AFileName) = 2) and (AFileName[2] = ':')) then begin
 			Temp := UCase(AFileName[1]);
 			GetDir(Ord(Temp[1]) - 64, Temp);
-			AFileName := Temp + Delimiter + Copy(AFileName, 3, Length(AFileName));
+			AFileName := TailDelim(Temp) + Copy(AFileName, 3, Length(AFileName));
 		end;
 		Temp := UCase(AFileName);
 		AFileName := '';
@@ -1153,7 +1153,7 @@ uses QStrings;
 					AFileName := Copy(AFileName, 1, I - 1);
 			end else
 			if Length(AFileName) > 0 then
-				AFileName := AFileName + Delimiter + S
+				AFileName := TailDelim(AFileName) + S
 			else
 				AFileName := S;
 		end;
