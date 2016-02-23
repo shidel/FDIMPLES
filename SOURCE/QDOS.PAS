@@ -971,9 +971,11 @@ uses QStrings;
 		Command[Length(Command)] := #0
 	else
 		Command := Command + #0;
+	P.FCB1 := nil;
+	P.FCB2 := nil;
 	P.EnvSeg := 0;
 	P.CmdLn := @P.Params;
-	P.Params := Params + #$0d;
+	P.Params := Params + #$0d + #0;
 	DoExec ($00, Command, P); { Load and Exec }
 	(*
 	DoExec ($03, Command[1], PSP); { Load Only }

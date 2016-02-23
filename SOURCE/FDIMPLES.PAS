@@ -34,7 +34,7 @@
         errorlevel 0, ok, and %TEMP%\FDIMPLES.LST contains package list.
 }
 
-{$M 50000,102400,204800} (* Memory: Largest Stack, 100K Minimum / Maximum *)
+{$M 32000,51200,204800} (* Memory: Largest Stack, 100K Minimum / Maximum *)
 
 {$I QCRT.DEF}
 program Test;
@@ -42,6 +42,7 @@ program Test;
 uses QCrtNM, QDos, QStrings;
 
 const
+    LoMem = 10240;
     AppName = 'FDIMPLES';
     AppVersion = '0.3.0';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
@@ -265,13 +266,19 @@ begin
     PackageLast := J;
 end;
 
+function FreeSomeMem : boolean;
+begin
+    FreeSomeMem := False;
+
+end;
+
 procedure AddLine(var P : PItem; S : String; NewLine : boolean);
 { Later add line appending }
 var
     N, L, H : PItem;
     W, M : integer;
 begin
-    if MaxAvail < 10240 then exit;
+    if MaxAvail < loMem then if not FreeSomeMem then exit;
     N := New(PItem);
     N^.Next := nil;
     N^.Prev := nil;
@@ -322,7 +329,7 @@ var
     end;
 
 begin
-    if MaxAvail < 51200 then exit;
+    if MaxAvail < LoMem then if not FreeSomeMem then exit;
 
     if not Group^.First then exit;
 
@@ -856,7 +863,9 @@ begin
                     TextAttr := $07;
                     WriteLn;
                     SwapIntVecs;
-                    Exec(GetEnv('COMSPEC'),'/C FDINST.EXE remove ' + J^.Name);
+{                    Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'remove ' + J^.Name);}
+                     Exec(GetEnv('COMSPEC'),'/C FDINST.EXE remove ' + J^.Name);
+{                    Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\vecho.com', '"remove ' + J^.Name + '"');}
                     SwapIntVecs;
                     InitQCrt;
                     if DosError <> 0 then begin
@@ -867,13 +876,15 @@ begin
             end else begin
                 if not C then begin
                     TextAttr := $1F;
-                    write('install ', lcase(TailDelim(P^.Name) + J^.Name));
+                    write('install ', lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
                     ClrEOl;
                     TextAttr := $07;
                     WriteLn;
                     SwapIntVecs;
                     Exec(GetEnv('COMSPEC'), '/C FDINST.EXE install ' +
                     TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
+{                    Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'install ' +
+                    TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');}
                     SwapIntVecs;
                     InitQCrt;
 
