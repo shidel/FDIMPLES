@@ -34,17 +34,19 @@
         errorlevel 0, ok, and %TEMP%\FDIMPLES.LST contains package list.
 }
 
-{$M 32000,51200,204800} (* Memory: Largest Stack, 100K Minimum / Maximum *)
+{$M 50000,51200,204800} (* Memory: Largest Stack, 100K Minimum / Maximum *)
 
 {$I QCRT.DEF}
 program Test;
 
-uses QCrtNM, QDos, QStrings;
+{$DEFINE USEBAT}
+
+uses QDos, QCrtNM, QStrings;
 
 const
     LoMem = 10240;
     AppName = 'FDIMPLES';
-    AppVersion = '0.3.0';
+    AppVersion = '0.4.0';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Frame : TPoint = (X:5; Y:4);
     Grps : TPoint = (X:16; Y:8);
@@ -378,21 +380,33 @@ var
 
 begin
     if Trim(GetEnv('FMEDIA')) <> '' then
-        FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))))
-    else begin
-        FMedia := TailDelim(Dir('\'));
-    end;
-    { FMedia := '\packages\all'; }
+        FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))));
+
     FDIMode := Ucase(ParamStr(1)) = '/FDI';
     if not FDIMode then begin
-        StartCursor := GetCursor;
-        HideCursor;
         if Not FileExists(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE') then begin
             WriteLn('unable to located package manager FDINST.');
             Halt(100);
         end;
+        if (GetEnv('TEMP') = '') or (not DirExists(GetEnv('TEMP'))) then begin
+            WriteLn('TEMP environment variable is not set.');
+            Halt(2);
+        end;
+        StartCursor := GetCursor;
+        HideCursor;
         Write('Please standby...');
-     end;
+        for CS := 0 to 24 do
+            if DirExists(Chr(CS + 67) + ':\') and
+            FileExists(Chr(CS + 67) + ':\BASE\COMMAND.ZIP') and
+            FileExists(Chr(CS + 67) + ':\BASE\KERNEL.ZIP') then begin
+                FMedia := Dir(Chr(CS + 67) + ':\');
+                Break;
+            end;
+    end else begin
+    if FMedia = '' then
+        FMedia := Dir('\');
+    end;
+
     ReadDefaults;
     F := ValueOf('TFF', White);
     H := ValueOf('TFH', LightGreen);
@@ -847,8 +861,18 @@ var
     P, J : PItem;
     S : String;
     C : boolean;
+    {$IFDEF USEBAT}
+    T : Text;
+    {$ENDIF}
 begin
     CleanUp;
+    {$IFDEF USEBAT}
+        Assign(T, TailDelim(GetEnv('TEMP')) +'FDINST.BAT');
+        rewrite(T);
+        WriteLn(T, '@ECHO OFF');
+        WriteLn(T, TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE %1 %2 %3 %4 %5 %6 %7 %8 %9');
+        Close(T);
+    {$ENDIF}
     P := GroupFirst;
     while assigned(P) do begin
         J := P^.Items;
@@ -863,8 +887,9 @@ begin
                     TextAttr := $07;
                     WriteLn;
                     SwapIntVecs;
-                    {$IFDEF DosBOX}
-                        Exec(GetEnv('COMSPEC'),'/C FDINST.EXE remove ' + J^.Name);
+                    {$IFDEF USEBAT}
+
+                        Exec(GetEnv('COMSPEC'),'/C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT remove ' + J^.Name);
                     {$ELSE}
                         Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'remove ' + J^.Name);
                     {$ENDIF}
@@ -883,8 +908,8 @@ begin
                     TextAttr := $07;
                     WriteLn;
                     SwapIntVecs;
-                    {$IFDEF DosBOX}
-                        Exec(GetEnv('COMSPEC'), '/C FDINST.EXE install ' +
+                    {$IFDEF USEBAT}
+                        Exec(GetEnv('COMSPEC'), '/C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT install ' +
                         TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
                     {$ELSE}
                         Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'install ' +
@@ -903,6 +928,10 @@ begin
         end;
         P := P^.Next;
     end;
+    {$IFDEF USEBAT}
+        Assign(T, TailDelim(GetEnv('TEMP')) +'FDINST.BAT');
+        Erase(T);
+    {$ENDIF}
 end;
 
 procedure Main;
@@ -1001,6 +1030,5 @@ begin
     Init;
     DrawTitle;
     DrawSelector;
-   { WriteLn(MaxAvail); }
     Main;
 end.
