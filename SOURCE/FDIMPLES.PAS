@@ -162,7 +162,7 @@ begin
     end else begin
         S := Trim(UCase(TailDelim(GetEnv('DOSDIR'))));
         if (S = '') then exit;
-        FindFirst(S + TailDelim('APPINFO') + '*.LSM', faAnyFile, D);
+        FindFirst(S + TailDelim('PACKAGES') + '*.LST', faAnyFile, D);
         L := nil;
         while DosError = 0 do begin
             if (D.Attr and faDirectory <> faDirectory) then begin
@@ -309,7 +309,7 @@ begin
     if S <> '' then AddLine(P, S, NewLine);
 end;
 
-procedure CacheGroup;
+procedure CacheGroup(var AGroup : PItem);
 var
     Name, Ver, Desc, MD5 : String;
     P : Longint;
@@ -333,10 +333,10 @@ var
 begin
     if MaxAvail < LoMem then if not FreeSomeMem then exit;
 
-    if not Group^.First then exit;
+    if not AGroup^.First then exit;
 
-    Group^.First := False;
-    Name := FMedia + TailDelim(Group^.Name) + 'INDEX.LST';
+    AGroup^.First := False;
+    Name := FMedia + TailDelim(AGroup^.Name) + 'INDEX.LST';
     if not FileExists(Name) then exit;
 
     FileMode := 0;
@@ -350,9 +350,9 @@ begin
             Desc := Trim(PullStr(#$09, B));
             MD5 := Trim(PullStr(#$09, B));
             if Ucase(Name) = 'FD-REPOV1' then begin
-                Group^.Title := StrPtr(WCase(Desc));
+                AGroup^.Title := StrPtr(WCase(Desc));
             end;
-            X := Group^.Items;
+            X := AGroup^.Items;
             while assigned(X) do begin
                 if UCase(Name) = UCase(X^.Name) then begin
                     X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Frame.X * 2 - Grps.X - 16));
@@ -500,6 +500,12 @@ begin
     end;
 
     Group := GroupFirst;
+    While Assigned(Group) do begin
+        CacheGroup(Group);
+        Group := Group^.Next;
+    end;
+
+    Group := GroupFirst;
     GroupTop := GroupFirst;
     GroupBottom := nil;
     Package := nil;
@@ -507,7 +513,6 @@ begin
     PackageTop := nil;
     PackageLast := nil;
     PackageBottom := nil;
-    CacheGroup;
     if not FDIMode then begin
         GotoXY(1,WhereY);
         ClrEol;
@@ -633,7 +638,7 @@ begin
     P := GroupTop;
     Y := 1;
     GroupBottom := nil;
-    if Assigned(Group) and (Group^.First) then CacheGroup;
+    if Assigned(Group) and (Group^.First) then CacheGroup(Group);
     while Assigned(P) and (Y <= Grps.Y) do begin
         GotoXY(1,Y);
         TextBackground(B);
@@ -877,7 +882,7 @@ begin
     while assigned(P) do begin
         J := P^.Items;
         while assigned(J) do begin
-            C := FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or
+            C := { FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or }
                 FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
             if J^.State = 0 then begin
                 if C then begin
