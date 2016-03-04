@@ -9,6 +9,8 @@ PROJECT=$(echo ${PWD##*/})
 TODAY=$(date +'%Y-%m-%d')
 VERSION=$(date +'%y.%m.%d')
 
+rm SOURCE/*.EXE >/dev/null
+rm SOURCE/*.TPU >/dev/null
 
 [[ -d "${HOME}/${DESTINATION}/${PROJECT}" ]] && rm -rf "${HOME}/${DESTINATION}/${PROJECT}"
 
