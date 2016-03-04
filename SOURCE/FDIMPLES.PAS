@@ -49,7 +49,8 @@ const
     AppVersion = '0.5.0';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Frame : TPoint = (X:5; Y:4);
-    Grps : TPoint = (X:16; Y:8);
+    Grps : TPoint = (X:18; Y:8);
+    Installed = 'Installed!'; {Always sorted first -- has only title, no name}
     NoScroll = 1;
 {    ALLPackages = '..\FDI\SETTINGS\PKG_ALL.LST';
     BASEPackages = '..\FDI\SETTINGS\PKG_BASE.LST'; }
@@ -261,6 +262,7 @@ begin
     J^.Name := N;
     J^.Items := nil;
     J^.Next := nil;
+    J^.Prev := nil;
     J^.Title := nil;
     J^.First := true;
     J^.State := 1;
@@ -270,14 +272,45 @@ begin
     end;
 end;
 
-procedure AddInstalled(Others : PItem);
+procedure AddInstalled(var Others : PItem);
+var
+    S : boolean;
+    P, J : PItem;
+    I : PText;
 begin
+    I := Defaults;
+    Others^.State := 1;
+    while Assigned(I) do begin
+        S := True;
+        P := GroupFirst;
+        while S and assigned(P) do begin
+            J := P^.Items;
+            while S and assigned(J) do begin
+                S := '\' + J^.Name <> PtrStr(I^.Str);
+                J := J^.Next;
+            end;
+            P := P^.Next;
+        end;
+        if S then begin
+            J := New(PItem);
+            J^.Name := Copy(PtrStr(I^.Str), 2, 13);
+            J^.Items := nil;
+            J^.Next := Others^.Items;
+            J^.Prev := nil;
+            J^.Title := nil;
+            J^.First := true;
+            J^.State := 1;
+            if assigned(Others^.Items) then
+                Others^.Items^.Prev := J;
+            Others^.Items := J;
+        end;
+        I := I^.Next;
+    end;
 end;
 
 function FreeSomeMem : boolean;
 begin
     FreeSomeMem := False;
-
 end;
 
 procedure AddLine(var P : PItem; S : String; NewLine : boolean);
@@ -432,7 +465,7 @@ begin
         Next := nil;
         First := True;
         State := 1;
-        Title := StrPtr('! Installed');
+        Title := StrPtr(Installed);
     end;
     FindFirst(FMedia + '*.*', faAnyFile, S);
     while DosError = 0 do begin
