@@ -46,7 +46,7 @@ uses QDos, QCrtNM, QStrings;
 const
     LoMem = 10240;
     AppName = 'FDIMPLES';
-    AppVersion = '0.4.0';
+    AppVersion = '0.5.0';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Frame : TPoint = (X:5; Y:4);
     Grps : TPoint = (X:16; Y:8);
@@ -249,13 +249,13 @@ var
   J : PItem;
   F : boolean;
 begin
-    if not FDIMode then exit;
+    if (not FDIMode) then exit;
 
     if not assigned(P) then exit;
 
     if not (P^.Name = B) then exit;
 
-    if not CheckDefault(TailDelim(B) + N) then exit;
+    if (not CheckDefault(TailDelim(B) + N)) then exit;
 
     J := New(PItem);
     J^.Name := N;
@@ -264,8 +264,14 @@ begin
     J^.Title := nil;
     J^.First := true;
     J^.State := 1;
-    PackageFirst := J;
-    PackageLast := J;
+    if not assigned(PackageFirst) then begin
+        PackageFirst := J;
+        PackageLast := J;
+    end;
+end;
+
+procedure AddInstalled(Others : PItem);
+begin
 end;
 
 function FreeSomeMem : boolean;
@@ -375,15 +381,17 @@ end;
 procedure Init;
 var
    S : TSearchRec;
-   P, J : PItem;
+   P, J, Others : PItem;
    CS, NS : integer;
 
 begin
-    if Trim(GetEnv('FMEDIA')) <> '' then
+    if Trim(GetEnv('FMEDIA')) <> '' then begin
         FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))));
+    end;
 
     FDIMode := Ucase(ParamStr(1)) = '/FDI';
     if not FDIMode then begin
+        if (FMedia <> '') and (not DirExists(FMedia)) then FMedia := '';
         if Not FileExists(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE') then begin
             WriteLn('unable to located package manager FDINST.');
             Halt(100);
@@ -395,7 +403,7 @@ begin
         StartCursor := GetCursor;
         HideCursor;
         Write('Please standby...');
-        for CS := 0 to 24 do
+        if FMedia = '' then for CS := 0 to 24 do
             if DirExists(Chr(CS + 67) + ':\') and
             FileExists(Chr(CS + 67) + ':\BASE\COMMAND.ZIP') and
             FileExists(Chr(CS + 67) + ':\BASE\KERNEL.ZIP') then begin
@@ -413,9 +421,19 @@ begin
     B := ValueOf('TFB', Red);
     C := ValueOf('TFC', $1e);
     Tab := 0;
-    GroupLast := nil;
-    GroupFirst := nil;
     Group := nil;
+    Others := New(PItem);
+    GroupFirst := Others;
+    GroupLast := GroupFirst;
+    with GroupFirst^ do begin
+        Name := '';
+        Items := nil;
+        Prev := nil;
+        Next := nil;
+        First := True;
+        State := 1;
+        Title := StrPtr('! Installed');
+    end;
     FindFirst(FMedia + '*.*', faAnyFile, S);
     while DosError = 0 do begin
         if (S.Attr and faDirectory = faDirectory) and (S.Name <> '.') and
@@ -428,14 +446,12 @@ begin
             P^.Title := nil;
             P^.First := True;
             P^.State := 0;
-            if not Assigned(GroupFirst) then
-                GroupFirst := P
-            else
-                GroupLast^.Next := P;
+            GroupLast^.Next := P;
             GroupLast := P;
         end;
         FindNext(S);
     end;
+
     SortList(GroupFirst, GroupLast);
     P := GroupFirst;
     while Assigned(P) do begin
@@ -447,31 +463,33 @@ begin
         AddCustomItems(P, 'BASE', 'WELCOME');
         AddCustomItems(P, 'UTIL', 'V8POWER');
 
-        FindFirst(FMedia + TailDelim(P^.NAME) + '*.ZIP', faAnyFile, S);
+        if P^.NAME <> '' then begin
+            FindFirst(FMedia + TailDelim(P^.NAME) + '*.ZIP', faAnyFile, S);
 
-        while DosError = 0 do begin
-            if (S.Attr and faDirectory <> faDirectory) and (S.Name <> '.') and
-            ((S.Name <> 'V8POWER.ZIP') or (Not FDIMode)) then begin
-                J := New(PItem);
-                J^.Name := Copy(S.Name, 1, Length(S.Name) - 4);
-                J^.Prev := PackageLast;
-                J^.Items := nil;
-                J^.Next := nil;
-                J^.Title := nil;
-                J^.First := True;
-                J^.State := 0;
-                if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
-                    J^.State := 1;
-                    inc(CS);
-                end else
-                    inc(NS);
-                if not Assigned(PackageFirst) then
-                    PackageFirst := J
-                else
-                    PackageLast^.Next := J;
-                PackageLast := J;
+            while DosError = 0 do begin
+                if (S.Attr and faDirectory <> faDirectory) and (S.Name <> '.') and
+                ((S.Name <> 'V8POWER.ZIP') or (Not FDIMode)) then begin
+                    J := New(PItem);
+                    J^.Name := Copy(S.Name, 1, Length(S.Name) - 4);
+                    J^.Prev := PackageLast;
+                    J^.Items := nil;
+                    J^.Next := nil;
+                    J^.Title := nil;
+                    J^.First := True;
+                    J^.State := 0;
+                    if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
+                        J^.State := 1;
+                        inc(CS);
+                    end else
+                        inc(NS);
+                    if not Assigned(PackageFirst) then
+                        PackageFirst := J
+                    else
+                        PackageLast^.Next := J;
+                    PackageLast := J;
+                end;
+                FindNext(S);
             end;
-            FindNext(S);
         end;
         if CS = 0 then
             P^.State := 0
@@ -481,9 +499,22 @@ begin
             else
                 P^.State := 2;
         end;
+        P^.Items := PackageFirst;
+        P := P^.Next;
+    end;
+
+    if (not FDIMode) then
+        AddInstalled(Others);
+
+    P := GroupFirst;
+    while Assigned(P) do begin
         J := P;
         P := P^.Next;
+        PackageFirst := J^.Items;
         if Assigned(PackageFirst) then begin
+            PackageLast := PackageFirst;
+            while Assigned(PackageLast^.Next) do
+                PackageLast := PackageLast^.Next;
             SortList(PackageFirst, PackageLast);
             J^.Items := PackageFirst;
         end else begin
@@ -664,8 +695,8 @@ begin
         FWrite(']');
         if P <> Group then TextColor(F);
         S := P^.Name;
-        if assigned(P^.Title) then
-            S := Trim(Copy(PtrStr(P^.Title), 1, Lo(WindMax) - Lo(WindMin) - WhereX + NoScroll));
+        if assigned(P^.Title) then S := PtrStr(P^.Title);
+        S := Trim(Copy(S , 1, Lo(WindMax) - Lo(WindMin) - WhereX + NoScroll));
         FWrite(RSpace(' ' + S, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         GroupBottom := P;
         P := P^.Next;
@@ -741,7 +772,8 @@ begin
     if Group^.State > 1 then Group^.State := 0;
     P := Group^.Items;
     while assigned(P) do begin
-        P^.State := Group^.State;
+{        if (Group^.State <> 0) or ((P^.Name <> 'FDNPKG') and (P^.NAME <> 'FDIMPLES')) then }
+            P^.State := Group^.State;
         P := P^.Next;
     end;
     DrawGroups;
