@@ -413,11 +413,41 @@ begin
     Close(F);
 end;
 
+function IsMediaDrive(S : String) : boolean;
+begin
+    IsMediaDrive := False;
+    S := TailDelim(S);
+    if DirExists(S) and
+    FileExists(TailDelim(S + 'BASE') + 'COMMAND.ZIP') and
+    FileExists(TailDelim(S + 'BASE') + 'KERNEL.ZIP') then begin
+        FMedia := S;
+        IsMediaDrive := True;
+    end;
+end;
+
+function ReadCfg : string;
+var
+  F : text;
+  T : String;
+begin
+    ReadCfg := '';
+    if not FileExists(TailDelim(GetExePath) + GetExeBase + '.DAT') then exit;
+    assign(F, TailDelim(GetExePath) + GetExeBase + '.DAT');
+    reset(F);
+    while Not eof(F) do begin
+        ReadLn(F, T);
+        T := Trim(T);
+        if T <> '' then ReadCfg := T;
+    end;
+    Close(F);
+end;
+
 procedure Init;
 var
    S : TSearchRec;
    P, J, Others : PItem;
    CS, NS : integer;
+   T, M : String;
 
 begin
     if Trim(GetEnv('FMEDIA')) <> '' then begin
@@ -438,18 +468,25 @@ begin
         StartCursor := GetCursor;
         HideCursor;
         Write('Please standby...');
-        if FMedia = '' then for CS := 0 to 24 do
-            if DirExists(Chr(CS + 67) + ':\') and
-            FileExists(Chr(CS + 67) + ':\BASE\COMMAND.ZIP') and
-            FileExists(Chr(CS + 67) + ':\BASE\KERNEL.ZIP') then begin
-                FMedia := Dir(Chr(CS + 67) + ':\');
-                Break;
-            end;
+        M := ReadCfg;
+        GetDir(0, T);
+        if (FMEDIA = '') and (M <> '') then IsMediaDrive(Copy(T,1,2) + M);
+        if FMEDIA = '' then IsMediaDrive(Copy(T,1,3));
+        if FMEDIA = '' then IsMediaDrive(Copy(T,1,3) + 'PACKAGES');
+        if FMEDIA = '' then IsMediaDrive(Copy(T,1,3) + 'FDSETUP\PACKAGES');
+        if FMEDIA = '' then IsMediaDrive(T);
+
+        if FMedia = '' then
+            for CS := 0 to 24 do begin
+            if (M <> '') and IsMediaDrive(Chr(CS + 67) + ':' + M) then Break;
+            if IsMediaDrive(Chr(CS + 67) + ':\') then Break;
+            if IsMediaDrive(Chr(CS + 67) + ':\PACKAGES') then Break;
+            if IsMediaDrive(Chr(CS + 67) + ':\FDSETUP\PACKAGES') then Break;
+        end;
     end else begin
     if FMedia = '' then
         FMedia := Dir('\');
     end;
-
     ReadDefaults;
     F := ValueOf('TFF', White);
     H := ValueOf('TFH', LightGreen);
