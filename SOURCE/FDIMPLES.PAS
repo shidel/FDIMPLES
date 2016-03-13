@@ -355,57 +355,99 @@ end;
 procedure AddLine(var P : PItem; S : String; NewLine : boolean);
 { Later add line appending }
 var
-    N, L, H : PItem;
-    W, M : integer;
+    L, N : PItem;
+    W, M, X : integer;
+    T : String;
 begin
     if not MemCheck(Sizeof(PItem) + Sizeof(String)) then exit;
-    N := New(PItem);
-    N^.Next := nil;
-    N^.Prev := nil;
-    N^.Name := '';
-    W := Lo(ScreenMax) - Frame.X * 2 - 3;
-    if Length(S) > W then begin
-        M := LastPos(' ', copy(S, 1, W));
-        if M > 0 then W := M;
-        N^.Title := StrPtr(copy(S, 1, W));
-        Delete(S, 1, W);
+    L := P^.Items;
+    if not assigned(L) then begin
+        L := New(PItem);
+        L^.Next := nil;
+        L^.Prev := nil;
+        L^.Name := '';
+        L^.Title := nil;
+        P^.Items := L;
     end else begin
-        N^.Title := StrPtr(S);
-        S := '';
+        while Assigned(L^.Next) do L := L^.Next;
     end;
-    if not assigned(P^.Items) then
-        P^.Items := N
-    else begin
-        L := P^.Items;
-        while Assigned(L) do begin
-            H := L;
-            L := L^.Next;
+
+    W := Lo(ScreenMax) - Frame.X * 2 - 3;
+    while S <> '' do begin
+        T := PtrStr(L^.Title);
+        M := W - Length(T);
+
+        if ((LastPos(' ', copy(S, 1, M)) = 0) and (T <> '')) or (M < 1) then begin
+            N := New(PItem);
+            L^.Next := N;
+            N^.Prev := L;
+            L := N;
+            L^.Next := nil;
+            L^.Name := '';
+            L^.Title := nil;
+        end else begin
+            FreeStr(L^.Title);
+            if Length(S) < M then
+                X := M
+            else begin
+                X := LastPos(' ', copy(S, 1, M));
+                if X = 0 then X := M;
+            end;
+            L^.Title := StrPtr(T + copy(S, 1, X));
+            Delete(S, 1, X);
         end;
-        H^.Next := N;
-        N^.Prev := H;
     end;
-    if S <> '' then AddLine(P, S, NewLine);
+
+    if NewLine then begin
+        N := New(PItem);
+        L^.Next := N;
+        N^.Prev := L;
+        L := N;
+        L^.Next := nil;
+        L^.Name := '';
+        L^.Title := nil;
+    end;
+
 end;
 
 function UnixRead(var F : File; var S : String) : integer;
 var
     P : longInt;
-    C, D : integer;
+    N : boolean;
+    C, D, O : integer;
 begin
     P := FilePos(F);
-    BlockRead(F, S[1], Sizeof(S) - 1, C);
+    BlockRead(F, S[1], Sizeof(S) - 10, C);
     S[0] := chr(C);
+    N := False;
     if C = 0 then
         UnixRead := -1
     else begin
-        repeat
-            D := Pos(#$0d, S);
-            if D > 0 then Delete (S, D, 1);
-        until D = 0;
+        O := 0;
         D := Pos(#$0a, S);
-        if (D <> 0) and (D <= Ord(S[0])) then S[0] := Chr(D - 1);
-        Seek(F, P + 1 + Ord(S[0]));
-        UnixRead := D;
+        if (D <> 0) and (D <= Ord(S[0])) then begin
+            S[0] := Chr(D - 1);
+            Inc(O);
+            N := true;
+        end;
+        D := Pos(#$0d, S);
+        if (D <> 0) and (D <= Ord(S[0])) then begin
+            S[0] := Chr(D - 1);
+            Inc(O);
+            N := true;
+        end;
+ {       D := 1;
+        while (D <= Length(S)) and (S <> '') do begin
+            if (Ord(S[D]) = $0a) or (Ord(S[D]) = $0d) then begin
+                Delete (S, D, 1);
+                Inc(O);
+            end else Inc(D);
+        end;}
+        if N then
+            UnixRead := 1
+        else
+            UnixRead := 0;
+        Seek(F, P + Ord(S[0]) + O);
     end;
 end;
 
@@ -463,25 +505,111 @@ procedure TryLSM(LSM : string; All : boolean);
 var
     F : File;
     S : String;
-    C : integer;
-    Flag : boolean;
+    C, Pass : integer;
+    Flag, TMode : boolean;
+    Title, Version, Desc,
+    Author, License, X : String;
+
+    procedure Ignore;
+    begin
+        TMode := False;
+    end;
+
+    function Trade(var V : string; S1, S2 : string) : boolean;
+    var
+        P : integer;
+    begin
+        P := Pos(ucase(S1), uCase(V));
+        if P > 0 then begin
+            Delete(V, P, Length(S1));
+            Insert(S2, V,  P);
+        end;
+        Trade := P <> 0;
+    end;
+
+    procedure IgnoreEmail(var V : String);
+    begin
+        TMode := False;
+        while Trade(V, #$27, '') do;
+        while Trade(V, #$60, '') do;
+        while Trade(V, '"', '') do;
+        while Trade(V, '  ', ' ') do;
+        if Trade(V, ' -at- ', '@') then exit;
+        if Trade(V, ' _at_ ', '@') then exit;
+        if Trade(V, '-at-', '@') then exit;
+        if Trade(V, '_at_', '@') then exit;
+        if Trade(V, ' (#) ', '@') then exit;
+
+    end;
+
+    function Match(T : string; var V : string) : boolean;
+    begin
+        T := Ucase(Trim(T)) + ': ';
+        if Pos(T, Ucase(Trim(S))) <> 1 then
+            Match := False
+        else begin
+            Match := True;
+            V := Trim(Copy(Trim(S), Length(T) + 1, Length(S)));
+        end;
+    end;
+
 begin
     if not FileExists(LSM) then exit;
     ClearPackage(Package);
     Assign(F, LSM);
     Reset(F, 1);
-    Flag := False;
-    repeat
-        C := UnixRead(F, S);
-        if Trim(Ucase(S)) = 'END' then
-            C := -1
-        else
-        if Trim(Ucase(S)) = 'BEGIN3' then
-            Flag := True
-        else
-        if Flag and (C > -1) and (S<>'') then
-            AddLine(Package, S, C <> 0);
-    until C = -1;
+    Pass := 0;
+    Title := 'unknown';
+    Version := Title;
+    Author := '';
+    License := '';
+    While Pass < 2 do begin
+        Flag := False;
+        TMode := False;
+        Seek(F, 0);
+        repeat
+            C := UnixRead(F, S);
+            if Trim(Ucase(S)) = 'END' then
+                C := -1
+            else
+            if Trim(Ucase(S)) = 'BEGIN3' then
+                Flag := True
+            else
+            if Match('TITLE', Title) then Ignore else
+            if Match('Version', Version) then Ignore else
+            if Match('Author', Author) then IgnoreEmail(Author) else
+            if Match('copying-policy', License) then Ignore else
+
+            if Match('Maintained-by', X) then Ignore else
+            if Match('entered-date', X) then Ignore else
+            if Match('Platforms', X) then Ignore else
+            if Match('keywords', X) then Ignore else
+            if Match('Primary-site', X) then Ignore else
+            if Match('Alternate-site', X) then Ignore else
+
+            if Flag and (C > -1) and ( S<>'') and (Pass = 1) then begin
+                if Match('description', Desc) then begin
+                    if PtrStr(Package^.Title) = '' then
+                        Package^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Frame.X * 2 - Grps.X - 16));
+                    S := Desc;
+                    TMode := true;
+                end;
+                if TMode then AddLine(Package, S, C <> 0);
+            end;
+        until C = -1;
+        if Pass = 0 then begin
+            AddLine(Package, Title + ' (' + Version + ')', True);
+            if Author <> '' then
+                AddLine(Package, Author, True);
+            if License <> '' then
+                AddLine(Package, License, True);
+            AddLine(Package, '', True);
+        end;
+        if (Pass = 1) and (PtrStr(Package^.Title) = '') then
+            Package^.Title := StrPtr(Copy(Title, 1, Lo(ScreenMax) - Frame.X * 2 - Grps.X - 16));
+
+        Inc(Pass);
+    end;
     Close(F)
 end;
 
@@ -506,7 +634,7 @@ begin
             Flag := False
         else
         if Flag and (C > -1) and (S<>'') then
-            AddLine(Package, S, C <> 0);
+            AddLine(Package, lcase(S), C <> 0);
     until C = -1;
     Close(F)
 end;
@@ -518,9 +646,9 @@ begin
         if not (All and assigned(Package^.Items)) then exit;
         TryLST(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + Package^.Name + '.LST', All);
     end else begin
-        TryLSM(TailDelim(GetEnv(FMEDIA)) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.LSM', All);
+        TryLSM(TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT', All);
         if not (All and assigned(Package^.Items)) then exit;
-        TryLST(TailDelim(GetEnv(FMEDIA)) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.LSM', All);
+        TryLST(TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT', All);
     end;
 end;
 
@@ -569,16 +697,16 @@ begin
     if not FDIMode then begin
         if (FMedia <> '') and (not DirExists(FMedia)) then FMedia := '';
         if Not FileExists(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE') then begin
-            WriteLn('unable to located package manager FDINST.');
+            FWriteLn('unable to located package manager FDINST.');
             Halt(100);
         end;
         if (GetEnv('TEMP') = '') or (not DirExists(GetEnv('TEMP'))) then begin
-            WriteLn('TEMP environment variable is not set.');
+            FWriteLn('TEMP environment variable is not set.');
             Halt(2);
         end;
         StartCursor := GetCursor;
         HideCursor;
-        Write('Please standby...');
+        FWrite('Please standby...');
         M := ucase(trim(ReadCfg));
         GetDir(0, T);
         if (FMEDIA = '') and (M <> '') then IsMediaDrive(Copy(T,1,2) + M);
@@ -752,12 +880,16 @@ var
     Y : integer;
     P : PItem;
     D : PText;
+    T : boolean;
 begin
     TextColor(F);
     TextBackground(B);
-    TextColor(F);
-    if Tab = 2 then
-        TextAttr := C;
+    if Tab = 2 then begin
+        {TextAttr := C;}
+        TextColor(F);
+    end else begin
+        TextColor(F and $7);
+    end;
     Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
     ClrScr;
     LineBottom := nil;
@@ -774,12 +906,29 @@ begin
             Y := 1;
             if Assigned(LineTop) then P := LineTop;
             LineTop := P;
+            T := False;
             while Assigned(P) and (Y <= Hi(WindMax) - Hi(WindMin) + 1)  do begin
                 GotoXY(2,Y);
-                if Tab <> 2 then begin
-                    if Y = 1 then TextColor(H) else TextColor(F);
+                if PtrStr(P^.Title) = '' then T := False;
+                if P = Package^.Items then begin
+                    T := True;
+                    TextColor(H);
+                    if Tab <> 2 then TextColor(H and $07);
+                end else if T then begin
+                    TextColor(11);
+                    if Tab <> 2 then TextColor(3);
+                end else begin
+                    TextColor(F);
+                    if Tab <> 2 then TextColor(F and $07);
                 end;
-                FWrite(PtrStr(P^.Title));
+                if Pos(ChrStr(#$c4, 10), PtrStr(P^.Title)) > 0 then begin
+                    Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X + 1, Hi(ScreenMax)- Frame.Y + 1);
+                    if Tab <> 2 then TextColor(6) else TextColor(14);
+                    GotoXY(2,Y);
+                    DrawLine(1, Y, Lo(WindMax) - Lo(WindMin), lnSingle or lnHorizontal);
+                    Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
+                end else
+                    FWrite(PtrStr(P^.Title));
                 Inc(Y);
                 LineBottom := P;
                 P := P^.Next;
@@ -1132,10 +1281,10 @@ begin
             if J^.State = 0 then begin
                 if C then begin
                     TextAttr := $4F;
-                    write ('remove ', J^.Name);
+                    FWrite ('remove ' + J^.Name);
                     ClrEOl;
                     TextAttr := $07;
-                    WriteLn;
+                    FWriteLn('');
                     SwapIntVecs;
                     {$IFDEF USEBAT}
 
@@ -1146,17 +1295,17 @@ begin
                     SwapIntVecs;
                     InitQCrt;
                     if DosError <> 0 then begin
-                        WriteLn('Aborted.');
+                        FWriteLn('Aborted.');
                         Halt(100);
                     end;
                 end;
             end else begin
                 if not C then begin
                     TextAttr := $1F;
-                    write('install ', lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
+                    FWrite('install ' + lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
                     ClrEOl;
                     TextAttr := $07;
-                    WriteLn;
+                    FWriteLn('');
                     SwapIntVecs;
                     {$IFDEF USEBAT}
                         Exec(GetEnv('COMSPEC'), '/C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT install ' +
@@ -1168,7 +1317,7 @@ begin
                     SwapIntVecs;
                     InitQCrt;
                     if DosError <> 0 then begin
-                        WriteLn('Aborted.');
+                        FWriteLn('Aborted.');
                         Halt(100);
                     end;
                 end;
@@ -1190,6 +1339,11 @@ var
     Quit : boolean;
     S : String;
 begin
+    CheckScroll := False;
+    CheckCursor := False;
+    Init;
+    DrawTitle;
+    DrawSelector;
     LTab := -1;
     Quit := False;
     PurgeEvents;
@@ -1205,27 +1359,27 @@ begin
             gotoXY(1,Hi(WindMax));
             TextAttr := $47;
             if MaxAvail < LoMem then TextAttr := $4F;
-            Write(' ', MaxAvail);
+            FWrite(' ' + IntStr(MaxAvail));
             TextAttr := $47;
-            Write('/');
+            FWrite('/');
             if MemAvail < LoMem then TextAttr := $4F;
-            Write(MemAvail, ' ');
+            FWrite(IntStr(MemAvail)+ ' ');
             TextAttr := $47;
             if Not Assigned(Group) then begin
-                Write(NoTailDelim(FMedia));
+                FWrite(NoTailDelim(FMedia));
             end else begin
                 if Group^.Name <> '' then begin
-                    Write(TailDelim(FMedia), TailDelim(Group^.Name));
-                    if Assigned(Package) then Write(Package^.Name, '.ZIP');
+                    FWrite(TailDelim(FMedia) + TailDelim(Group^.Name));
+                    if Assigned(Package) then FWrite(Package^.Name + '.ZIP');
                 end else begin
                     if Assigned(Package) then begin
-                        Write( 'Package ');
+                        FWrite( 'Package ');
                         TextAttr := $4F;
-                        Write(Package^.Name);
+                        FWrite(Package^.Name);
                         TextAttr := $47;
-                        Write(' not found under ');
+                        FWrite(' not found under ');
                         TextAttr := $4F;
-                        Write(NoTailDelim(FMedia));
+                        FWrite(NoTailDelim(FMedia));
                         TextAttr := $47;
                     end;
                 end;
@@ -1293,17 +1447,36 @@ begin
                 end;
 {                else
                     GotoXY(1, Hi(WindMax) - 1);
-                    write(HexStr(E.KeyCode));
+                    FWrite(HexStr(E.KeyCode));
                     ClrEol; }
             end;
     until Quit;
 end;
 
+procedure TestRead(N : String);
+var
+    K : File;
+    R, L : Integer;
+    S : String;
 begin
-    CheckScroll := False;
-    CheckCursor := False;
-    Init;
-    DrawTitle;
-    DrawSelector;
+    Assign(K, N);
+    Reset(K,1);
+    L := 0;
+    repeat
+        R := UnixRead(K, S);
+        if R = 0 then FWrite(S + '+')
+        else if R > 0 then FWriteLn(S + ';');
+        Delay(250);
+        Inc(L);
+    until (R = -1) or Keypressed or (L > 5);
+    close(K);
+    Delay(1000);
+    FWriteLn('');
+end;
+
+begin
     Main;
+
+{   TestRead('\PACKAGES\PKGINFO\JEMM.TXT');
+   TestRead('\PACKAGES\ALL\BASE\INDEX.LST');}
 end.

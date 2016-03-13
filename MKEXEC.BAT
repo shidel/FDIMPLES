@@ -4,7 +4,7 @@ set TPV=TP70
 set TPC=TPC
 if exist %DOSDIR%\LINKS\%TPC%.BAT set TPC=call %TPC%
 
-rem call MKCLEAN.BAT
+call MKCLEAN.BAT
 
 cd SOURCE
 
