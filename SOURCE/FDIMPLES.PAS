@@ -468,7 +468,7 @@ begin
         StartCursor := GetCursor;
         HideCursor;
         Write('Please standby...');
-        M := ReadCfg;
+        M := ucase(trim(ReadCfg));
         GetDir(0, T);
         if (FMEDIA = '') and (M <> '') then IsMediaDrive(Copy(T,1,2) + M);
         if FMEDIA = '' then IsMediaDrive(Copy(T,1,3));
@@ -1063,13 +1063,24 @@ begin
             gotoXY(1,Hi(WindMax));
             TextAttr := $47;
             Write(' ', MaxAvail, '/', MemAvail, ' ');
+            if Not Assigned(Group) then begin
+                Write(NoTailDelim(FMedia));
+            end else begin
+                if Group^.Name <> '' then begin
+                    Write(TailDelim(FMedia), TailDelim(Group^.Name));
+                    if Assigned(Package) then Write(Package^.Name, '.ZIP');
+                end else begin
+                    if Assigned(Package) then Write( 'Package ', Package^.Name,
+                    ' not found under ', NoTailDelim(FMedia));
+                end;
+            end;
             ClrEol;
         end;
         ClearEvent(E);
         While E.What = evNothing do GetEvent(E);
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
-                $03 : begin
+                $0003 : begin
                     CleanUp;
                     Halt(200); { CTRL-C }
                 end;
