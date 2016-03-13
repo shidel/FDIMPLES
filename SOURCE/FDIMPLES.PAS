@@ -907,6 +907,10 @@ begin
             if Assigned(LineTop) then P := LineTop;
             LineTop := P;
             T := False;
+            if Assigned(P) then begin
+                if (P^.Prev = Package^.Items) then T := True;
+                if assigned(P^.Prev) and (P^.Prev^.Prev = Package^.Items) then T := True;
+            end;
             while Assigned(P) and (Y <= Hi(WindMax) - Hi(WindMin) + 1)  do begin
                 GotoXY(2,Y);
                 if PtrStr(P^.Title) = '' then T := False;
