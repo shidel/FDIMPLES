@@ -46,7 +46,7 @@ uses QDos, QCrtNM, QStrings;
 const
     LoMem = 10240;
     AppName = 'FDIMPLES';
-    AppVersion = '0.5.0';
+    AppVersion = '0.6.0';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Frame : TPoint = (X:5; Y:4);
     Grps : TPoint = (X:18; Y:8);
@@ -353,7 +353,7 @@ var
     Name, Ver, Desc, MD5 : String;
     P : Longint;
     F : File;
-    C, E, D : integer;
+    C, D : integer;
     B : String;
     X : PItem;
 
@@ -362,9 +362,11 @@ var
         P := FilePos(F);
         BlockRead(F, B[1], Sizeof(B) - 1, C);
         B[0] := chr(C);
-        E := Pos(#$0d, B);
+        repeat
+            D := Pos(#$0d, B);
+            if D > 0 then Delete (B, D, 1);
+        until D = 0;
         D := Pos(#$0a, B);
-        if (E <> 0) and (E <= Ord(B[0])) then B[0] := Chr(E - 1);
         if (D <> 0) and (D <= Ord(B[0])) then B[0] := Chr(D - 1);
         Seek(F, P + 1 + Ord(B[0]))
     end;
@@ -397,10 +399,10 @@ begin
                     X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Frame.X * 2 - Grps.X - 16));
                     AddLine(X, Name + ' (' + ver + ')', True);
                     AddLine(X, '', True);
-                    AddLine(X, Desc, E or D <> 0);
-                    while (C <> 0) and (E or D = 0) do begin
+                    AddLine(X, Desc, D <> 0);
+                    while (C <> 0) and (D = 0) do begin
                         ReadFile;
-                        AddLine(X, B, E or D <> 0);
+                        AddLine(X, B, D <> 0);
                     end;
                     X := nil;
                 end else
@@ -500,8 +502,8 @@ begin
             FindFirst(FMedia + TailDelim(P^.NAME) + '*.ZIP', faAnyFile, S);
 
             while DosError = 0 do begin
-                if (S.Attr and faDirectory <> faDirectory) and (S.Name <> '.') and
-                ((S.Name <> 'V8POWER.ZIP') or (Not FDIMode)) then begin
+                if (S.Attr and (faDirectory or faSystem or faHidden) = 0) and
+                (S.Name <> '.') and ((S.Name <> 'V8POWER.ZIP') or (Not FDIMode)) then begin
                     J := New(PItem);
                     J^.Name := Copy(S.Name, 1, Length(S.Name) - 4);
                     J^.Prev := PackageLast;
