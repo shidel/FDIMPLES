@@ -593,7 +593,8 @@ begin
                         Package^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Frame.X * 2 - Grps.X - 16));
                     S := Desc;
                     TMode := true;
-                end;
+                end else
+                    if (Copy(S, 1, 2) = '  ') then S := LTrim(S);
                 if TMode then AddLine(Package, S, C <> 0);
             end;
         until C = -1;
