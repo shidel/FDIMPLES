@@ -52,8 +52,6 @@ const
     Grps : TPoint = (X:18; Y:8);
     Installed = 'Installed!'; {Always sorted first -- has only title, no name}
     NoScroll = 1;
-{    ALLPackages = '..\FDI\SETTINGS\PKG_ALL.LST';
-    BASEPackages = '..\FDI\SETTINGS\PKG_BASE.LST'; }
     ALLPackages = 'FDPLALL.LST';
     BASEPackages = 'FDPLBASE.LST';
 
@@ -77,6 +75,7 @@ var
     Defaults : PText;
     Group, GroupFirst, GroupTop, GroupBottom, GroupLast,
     Package, PackageFirst, PackageTop, PackageBottom, PackageLast : PItem;
+    LineTop, LineBottom : PItem;
     F, B, C, H : integer;
     FMedia : String;
     FDIMode : boolean;
@@ -308,9 +307,49 @@ begin
     end;
 end;
 
-function FreeSomeMem : boolean;
+procedure ClearPackage(var Pkg : PItem);
+var
+    P, N : PItem;
 begin
-    FreeSomeMem := False;
+    P := Pkg^.Items;
+    While Assigned(P) do begin
+        N := P^.Next;
+        FreeStr(P^.Title);
+        Dispose(P);
+        P := N;
+    end;
+    Pkg^.First := true;
+    Pkg^.Items := nil;
+end;
+
+function FreeSomeMem : boolean;
+var
+    Flag : boolean;
+    G, P, PN : PItem;
+
+begin
+    G := GroupFirst;
+    Flag := False;
+    while Assigned(G) and (not Flag) do begin
+        P := G^.Items;
+        while Assigned(P) and (Not Flag) do begin
+            if P <> Package then
+                ClearPackage(P);
+            Flag := (MaxAvail > LoMem * 20);
+            P := P^.Next;
+        end;
+        G := G^.Next;
+    end;
+    FreeSomeMem := (MaxAvail > LoMem * 2);
+end;
+
+function MemCheck(size : integer) : boolean;
+begin
+    if (MaxAvail < Size * 2) or (MemAvail < LoMem) then begin
+        FreeSomeMem;
+        MemCheck := (MaxAvail > Size * 2);
+    end else
+        MemCheck := True;
 end;
 
 procedure AddLine(var P : PItem; S : String; NewLine : boolean);
@@ -319,7 +358,7 @@ var
     N, L, H : PItem;
     W, M : integer;
 begin
-    if MaxAvail < loMem then if not FreeSomeMem then exit;
+    if not MemCheck(Sizeof(PItem) + Sizeof(String)) then exit;
     N := New(PItem);
     N^.Next := nil;
     N^.Prev := nil;
@@ -348,31 +387,38 @@ begin
     if S <> '' then AddLine(P, S, NewLine);
 end;
 
+function UnixRead(var F : File; var S : String) : integer;
+var
+    P : longInt;
+    C, D : integer;
+begin
+    P := FilePos(F);
+    BlockRead(F, S[1], Sizeof(S) - 1, C);
+    S[0] := chr(C);
+    if C = 0 then
+        UnixRead := -1
+    else begin
+        repeat
+            D := Pos(#$0d, S);
+            if D > 0 then Delete (S, D, 1);
+        until D = 0;
+        D := Pos(#$0a, S);
+        if (D <> 0) and (D <= Ord(S[0])) then S[0] := Chr(D - 1);
+        Seek(F, P + 1 + Ord(S[0]));
+        UnixRead := D;
+    end;
+end;
+
 procedure CacheGroup(var AGroup : PItem);
 var
     Name, Ver, Desc, MD5 : String;
-    P : Longint;
     F : File;
-    C, D : integer;
     B : String;
+    C : integer;
     X : PItem;
 
-    procedure ReadFile;
-    begin
-        P := FilePos(F);
-        BlockRead(F, B[1], Sizeof(B) - 1, C);
-        B[0] := chr(C);
-        repeat
-            D := Pos(#$0d, B);
-            if D > 0 then Delete (B, D, 1);
-        until D = 0;
-        D := Pos(#$0a, B);
-        if (D <> 0) and (D <= Ord(B[0])) then B[0] := Chr(D - 1);
-        Seek(F, P + 1 + Ord(B[0]))
-    end;
-
 begin
-    if MaxAvail < LoMem then if not FreeSomeMem then exit;
+    if not MemCheck(LoMem) then exit;
 
     if not AGroup^.First then exit;
 
@@ -384,8 +430,8 @@ begin
     Assign(F, Name);
     Reset(F, 1);
     repeat
-        ReadFile;
-        if Trim(B) <> '' then begin
+        C := UnixRead(F, B);
+        if (C >= 0) and (Trim(B) <> '') then begin
             Name := Trim(PullStr(#$09, B));
             Ver := Trim(PullStr(#$09, B));
             Desc := Trim(PullStr(#$09, B));
@@ -395,22 +441,87 @@ begin
             end;
             X := AGroup^.Items;
             while assigned(X) do begin
-                if UCase(Name) = UCase(X^.Name) then begin
+                if (UCase(Name) = UCase(X^.Name)) and (not assigned(X^.Items)) then begin
                     X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Frame.X * 2 - Grps.X - 16));
                     AddLine(X, Name + ' (' + ver + ')', True);
                     AddLine(X, '', True);
-                    AddLine(X, Desc, D <> 0);
-                    while (C <> 0) and (D = 0) do begin
-                        ReadFile;
-                        AddLine(X, B, D <> 0);
+                    AddLine(X, Desc, C <> 0);
+                    while (C = 0) do begin
+                        C := UnixRead(F, B);
+                        AddLine(X, B, C <> 0);
                     end;
                     X := nil;
                 end else
                     X := X^.Next;
             end;
         end;
-    until (C = 0);
+    until (C = -1);
     Close(F);
+end;
+
+procedure TryLSM(LSM : string; All : boolean);
+var
+    F : File;
+    S : String;
+    C : integer;
+    Flag : boolean;
+begin
+    if not FileExists(LSM) then exit;
+    ClearPackage(Package);
+    Assign(F, LSM);
+    Reset(F, 1);
+    Flag := False;
+    repeat
+        C := UnixRead(F, S);
+        if Trim(Ucase(S)) = 'END' then
+            C := -1
+        else
+        if Trim(Ucase(S)) = 'BEGIN3' then
+            Flag := True
+        else
+        if Flag and (C > -1) and (S<>'') then
+            AddLine(Package, S, C <> 0);
+    until C = -1;
+    Close(F)
+end;
+
+procedure TryLST(LST : string; All : boolean);
+var
+    F : File;
+    S : String;
+    C : integer;
+    Flag : boolean;
+begin
+    if not FileExists(LST) then exit;
+    AddLine(Package, ' ' + ChrStr(#$c4, Lo(ScreenMax) - Frame.X * 2 - 5), true);
+    Assign(F, LST);
+    Reset(F, 1);
+    Flag := True;
+    repeat
+        C := UnixRead(F, S);
+        if Trim(Ucase(S)) = 'END' then
+            Flag := True
+        else
+        if Trim(Ucase(S)) = 'BEGIN3' then
+            Flag := False
+        else
+        if Flag and (C > -1) and (S<>'') then
+            AddLine(Package, S, C <> 0);
+    until C = -1;
+    Close(F)
+end;
+
+procedure SearchForData(All:boolean);
+begin
+    if Group^.Name = '' then begin
+        TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', All);
+        if not (All and assigned(Package^.Items)) then exit;
+        TryLST(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + Package^.Name + '.LST', All);
+    end else begin
+        TryLSM(TailDelim(GetEnv(FMEDIA)) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.LSM', All);
+        if not (All and assigned(Package^.Items)) then exit;
+        TryLST(TailDelim(GetEnv(FMEDIA)) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.LSM', All);
+    end;
 end;
 
 function IsMediaDrive(S : String) : boolean;
@@ -605,6 +716,12 @@ begin
     Group := GroupFirst;
     While Assigned(Group) do begin
         CacheGroup(Group);
+        Package := Group^.Items;
+        while Assigned(Package) do begin
+            if Not Assigned(Package^.Items) then
+                SearchForData(False);
+            Package := Package^.Next;
+        end;
         Group := Group^.Next;
     end;
 
@@ -616,6 +733,8 @@ begin
     PackageTop := nil;
     PackageLast := nil;
     PackageBottom := nil;
+    LineTop := nil;
+    LineBottom := nil;
     if not FDIMode then begin
         GotoXY(1,WhereY);
         ClrEol;
@@ -624,6 +743,8 @@ end;
 
 procedure FetchData;
 begin
+    SearchForData(true);
+    Package^.First := False;
 end;
 
 procedure DrawPackage;
@@ -639,16 +760,20 @@ begin
         TextAttr := C;
     Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
     ClrScr;
+    LineBottom := nil;
     if assigned(Package) then begin
+        if Package^.First then begin
+            FetchData;
+        end;
+
         if not assigned(Package^.Items) then
             FWrite(RSpace(' ' + Package^.Name + ' - No information',
             Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll))
         else begin
-            if Package^.First then begin
-                FetchData;
-            end;
             P := Package^.Items;
             Y := 1;
+            if Assigned(LineTop) then P := LineTop;
+            LineTop := P;
             while Assigned(P) and (Y <= Hi(WindMax) - Hi(WindMin) + 1)  do begin
                 GotoXY(2,Y);
                 if Tab <> 2 then begin
@@ -656,6 +781,7 @@ begin
                 end;
                 FWrite(PtrStr(P^.Title));
                 Inc(Y);
+                LineBottom := P;
                 P := P^.Next;
             end;
         end;
@@ -725,6 +851,8 @@ begin
         Inc(Y);
     end;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+    LineTop := nil;
+    LineBottom := nil;
     DrawPackage;
 end;
 
@@ -936,10 +1064,23 @@ end;
 
 procedure TextUp(T:integer);
 begin
+    if not Assigned(LineTop) then exit;
+    While (T > 0) and assigned(LineTop^.Prev) do begin
+        Dec(T);
+        LineTop := LineTop^.Prev;
+    end;
+    DrawPackage;
 end;
 
 procedure TextDown(T:integer);
 begin
+    if not Assigned(LineBottom) then exit;
+    While (T > 0) and assigned(LineBottom^.Next) do begin
+        Dec(T);
+        LineTop := LineTop^.Next;
+        LineBottom := LineBottom^.Next;
+    end;
+    DrawPackage;
 end;
 
 procedure MakeList;
@@ -1047,6 +1188,7 @@ var
     E : TEvent;
     LTab : integer;
     Quit : boolean;
+    S : String;
 begin
     LTab := -1;
     Quit := False;
@@ -1062,7 +1204,13 @@ begin
         if not FDIMode then begin
             gotoXY(1,Hi(WindMax));
             TextAttr := $47;
-            Write(' ', MaxAvail, '/', MemAvail, ' ');
+            if MaxAvail < LoMem then TextAttr := $4F;
+            Write(' ', MaxAvail);
+            TextAttr := $47;
+            Write('/');
+            if MemAvail < LoMem then TextAttr := $4F;
+            Write(MemAvail, ' ');
+            TextAttr := $47;
             if Not Assigned(Group) then begin
                 Write(NoTailDelim(FMedia));
             end else begin
@@ -1070,8 +1218,16 @@ begin
                     Write(TailDelim(FMedia), TailDelim(Group^.Name));
                     if Assigned(Package) then Write(Package^.Name, '.ZIP');
                 end else begin
-                    if Assigned(Package) then Write( 'Package ', Package^.Name,
-                    ' not found under ', NoTailDelim(FMedia));
+                    if Assigned(Package) then begin
+                        Write( 'Package ');
+                        TextAttr := $4F;
+                        Write(Package^.Name);
+                        TextAttr := $47;
+                        Write(' not found under ');
+                        TextAttr := $4F;
+                        Write(NoTailDelim(FMedia));
+                        TextAttr := $47;
+                    end;
                 end;
             end;
             ClrEol;
@@ -1096,7 +1252,7 @@ begin
                 $4900 : case Tab of
                     0: GroupUp(Grps.Y - 1);
                     1: FileUp(Grps.Y - 1);
-                    2: TextUp(Grps.Y - 1);
+                    2: TextUp(Hi(ScreenMax)- Frame.Y * 2 - Grps.Y - 1);
                 end;
                 $5000 : case Tab of
                     0: GroupDown(1);
@@ -1106,7 +1262,7 @@ begin
                 $5100 : case Tab of
                     0: GroupDown(Grps.Y - 1);
                     1: FileDown(Grps.Y - 1);
-                    2: TextDown(Grps.Y - 1);
+                    2: TextDown(Hi(ScreenMax)- Frame.Y * 2 - Grps.Y - 1);
                 end;
                 $0020, $000A, $000D : case Tab of
                     0: GroupToggle;
