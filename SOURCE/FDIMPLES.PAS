@@ -46,10 +46,8 @@ uses QDos, QCrtNM, QStrings;
 const
     LoMem = 10240;
     AppName = 'FDIMPLES';
-    AppVersion = '0.6.0';
+    AppVersion = '0.7.0';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
-    Frame : TPoint = (X:5; Y:4);
-    Grps : TPoint = (X:18; Y:8);
     Installed = 'Installed!'; {Always sorted first -- has only title, no name}
     NoScroll = 1;
     ALLPackages = 'FDPLALL.LST';
@@ -69,6 +67,21 @@ type
         Next : PText;
         Str : PString;
     end;
+    TTheme = record
+        Frame, Grps : TPoint;
+        Border:byte;
+        Fore, Back, Choose, Hot : Byte;
+        FillAttr : Byte;
+        FillChar : Char;
+        Double, Shadow : boolean;
+        Title, TitleHot : byte;
+        Status, StatusHot : byte;
+        Brace, Check : byte;
+        Text, TextHot : byte;
+        Name, NameHot : byte;
+        Author, AuthorHot : byte;
+        Bar, BarHot : byte;
+    end;
 
 var
     Tab : integer;
@@ -76,10 +89,66 @@ var
     Group, GroupFirst, GroupTop, GroupBottom, GroupLast,
     Package, PackageFirst, PackageTop, PackageBottom, PackageLast : PItem;
     LineTop, LineBottom : PItem;
-    F, B, C, H : integer;
     FMedia : String;
     FDIMode : boolean;
     StartCursor : word;
+    Theme : TTheme;
+
+const
+    ThemeRed : TTheme = (
+        Frame:(X:5; Y:4);
+        Grps:(X:18; Y:8);
+        Border:$4F;
+        Fore:White;
+        Back:Red;
+        Choose:$1e;
+        Hot:LightGreen;
+        FillAttr:$07;
+        FillChar:#$B0;
+        Double:True;
+        Shadow:True;
+        Title:$4f;
+        TitleHot:$4e;
+        Status:$47;
+        StatusHot:$4f;
+        Brace:$08;
+        Check:$07;
+        Text:$07;
+        TextHot:$0F;
+        Name:$02;
+        NameHot:$0A;
+        Author:$03;
+        AuthorHot:$0B;
+        Bar:$06;
+        BarHot:$0e
+    );
+    ThemeBlue : TTheme = (
+        Frame:(X:1; Y:2);
+        Grps:(X:18; Y:8);
+        Border:$17;
+        Fore:White;
+        Back:Blue;
+        Choose:$71;
+        Hot:LightGreen;
+        FillAttr:$07;
+        FillChar:#$B0;
+        Double:True;
+        Shadow:False;
+        Title:$70;
+        TitleHot:$74;
+        Status:$08;
+        StatusHot:$07;
+        Brace:$08;
+        Check:$07;
+        Text:$07;
+        TextHot:$0F;
+        Name:$02;
+        NameHot:$0A;
+        Author:$03;
+        AuthorHot:$0B;
+        Bar:$06;
+        BarHot:$0e
+    );
 
 procedure CleanUp;
 begin
@@ -124,6 +193,24 @@ begin
     S := Trim(UCase(GetEnv(S)));
     if S = '' then S := Ucase(D);
     StrOf := S;
+end;
+
+procedure SetTheme;
+begin
+    if FDIMode then begin
+        Theme := ThemeRed;
+        Theme.Fore      := ValueOf('TFF', Theme.Fore);
+        Theme.Back      := ValueOf('TFB', Theme.Back);
+        Theme.Border    := Theme.Fore or Theme.Back shl 4;
+        Theme.Choose    := ValueOf('TFC', Theme.Choose);
+        Theme.Hot       := ValueOf('TFH', Theme.Hot);
+        Theme.FillAttr  := ValueOf('TSF', Theme.FillAttr and $0F) +
+            ValueOf('TSB', Theme.FillAttr shr 4 ) shl 4;
+        Theme.FillChar  :=  Char(ValueOf('TSC', Ord(Theme.FillChar)));
+        Theme.Double    := Pos('DOUBLE', StrOf('TFS', 'double shadow')) > 0;
+        Theme.Shadow    := Pos('SHADOW', StrOf('TFS', 'double shadow')) > 0;
+    end else
+        Theme := ThemeBlue;
 end;
 
 procedure ReadDefaults;
@@ -372,7 +459,7 @@ begin
         while Assigned(L^.Next) do L := L^.Next;
     end;
 
-    W := Lo(ScreenMax) - Frame.X * 2 - 3;
+    W := Lo(ScreenMax) - Theme.Frame.X * 2 - 3;
     while S <> '' do begin
         T := PtrStr(L^.Title);
         M := W - Length(T);
@@ -484,7 +571,7 @@ begin
             X := AGroup^.Items;
             while assigned(X) do begin
                 if (UCase(Name) = UCase(X^.Name)) and (not assigned(X^.Items)) then begin
-                    X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Frame.X * 2 - Grps.X - 16));
+                    X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
                     AddLine(X, Name + ' (' + ver + ')', True);
                     AddLine(X, '', True);
                     AddLine(X, Desc, C <> 0);
@@ -544,7 +631,7 @@ var
 
     function Match(T : string; var V : string) : boolean;
     begin
-        T := Ucase(Trim(T)) + ': ';
+        T := Ucase(Trim(T)) + ':';
         if Pos(T, Ucase(Trim(S))) <> 1 then
             Match := False
         else begin
@@ -587,10 +674,10 @@ begin
             if Match('Primary-site', X) then Ignore else
             if Match('Alternate-site', X) then Ignore else
 
-            if Flag and (C > -1) and ( S<>'') and (Pass = 1) then begin
+            if Flag and (C > -1) and (S <> '') and (Pass = 1) then begin
                 if Match('description', Desc) then begin
                     if PtrStr(Package^.Title) = '' then
-                        Package^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Frame.X * 2 - Grps.X - 16));
+                        Package^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
                     S := Desc;
                     TMode := true;
                 end else
@@ -607,7 +694,7 @@ begin
             AddLine(Package, '', True);
         end;
         if (Pass = 1) and (PtrStr(Package^.Title) = '') then
-            Package^.Title := StrPtr(Copy(Title, 1, Lo(ScreenMax) - Frame.X * 2 - Grps.X - 16));
+            Package^.Title := StrPtr(Copy(Title, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
 
         Inc(Pass);
     end;
@@ -622,7 +709,7 @@ var
     Flag : boolean;
 begin
     if not FileExists(LST) then exit;
-    AddLine(Package, ' ' + ChrStr(#$c4, Lo(ScreenMax) - Frame.X * 2 - 5), true);
+    AddLine(Package, ' ' + ChrStr(#$c4, Lo(ScreenMax) - Theme.Frame.X * 2 - 5), true);
     Assign(F, LST);
     Reset(F, 1);
     Flag := True;
@@ -694,7 +781,6 @@ begin
         FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))));
     end;
 
-    FDIMode := Ucase(ParamStr(1)) = '/FDI';
     if not FDIMode then begin
         if (FMedia <> '') and (not DirExists(FMedia)) then FMedia := '';
         if Not FileExists(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE') then begin
@@ -728,10 +814,6 @@ begin
         FMedia := Dir('\');
     end;
     ReadDefaults;
-    F := ValueOf('TFF', White);
-    H := ValueOf('TFH', LightGreen);
-    B := ValueOf('TFB', Red);
-    C := ValueOf('TFC', $1e);
     Tab := 0;
     Group := nil;
     Others := New(PItem);
@@ -883,15 +965,16 @@ var
     D : PText;
     T : boolean;
 begin
-    TextColor(F);
-    TextBackground(B);
+    TextColor(Theme.Fore);
+    TextBackground(Theme.Back);
     if Tab = 2 then begin
-        {TextAttr := C;}
-        TextColor(F);
+        {TextAttr := Theme.Choose;}
+        TextColor(Theme.TextHot);
     end else begin
-        TextColor(F and $7);
+        TextColor(Theme.Text);
     end;
-    Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
+    Window (Theme.Frame.X + 2, Theme.Frame.Y + Theme.Grps.Y + 2,
+    Lo(ScreenMax) - Theme.Frame.X, Hi(ScreenMax)- Theme.Frame.Y + 1);
     ClrScr;
     LineBottom := nil;
     if assigned(Package) then begin
@@ -917,21 +1000,23 @@ begin
                 if PtrStr(P^.Title) = '' then T := False;
                 if P = Package^.Items then begin
                     T := True;
-                    TextColor(H);
-                    if Tab <> 2 then TextColor(H and $07);
+                    TextColor(Theme.NameHot);
+                    if Tab <> 2 then TextColor(Theme.Name);
                 end else if T then begin
-                    TextColor(11);
-                    if Tab <> 2 then TextColor(3);
+                    TextColor(Theme.AuthorHot);
+                    if Tab <> 2 then TextColor(Theme.Author);
                 end else begin
-                    TextColor(F);
-                    if Tab <> 2 then TextColor(F and $07);
+                    TextColor(Theme.TextHot);
+                    if Tab <> 2 then TextColor(Theme.Text);
                 end;
                 if Pos(ChrStr(#$c4, 10), PtrStr(P^.Title)) > 0 then begin
-                    Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X + 1, Hi(ScreenMax)- Frame.Y + 1);
-                    if Tab <> 2 then TextColor(6) else TextColor(14);
+                    Window (Theme.Frame.X + 2, Theme.Frame.Y + Theme.Grps.Y + 2,
+                    Lo(ScreenMax) - Theme.Frame.X + 1, Hi(ScreenMax)- Theme.Frame.Y + 1);
+                    if Tab <> 2 then TextColor(Theme.Bar) else TextColor(Theme.BarHot);
                     GotoXY(2,Y);
                     DrawLine(1, Y, Lo(WindMax) - Lo(WindMin), lnSingle or lnHorizontal);
-                    Window (Frame.X + 2, Frame.Y + Grps.Y + 2, Lo(ScreenMax) - Frame.X, Hi(ScreenMax)- Frame.Y + 1);
+                    Window (Theme.Frame.X + 2, Theme.Frame.Y + Theme.Grps.Y + 2,
+                    Lo(ScreenMax) - Theme.Frame.X, Hi(ScreenMax)- Theme.Frame.Y + 1);
                 end else
                     FWrite(PtrStr(P^.Title));
                 Inc(Y);
@@ -949,9 +1034,10 @@ var
     Y : integer;
     S : String;
 begin
-    TextColor(F);
-    TextBackground(B);
-    Window (Frame.X + 4 + Grps.X - NoScroll, Frame.Y + 1, Lo(ScreenMax) - Frame.X, Frame.Y + Grps.Y);
+    TextColor(Theme.Fore);
+    TextBackground(Theme.Back);
+    Window (Theme.Frame.X + 4 + Theme.Grps.X - NoScroll, Theme.Frame.Y + 1,
+    Lo(ScreenMax) - Theme.Frame.X, Theme.Frame.Y + Theme.Grps.Y);
     if not Assigned(Group) then exit;
     { ClrScr; }
     if not assigned(PackageFirst) then begin
@@ -965,30 +1051,37 @@ begin
     P := PackageTop;
     PackageBottom := nil;
     Y := 1;
-    while Assigned(P) and (Y <= Grps.Y) do begin
+    while Assigned(P) and (Y <= Theme.Grps.Y) do begin
         GotoXY(1,Y);
-        TextBackground(B);
+        TextBackground(Theme.Back);
         if P <> Package then
-            TextColor(F)
+            TextColor(Theme.Fore)
         else begin
             if Tab <> 1 then
-                TextColor(H)
+                TextColor(Theme.Hot)
             else
-                TextAttr := C;
+                TextAttr := Theme.Choose;
         end;
         FWrite(' ');
-        if P <> Package then TextColor(DarkGray);
+        if P <> Package then TextColor(Theme.Brace);
         FWrite('[');
-        if P <> Package then TextColor(Yellow);
+        if P <> Package then TextColor(Theme.Check);
         case P^.State of
             1 : FWrite('X');
             2 : FWrite('+');
         else
             FWrite(#32);
         end;
-        if P <> Package then TextColor(DarkGray);
+        if P <> Package then TextColor(Theme.Brace);
         FWrite(']');
-        if P <> Package then TextColor(F);
+        if P <> Package then
+            TextColor(Theme.Fore)
+        else begin
+            if Tab <> 1 then
+                TextColor(Theme.Hot)
+            else
+                TextAttr := Theme.Choose;
+        end;
         S := P^.Name;
         if assigned(P^.Title) then
             S := Trim(Copy(RSpace(P^.Name, 9) + ' ' + PtrStr(P^.Title), 1,
@@ -998,9 +1091,9 @@ begin
         P := P^.Next;
         Inc(Y);
     end;
-    TextColor(F);
-    TextBackground(B);
-    while (Y <= Grps.Y) do begin
+    TextColor(Theme.Fore);
+    TextBackground(Theme.Back);
+    while (Y <= Theme.Grps.Y) do begin
         FWrite(RSpace('', Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         Inc(Y);
     end;
@@ -1016,38 +1109,39 @@ var
     Y : integer;
     S : String;
 begin
-    TextColor(F);
-    TextBackground(B + 1);
-    Window (Frame.X + 2, Frame.Y + 1, Frame.X + 2 - NoScroll + Grps.X, Frame.Y + Grps.Y);
+    TextColor(Theme.Fore);
+    TextBackground(Theme.Back + 1);
+    Window (Theme.Frame.X + 2, Theme.Frame.Y + 1, Theme.Frame.X + 2 - NoScroll + Theme.Grps.X,
+    Theme.Frame.Y + Theme.Grps.Y);
     { ClrScr; }
     P := GroupTop;
     Y := 1;
     GroupBottom := nil;
     if Assigned(Group) and (Group^.First) then CacheGroup(Group);
-    while Assigned(P) and (Y <= Grps.Y) do begin
+    while Assigned(P) and (Y <= Theme.Grps.Y) do begin
         GotoXY(1,Y);
-        TextBackground(B);
+        TextBackground(Theme.Back);
         if P <> Group then
-            TextColor(F)
+            TextColor(Theme.Fore)
         else begin
             if Tab <> 0 then
-                TextColor(H)
+                TextColor(Theme.Hot)
             else
-                TextAttr := C;
+                TextAttr := Theme.Choose;
         end;
         FWrite(' ');
-        if P <> Group then TextColor(DarkGray);
+        if P <> Group then TextColor(Theme.Brace);
         FWrite('[');
-        if P <> Group then TextColor(Yellow);
+        if P <> Group then TextColor(Theme.Check);
         case P^.State of
             1 : FWrite('X');
             2 : FWrite('+');
         else
             FWrite(#32);
         end;
-        if P <> Group then TextColor(DarkGray);
+        if P <> Group then TextColor(Theme.Brace);
         FWrite(']');
-        if P <> Group then TextColor(F);
+        if P <> Group then TextColor(Theme.Fore);
         S := P^.Name;
         if assigned(P^.Title) then S := PtrStr(P^.Title);
         S := Trim(Copy(S , 1, Lo(WindMax) - Lo(WindMin) - WhereX + NoScroll));
@@ -1063,17 +1157,17 @@ end;
 procedure DrawButtons;
 begin
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
-    Gotoxy (Lo(ScreenMax) - Frame.X - 25, Hi(ScreenMax)- Frame.Y + 1);
-    TextColor(F);
-    TextBackground(B);
+    Gotoxy (Lo(ScreenMax) - Theme.Frame.X - 25, Hi(ScreenMax)- Theme.Frame.Y + 1);
+    TextColor(Theme.Fore);
+    TextBackground(Theme.Back);
     if Tab = 3 then
-        TextAttr := C;
+        TextAttr := Theme.Choose;
     FWrite( CSpace('OK', 10));
     GotoXY (WhereX + 5, WhereY);
-    TextColor(F);
-    TextBackground(B);
+    TextColor(Theme.Fore);
+    TextBackground(Theme.Back);
     if Tab = 4 then
-        TextAttr := C;
+        TextAttr := Theme.Choose;
     FWrite( CSpace('Cancel', 10));
 end;
 
@@ -1081,40 +1175,79 @@ procedure DrawSelector;
 begin
     { Back Drop }
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
-    TextColor(ValueOf('TSF', LightGray));
-    TextBackground(ValueOf('TSB', Black));
-    TextChar := Char(ValueOf('TSC', $B0));
+    TextAttr := Theme.FillAttr;
+    TextChar := Theme.FillChar;
     ClrScr;
     { Window Box }
     TextChar := #32;
-    TextColor(F);
-    TextBackground(B);
-    Window(Frame.X, Frame.Y, Lo(ScreenMax) + 2 - Frame.X, Hi(ScreenMax) + 2 - Frame.Y);
+    TextColor(Theme.Fore);
+    TextBackground(Theme.Back);
+    Window(Theme.Frame.X, Theme.Frame.Y, Lo(ScreenMax) + 2 - Theme.Frame.X, Hi(ScreenMax) + 2 - Theme.Frame.Y);
     ClrScr;
     Window(1,1,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
-    if Pos('DOUBLE', StrOf('TFS', 'double shadow')) > 0 then
-        DrawBox(Frame.X + 1, Frame.Y, Lo(ScreenMax) + 1 - Frame.X, Hi(ScreenMax) + 2 - Frame.Y, bxDouble);
-    if Pos('DOUBLE', StrOf('TFS', 'double shadow')) = 0 then
-        DrawBox(Frame.X + 1, Frame.Y, Lo(ScreenMax) + 1 - Frame.X, Hi(ScreenMax) + 2 - Frame.Y, bxSingle);
-    DrawLine(Frame.X + 1, Frame.Y + Grps.Y + 1, Lo(ScreenMax) - Frame.X * 2 + 1, lnSingle or lnHorizontal);
-    DrawLine(Frame.X + Grps.X + 3 - NoScroll, Frame.Y, Grps.Y + 2, lnSingle or lnVertical);
-    if Pos('SHADOW', StrOf('TFS', 'double shadow')) > 0 then
-        DrawShadow(Frame.X + 1, Frame.Y, Lo(ScreenMax) + 2 - Frame.X, Hi(ScreenMax) + 2 - Frame.Y, bsDoubleWide);
+    if Theme.Double then
+        DrawBox(Theme.Frame.X + 1, Theme.Frame.Y, Lo(ScreenMax) + 1 - Theme.Frame.X,
+        Hi(ScreenMax) + 2 - Theme.Frame.Y, bxDouble);
+    if not Theme.Double then
+        DrawBox(Theme.Frame.X + 1, Theme.Frame.Y, Lo(ScreenMax) + 1 - Theme.Frame.X,
+        Hi(ScreenMax) + 2 - Theme.Frame.Y, bxSingle);
+    DrawLine(Theme.Frame.X + 1, Theme.Frame.Y + Theme.Grps.Y + 1, Lo(ScreenMax) - Theme.Frame.X * 2 + 1,
+    lnSingle or lnHorizontal);
+    DrawLine(Theme.Frame.X + Theme.Grps.X + 3 - NoScroll, Theme.Frame.Y, Theme.Grps.Y + 2,
+    lnSingle or lnVertical);
+    if Theme.Shadow then
+        DrawShadow(Theme.Frame.X + 1, Theme.Frame.Y, Lo(ScreenMax) + 2 - Theme.Frame.X,
+        Hi(ScreenMax) + 2 - Theme.Frame.Y, bsDoubleWide);
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
 end;
 
 procedure DrawTitle;
 begin
     if FDIMode then exit;
-    TextAttr := $4F;
+    TextAttr := Theme.Title;
     GotoXY(1,1);
     ClrEol;
     GotoXY(40 - (Length(AppTitle + ' ' + AppVersion + ' ()' + AppName ) div 2), 1);
     FWrite(AppTitle + ' ');
-    TextAttr := $4E;
+    TextAttr := Theme.TitleHot;
     FWrite(AppVersion);
-    TextAttr := $4F;
+    TextAttr := Theme.Title;
     FWrite(' (' + AppName + ')');
+end;
+
+procedure DrawStatus;
+begin
+    if FDIMode then Exit;
+    Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+    gotoXY(1,Hi(WindMax));
+    TextAttr := Theme.Status;
+    if MaxAvail < LoMem then TextAttr := Theme.StatusHot;
+    FWrite(' ' + IntStr(MaxAvail));
+    TextAttr := Theme.Status;
+    FWrite('/');
+    if MemAvail < LoMem then TextAttr := Theme.StatusHot;
+    FWrite(IntStr(MemAvail)+ ' ');
+    TextAttr := Theme.Status;
+    if Not Assigned(Group) then begin
+        FWrite(NoTailDelim(FMedia));
+    end else begin
+        if Group^.Name <> '' then begin
+            FWrite(TailDelim(FMedia) + TailDelim(Group^.Name));
+            if Assigned(Package) then FWrite(Package^.Name + '.ZIP');
+        end else begin
+            if Assigned(Package) then begin
+                FWrite( 'Package ');
+                TextAttr := Theme.StatusHot;
+                FWrite(Package^.Name);
+                TextAttr := Theme.Status;
+                FWrite(' not found under ');
+                TextAttr := Theme.StatusHot;
+                FWrite(NoTailDelim(FMedia));
+                TextAttr := Theme.Status;
+            end;
+        end;
+    end;
+    ClrEol;
 end;
 
 procedure GroupToggle;
@@ -1346,6 +1479,8 @@ var
 begin
     CheckScroll := False;
     CheckCursor := False;
+    FDIMode := Ucase(ParamStr(1)) = '/FDI';
+    SetTheme;
     Init;
     DrawTitle;
     DrawSelector;
@@ -1359,38 +1494,7 @@ begin
             DrawButtons;
             LTab := Tab;
         end;
-        Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
-        if not FDIMode then begin
-            gotoXY(1,Hi(WindMax));
-            TextAttr := $47;
-            if MaxAvail < LoMem then TextAttr := $4F;
-            FWrite(' ' + IntStr(MaxAvail));
-            TextAttr := $47;
-            FWrite('/');
-            if MemAvail < LoMem then TextAttr := $4F;
-            FWrite(IntStr(MemAvail)+ ' ');
-            TextAttr := $47;
-            if Not Assigned(Group) then begin
-                FWrite(NoTailDelim(FMedia));
-            end else begin
-                if Group^.Name <> '' then begin
-                    FWrite(TailDelim(FMedia) + TailDelim(Group^.Name));
-                    if Assigned(Package) then FWrite(Package^.Name + '.ZIP');
-                end else begin
-                    if Assigned(Package) then begin
-                        FWrite( 'Package ');
-                        TextAttr := $4F;
-                        FWrite(Package^.Name);
-                        TextAttr := $47;
-                        FWrite(' not found under ');
-                        TextAttr := $4F;
-                        FWrite(NoTailDelim(FMedia));
-                        TextAttr := $47;
-                    end;
-                end;
-            end;
-            ClrEol;
-        end;
+        DrawStatus;
         ClearEvent(E);
         While E.What = evNothing do GetEvent(E);
         if E.What and evKeyDown = evKeyDown then
@@ -1409,9 +1513,9 @@ begin
                     2: TextUp(1);
                 end;
                 $4900 : case Tab of
-                    0: GroupUp(Grps.Y - 1);
-                    1: FileUp(Grps.Y - 1);
-                    2: TextUp(Hi(ScreenMax)- Frame.Y * 2 - Grps.Y - 1);
+                    0: GroupUp(Theme.Grps.Y - 1);
+                    1: FileUp(Theme.Grps.Y - 1);
+                    2: TextUp(Hi(ScreenMax)- Theme.Frame.Y * 2 - Theme.Grps.Y - 1);
                 end;
                 $5000 : case Tab of
                     0: GroupDown(1);
@@ -1419,9 +1523,9 @@ begin
                     2: TextDown(1);
                 end;
                 $5100 : case Tab of
-                    0: GroupDown(Grps.Y - 1);
-                    1: FileDown(Grps.Y - 1);
-                    2: TextDown(Hi(ScreenMax)- Frame.Y * 2 - Grps.Y - 1);
+                    0: GroupDown(Theme.Grps.Y - 1);
+                    1: FileDown(Theme.Grps.Y - 1);
+                    2: TextDown(Hi(ScreenMax)- Theme.Frame.Y * 2 - Theme.Grps.Y - 1);
                 end;
                 $0020, $000A, $000D : case Tab of
                     0: GroupToggle;
@@ -1458,30 +1562,6 @@ begin
     until Quit;
 end;
 
-procedure TestRead(N : String);
-var
-    K : File;
-    R, L : Integer;
-    S : String;
-begin
-    Assign(K, N);
-    Reset(K,1);
-    L := 0;
-    repeat
-        R := UnixRead(K, S);
-        if R = 0 then FWrite(S + '+')
-        else if R > 0 then FWriteLn(S + ';');
-        Delay(250);
-        Inc(L);
-    until (R = -1) or Keypressed or (L > 5);
-    close(K);
-    Delay(1000);
-    FWriteLn('');
-end;
-
 begin
     Main;
-
-{   TestRead('\PACKAGES\PKGINFO\JEMM.TXT');
-   TestRead('\PACKAGES\ALL\BASE\INDEX.LST');}
 end.
