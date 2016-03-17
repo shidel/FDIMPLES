@@ -46,7 +46,7 @@ uses QDos, QCrtNM, QStrings;
 const
     LoMem = 10240;
     AppName = 'FDIMPLES';
-    AppVersion = '0.7.0';
+    AppVersion = '0.7.1';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Installed = 'Installed!'; {Always sorted first -- has only title, no name}
     NoScroll = 1;
@@ -60,6 +60,8 @@ type
         Name : Str12;
         State : integer;
         Title : PString;
+        IVersion,
+        MVersion : PString;
         First : boolean;
     end;
     PText = ^TText;
@@ -125,14 +127,14 @@ const
     ThemeBlue : TTheme = (
         Frame:(X:1; Y:2);
         Grps:(X:18; Y:8);
-        Border:$17;
+        Border:$1F;
         Fore:White;
         Back:Blue;
         Choose:$71;
         Hot:LightGreen;
         FillAttr:$07;
         FillChar:#$B0;
-        Double:True;
+        Double:False;
         Shadow:False;
         Title:$70;
         TitleHot:$74;
@@ -349,6 +351,8 @@ begin
     J^.Items := nil;
     J^.Next := nil;
     J^.Prev := nil;
+    J^.IVersion := nil;
+    J^.MVersion := nil;
     J^.Title := nil;
     J^.First := true;
     J^.State := 1;
@@ -384,6 +388,8 @@ begin
             J^.Next := Others^.Items;
             J^.Prev := nil;
             J^.Title := nil;
+            J^.IVersion := nil;
+            J^.MVersion := nil;
             J^.First := true;
             J^.State := 1;
             if assigned(Others^.Items) then
@@ -409,7 +415,7 @@ begin
     Pkg^.Items := nil;
 end;
 
-function FreeSomeMem : boolean;
+function FreeSomeMem(Factor : Longint) : boolean;
 var
     Flag : boolean;
     G, P, PN : PItem;
@@ -422,7 +428,7 @@ begin
         while Assigned(P) and (Not Flag) do begin
             if P <> Package then
                 ClearPackage(P);
-            Flag := (MaxAvail > LoMem * 20);
+            Flag := (MaxAvail > LoMem * Factor);
             P := P^.Next;
         end;
         G := G^.Next;
@@ -433,7 +439,7 @@ end;
 function MemCheck(size : integer) : boolean;
 begin
     if (MaxAvail < Size * 2) or (MemAvail < LoMem) then begin
-        FreeSomeMem;
+        FreeSomeMem(10);
         MemCheck := (MaxAvail > Size * 2);
     end else
         MemCheck := True;
@@ -571,13 +577,18 @@ begin
             X := AGroup^.Items;
             while assigned(X) do begin
                 if (UCase(Name) = UCase(X^.Name)) and (not assigned(X^.Items)) then begin
-                    X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
-                    AddLine(X, Name + ' (' + ver + ')', True);
-                    AddLine(X, '', True);
-                    AddLine(X, Desc, C <> 0);
-                    while (C = 0) do begin
-                        C := UnixRead(F, B);
-                        AddLine(X, B, C <> 0);
+                    if Not Assigned(X^.Title) then
+                        X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
+                    if Not Assigned(X^.MVersion) then
+                        X^.MVersion := StrPtr(Ver);
+                    if not assigned(X^.Items) then begin
+                        AddLine(X, Name + ' (' + Ver + ')', True);
+                        AddLine(X, '', True);
+                        AddLine(X, Desc, C <> 0);
+                        while (C = 0) do begin
+                            C := UnixRead(F, B);
+                            AddLine(X, B, C <> 0);
+                        end;
                     end;
                     X := nil;
                 end else
@@ -629,6 +640,18 @@ var
 
     end;
 
+    procedure IgnoreVersion;
+    begin
+        TMode := False;
+        if FileExtension(LSM) = 'TXT' then begin
+            FreeStr(Package^.MVersion);
+            Package^.MVersion := StrPtr(Trim(Version));
+        end else begin
+            FreeStr(Package^.IVersion);
+            Package^.IVersion := StrPtr(Trim(Version));
+        end;
+    end;
+
     function Match(T : string; var V : string) : boolean;
     begin
         T := Ucase(Trim(T)) + ':';
@@ -663,7 +686,7 @@ begin
                 Flag := True
             else
             if Match('TITLE', Title) then Ignore else
-            if Match('Version', Version) then Ignore else
+            if Match('Version', Version) then IgnoreVersion else
             if Match('Author', Author) then IgnoreEmail(Author) else
             if Match('copying-policy', License) then Ignore else
 
@@ -686,7 +709,12 @@ begin
             end;
         until C = -1;
         if Pass = 0 then begin
-            AddLine(Package, Title + ' (' + Version + ')', True);
+           if (Not FDIMode) and Assigned(Package^.IVersion) and Assigned(Package^.MVersion) and
+            (Ucase(PtrStr(Package^.IVersion)) <> Ucase(PtrStr(Package^.MVersion))) then
+                AddLine(Package, Title + ' (' + PtrStr(Package^.MVersion)  + ', ' +
+                PtrStr(Package^.IVersion) + ' installed)', True)
+            else
+                AddLine(Package, Title + ' (' + Version + ')', True);
             if Author <> '' then
                 AddLine(Package, Author, True);
             if License <> '' then
@@ -731,12 +759,14 @@ procedure SearchForData(All:boolean);
 begin
     if Group^.Name = '' then begin
         TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', All);
-        if not (All and assigned(Package^.Items)) then exit;
-        TryLST(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + Package^.Name + '.LST', All);
+        if (All and assigned(Package^.Items)) then
+            TryLST(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + Package^.Name + '.LST', All);
     end else begin
+        if (not assigned(Package^.IVersion)) and (not FDIMode) then
+            TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', false);
         TryLSM(TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT', All);
-        if not (All and assigned(Package^.Items)) then exit;
-        TryLST(TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT', All);
+        if (All and assigned(Package^.Items)) then
+            TryLST(TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT', All);
     end;
 end;
 
@@ -824,6 +854,8 @@ begin
         Items := nil;
         Prev := nil;
         Next := nil;
+        IVersion := nil;
+        MVersion := nil;
         First := True;
         State := 1;
         Title := StrPtr(Installed);
@@ -838,6 +870,8 @@ begin
             P^.Items := nil;
             P^.Next := nil;
             P^.Title := nil;
+            P^.IVersion := nil;
+            P^.MVersion := nil;
             P^.First := True;
             P^.State := 0;
             GroupLast^.Next := P;
@@ -869,6 +903,8 @@ begin
                     J^.Items := nil;
                     J^.Next := nil;
                     J^.Title := nil;
+                    J^.IVersion := nil;
+                    J^.MVersion := nil;
                     J^.First := True;
                     J^.State := 0;
                     if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
@@ -955,6 +991,11 @@ end;
 procedure FetchData;
 begin
     SearchForData(true);
+    if Not assigned(Package^.Items) then begin
+        Group^.First := True;
+        FreeSomeMem(20);
+        CacheGroup(Group);
+    end;
     Package^.First := False;
 end;
 
@@ -978,14 +1019,14 @@ begin
     ClrScr;
     LineBottom := nil;
     if assigned(Package) then begin
-        if Package^.First then begin
+        if (Package^.First) or (not assigned(Package^.Items)) then begin
             FetchData;
         end;
 
-        if not assigned(Package^.Items) then
+        if not assigned(Package^.Items) then begin
             FWrite(RSpace(' ' + Package^.Name + ' - No information',
             Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll))
-        else begin
+        end else begin
             P := Package^.Items;
             Y := 1;
             if Assigned(LineTop) then P := LineTop;
@@ -1180,8 +1221,7 @@ begin
     ClrScr;
     { Window Box }
     TextChar := #32;
-    TextColor(Theme.Fore);
-    TextBackground(Theme.Back);
+    TextAttr := Theme.Border;
     Window(Theme.Frame.X, Theme.Frame.Y, Lo(ScreenMax) + 2 - Theme.Frame.X, Hi(ScreenMax) + 2 - Theme.Frame.Y);
     ClrScr;
     Window(1,1,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
