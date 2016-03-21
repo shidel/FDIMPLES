@@ -46,7 +46,7 @@ uses QDos, QCrtNM, QStrings;
 const
     LoMem = 10240;
     AppName = 'FDIMPLES';
-    AppVersion = '0.7.1';
+    AppVersion = '0.7.2';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Installed = 'Installed!'; {Always sorted first -- has only title, no name}
     NoScroll = 1;
@@ -604,9 +604,11 @@ var
     F : File;
     S : String;
     C, Pass : integer;
+    V : longint;
     Flag, TMode : boolean;
     Title, Version, Desc,
-    Author, License, X : String;
+    Author, License, X, M : String;
+    ISize, IFiles, SSize, SFIles : String;
 
     procedure Ignore;
     begin
@@ -660,6 +662,7 @@ var
         else begin
             Match := True;
             V := Trim(Copy(Trim(S), Length(T) + 1, Length(S)));
+            if V = '-' then V := '';
         end;
     end;
 
@@ -673,6 +676,10 @@ begin
     Version := Title;
     Author := '';
     License := '';
+    ISize := '';
+    IFiles := '';
+    SSize := '';
+    SFiles := '';
     While Pass < 2 do begin
         Flag := False;
         TMode := False;
@@ -689,6 +696,10 @@ begin
             if Match('Version', Version) then IgnoreVersion else
             if Match('Author', Author) then IgnoreEmail(Author) else
             if Match('copying-policy', License) then Ignore else
+            if Match('Total-size', ISize) then Ignore else
+            if Match('Total-files', IFiles) then Ignore else
+            if Match('Source-size', SSize) then Ignore else
+            if Match('Source-files', SFiles) then Ignore else
 
             if Match('Maintained-by', X) then Ignore else
             if Match('entered-date', X) then Ignore else
@@ -723,6 +734,26 @@ begin
         end;
         if (Pass = 1) and (PtrStr(Package^.Title) = '') then
             Package^.Title := StrPtr(Copy(Title, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
+        if (Pass = 1) and (ISize <> '') then begin
+            X := '';
+            if IFiles <> '' then begin
+                V := StrInt(IFiles) - StrInt(SFiles);
+                X := Comma(IntStr(V)) + ' file' + PluralStr(V) + ', ';
+            end;
+            V := StrInt(trim(ISize)) - StrInt(trim(SSize));
+            M := ' byte';
+            if V > 10239 then begin
+                M := ' KByte';
+                V := V div 1024;
+                if V > 5119 then begin
+                    M := ' MByte';
+                    V := V div 1024;
+                end;
+            end;
+            X := X + Comma(IntStr(V)) + M + PluralStr(V);
+            AddLine(Package, '', True);
+            AddLine(Package, X { + ':' + IFiles + '/' + ISize + ',' + SFiles + '/' + SSize }, True);
+        end;
 
         Inc(Pass);
     end;

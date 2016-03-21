@@ -78,7 +78,7 @@ interface
 
   function  StrBool(S : String) : Boolean;
   { Converts a String to a Boolean. True, On, Ok, Yes and Y return true }
-  function  StrInt(S : String) : integer;
+  function  StrInt(S : String) : LongInt;
   { Converts a String to an Integer. If an error occurs, Zero is returned }
   function StrHex(S : String; PascalStyle : boolean) : String;
   { Converts a Strings to its Hex Values }
@@ -651,9 +651,10 @@ implementation
         (S = 'T') or (S = 'Y');
   end;
 
-  function StrInt(S : String) : integer;
+  function StrInt(S : String) : longint;
   var
-    Temp, Err : integer;
+    Temp : LongInt;
+    Err : integer;
   begin
     Val(S, Temp, Err);
     if Err <> 0 then Temp := 0;
