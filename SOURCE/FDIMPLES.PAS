@@ -46,7 +46,7 @@ uses QDos, QCrtNM, QStrings;
 const
     LoMem = 10240;
     AppName = 'FDIMPLES';
-    AppVersion = '0.7.2';
+    AppVersion = '0.7.3';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Installed = 'Installed!'; {Always sorted first -- has only title, no name}
     NoScroll = 1;
