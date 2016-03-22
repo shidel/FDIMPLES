@@ -736,21 +736,39 @@ begin
             Package^.Title := StrPtr(Copy(Title, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
         if (Pass = 1) and (ISize <> '') then begin
             X := '';
-            if IFiles <> '' then begin
-                V := StrInt(IFiles) - StrInt(SFiles);
-                X := Comma(IntStr(V)) + ' file' + PluralStr(V) + ', ';
-            end;
-            V := StrInt(trim(ISize)) - StrInt(trim(SSize));
-            M := ' byte';
-            if V > 10239 then begin
-                M := ' KByte';
-                V := V div 1024;
-                if V > 5119 then begin
-                    M := ' MByte';
-                    V := V div 1024;
+            { if not FDIMODE then begin }
+                if IFiles <> '' then begin
+                    V := StrInt(IFiles) - StrInt(SFiles);
+                    X := Comma(IntStr(V)) + ' file' + PluralStr(V) + ' (';
                 end;
-            end;
-            X := X + Comma(IntStr(V)) + M + PluralStr(V);
+                V := StrInt(trim(ISize)) - StrInt(trim(SSize));
+                M := ' byte';
+                if V > 10239 then begin
+                    M := ' KByte';
+                    V := V div 1024;
+                    if V > 5119 then begin
+                        M := ' MByte';
+                        V := V div 1024;
+                    end;
+                end;
+                X := X + Comma(IntStr(V)) + M + PluralStr(V) + ')';
+                if SFIles <> '' then begin
+                    X := X  + '; ';
+                    V := StrInt(SFiles);
+                    X := X + Comma(IntStr(V)) + ' source file' + PluralStr(V) + ' (';
+                    V := StrInt(trim(SSize));
+                    M := ' byte';
+                    if V > 10239 then begin
+                        M := ' KByte';
+                        V := V div 1024;
+                        if V > 5119 then begin
+                            M := ' MByte';
+                            V := V div 1024;
+                        end;
+                    end;
+                    X := X + Comma(IntStr(V)) + M + PluralStr(V) + ')';
+                end;
+            { end;}
             AddLine(Package, '', True);
             AddLine(Package, X { + ':' + IFiles + '/' + ISize + ',' + SFiles + '/' + SSize }, True);
         end;
@@ -787,6 +805,8 @@ begin
 end;
 
 procedure SearchForData(All:boolean);
+var
+     FN : String;
 begin
     if Group^.Name = '' then begin
         TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', All);
@@ -795,9 +815,11 @@ begin
     end else begin
         if (not assigned(Package^.IVersion)) and (not FDIMode) then
             TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', false);
-        TryLSM(TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT', All);
+        FN := TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT';
+        while (Copy(FN, 3, 3) = '\..') do Delete(FN, 3, 3);
+        TryLSM(FN, All);
         if (All and assigned(Package^.Items)) then
-            TryLST(TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT', All);
+            TryLST(FN, All);
     end;
 end;
 
