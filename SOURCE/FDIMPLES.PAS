@@ -44,7 +44,7 @@ program Test;
 uses QDos, QCrtNM, QStrings;
 
 const
-    AppVersion = '0.7.5';
+    AppVersion = '0.8.0';
     AppName = 'FDIMPLES';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Installed = 'Installed!'; {Always sorted first -- has only title, no name}
@@ -249,8 +249,8 @@ end;
 function LockPackage(AName : String) : boolean;
 begin
     LockPackage := (RunMode = rmStandAlone) and (
-        (AName = 'FDNPKG') { or
-        (AName = 'FDIMPLES') }
+        (AName = 'FDNPKG') or
+        (AName = 'FDIMPLES')
     );
 end;
 
