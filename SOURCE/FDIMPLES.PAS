@@ -54,7 +54,8 @@ const
     NoScroll = 1;
 
 type
-    TStates = (psNone, psPartial, psInstalled, psUpgrade);
+    TStates = (psNone, psPartial, psFull, psUpgrade);
+    TChecks = array [TStates] of Char;
     PItem = ^TItem;
     TItem = record
         Prev, Next, Items : PItem;
@@ -94,8 +95,12 @@ var
     FDIMode : boolean;
     StartCursor : word;
     Theme : TTheme;
+    CheckMark : TChecks;
 
 const
+    NormalCheckMarks : TChecks = (
+        ' ', '+', 'X', 'U'
+    );
     ThemeRed : TTheme = (
         Frame:(X:5; Y:4);
         Grps:(X:18; Y:8);
@@ -365,7 +370,7 @@ begin
 
     if (not CheckDefault(TailDelim(B) + N)) then exit;
 
-    J := NewPItem(N, psInstalled);
+    J := NewPItem(N, psFull);
     if not assigned(PackageFirst) then begin
         PackageFirst := J;
         PackageLast := J;
@@ -379,7 +384,7 @@ var
     I : PText;
 begin
     I := Defaults;
-    Others^.State := psInstalled;
+    Others^.State := psFull;
     while Assigned(I) do begin
         S := True;
         P := GroupFirst;
@@ -392,7 +397,7 @@ begin
             P := P^.Next;
         end;
         if S then begin
-            J := NewPItem(Copy(PtrStr(I^.Str), 2, 13), psInstalled);
+            J := NewPItem(Copy(PtrStr(I^.Str), 2, 13), psFull);
             J^.Next := Others^.Items;
             if assigned(Others^.Items) then
                 Others^.Items^.Prev := J;
@@ -850,6 +855,7 @@ var
    T, M : String;
 
 begin
+    CheckMark := NormalCheckMarks;
     if Trim(GetEnv('FMEDIA')) <> '' then begin
         FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))));
     end;
@@ -889,7 +895,7 @@ begin
     ReadDefaults;
     Tab := 0;
     Group := nil;
-    Others := NewPItem('', psInstalled);
+    Others := NewPItem('', psFull);
     GroupFirst := Others;
     GroupLast := GroupFirst;
     with GroupFirst^ do begin
@@ -929,7 +935,7 @@ begin
                         J^.Locked := True;
                     J^.Prev := PackageLast;
                     if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
-                        J^.State := psInstalled;
+                        J^.State := psFull;
                         inc(CS);
                     end else
                         inc(NS);
@@ -946,7 +952,7 @@ begin
             P^.State := psNone
         else begin
             if NS = 0 then
-                P^.State := psInstalled
+                P^.State := psFull
             else
                 P^.State := psPartial;
         end;
@@ -1133,12 +1139,7 @@ begin
         if P <> Package then TextColor(Theme.Brace);
         FWrite('[');
         if P <> Package then TextColor(Theme.Check);
-        case P^.State of
-            psInstalled : FWrite('X');
-            psPartial : FWrite('+');
-        else
-            FWrite(#32);
-        end;
+        FWrite(CheckMark[P^.State]);
         if P <> Package then TextColor(Theme.Brace);
         FWrite(']');
         if P <> Package then
@@ -1200,12 +1201,7 @@ begin
         if P <> Group then TextColor(Theme.Brace);
         FWrite('[');
         if P <> Group then TextColor(Theme.Check);
-        case P^.State of
-            psInstalled : FWrite('X');
-            psPartial : FWrite('+');
-        else
-            FWrite(#32);
-        end;
+        FWrite(CheckMark[P^.State]);
         if P <> Group then TextColor(Theme.Brace);
         FWrite(']');
         if P <> Group then TextColor(Theme.Fore);
@@ -1335,7 +1331,7 @@ begin
         Group^.State := psNone
     else begin
         if NS = 0 then
-            Group^.State := psInstalled
+            Group^.State := psFull
         else
             Group^.State := psPartial;
     end;
@@ -1347,10 +1343,10 @@ var
     P : PItem;
 begin
     if not Assigned(Group) then exit;
-    if Group^.State = psInstalled then
+    if Group^.State = psFull then
         Group^.State := psNone
     else
-        Group^.State := psInstalled;
+        Group^.State := psFull;
     P := Group^.Items;
     while assigned(P) do begin
         if (Group^.State <> psNone) or (not P^.Locked) then
@@ -1367,7 +1363,7 @@ begin
         if Package^.State <> psNone then
             Package^.State := psNone
         else
-            Package^.State := psInstalled;
+            Package^.State := psFull;
     end;
     VerifyGroupState;
 end;
