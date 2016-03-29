@@ -98,6 +98,7 @@ var
     CheckMark : TChecks;
     RunMode : TModes;
     FileList : boolean;
+    AutoUpdate : boolean;
 
 const
     NormalCheckMarks : TChecks = (#$20, '+', 'X', 'U', '-');
@@ -1013,6 +1014,10 @@ begin
         while Assigned(Package) do begin
             if Not Assigned(Package^.Items) then
                 SearchForData(False);
+            if assigned(Package^.IVersion) and assigned(Package^.MVersion) and
+            (PtrStr(Package^.IVersion) <> PtrStr(Package^.MVersion)) and
+            (RunMode = rmStandAlone) and (not Package^.Locked) and AutoUpdate then
+                Package^.State := psUpgrade;
             Package := Package^.Next;
         end;
         Group := Group^.Next;
@@ -1334,27 +1339,28 @@ end;
 procedure VerifyGroupState;
 var
     P : PItem;
-    NS, CS : integer;
+    NS, FS, US : integer;
 begin
     P := Group^.Items;
     NS := 0;
-    CS := 0;
+    FS := 0;
+    US := 0;
     while assigned(P) do begin
-         if P^.State <> psNone then begin
-            inc(CS);
-         end else
-            inc(NS);
+         case P^.State of
+            psNone    : Inc(NS);
+            psFull    : Inc(FS);
+            psUpgrade : Inc(US);
+         end;
         P := P^.Next;
     end;
-    if CS = 0 then
+    if (FS = 0) and (US = 0) then
         Group^.State := psNone
-    else begin
-        if NS = 0 then
-            Group^.State := psFull
-        else
-            Group^.State := psPartial;
-    end;
-    DrawGroups;
+    else if (NS = 0) and (US = 0) then
+        Group^.State := psFull
+    else if (NS = 0) and (FS = 0) then
+        Group^.State := psUpgrade
+    else
+        Group^.State := psPartial;
 end;
 
 procedure GroupToggle;
@@ -1373,18 +1379,25 @@ begin
         P := P^.Next;
     end;
     VerifyGroupState;
+    DrawGroups;
 end;
 
 procedure FileToggle;
 begin
     if not assigned(Package) then exit;
     if (not Package^.Locked) then begin
-        if Package^.State <> psNone then
-            Package^.State := psNone
+        if Package^.State = psNone then
+            Package^.State := psFull
+        else if (Package^.State = psFull) and
+        assigned(Package^.IVersion) and assigned(Package^.MVersion) and
+        (PtrStr(Package^.IVersion) <> PtrStr(Package^.MVersion)) and
+        (RunMode = rmStandAlone) then
+            Package^.State := psUpgrade
         else
-            Package^.State := psFull;
+            Package^.State := psNone;
     end;
     VerifyGroupState;
+    DrawGroups;
 end;
 
 procedure GroupUp(T:integer);
@@ -1508,7 +1521,7 @@ begin
         while assigned(J) do begin
             C := { FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or }
                 FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
-            if J^.State = psNone then begin
+            if (J^.State = psNone) or (J^.State = psUpgrade) then begin
                 if C then begin
                     TextAttr := $4F;
                     FWrite ('remove ' + J^.Name);
@@ -1529,7 +1542,9 @@ begin
                         Halt(100);
                     end;
                 end;
-            end else begin
+                C := False;
+            end;
+            if (J^.State = psFull) or (J^.State = psUpgrade) then begin
                 if not C then begin
                     TextAttr := $1F;
                     FWrite('install ' + lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
@@ -1565,23 +1580,30 @@ end;
 procedure CommandLineHelp;
     procedure Option(S1, S2 : String);
     begin
-        WriteLn(ChrStr(#$20, 4),RSpace(S1, 10), #$20, S2);
+        WriteLn(ChrStr(#$20, 4),RSpace(S1, 16), #$20, S2);
     end;
 begin
     WriteLn(AppTitle, ' (', AppName, '), version ', AppVersion);
     WriteLn('Copyright 2016 Jerome Shidel');
     WriteLn('Released Under GPL v2.0 License.');
     WriteLn;
-    WriteLn(AppName, ' provides an easy-to-use user interface to the FDINST command-line');
-    WriteLn('package manager utility.');
+    WriteLn(AppName, ' provides an easy-to-use user interface to the FDINST package');
+    WriteLn('manager command-line utility.');
     WriteLn;
     WriteLn('usage: ', GetExeBase, ' [options]');
     WriteLn;
     Option ('/HELP,/?',  'Show this help screen.');
-    Option ('/FILES',    'Show file list in package description.');
-    Option ('/NOFILES',  'Do not show file list in package description.');
+    Option ('/[NO]FILES',  '[DO NOT] Show file list in package description.');
+    Option ('/[NO]UPDATE', '[DO NOT] Automatically select updatable packages.');
     WriteLn;
     Option ('/LISTS',    'Create package list files for use with FDI build utility.');
+    WriteLn;
+    WriteLn('User interface keyboard commands:');
+    WriteLn;
+    Option ('SPACE,ENTER', 'Toggle selection.');
+    Option ('TAB,LEFT,RIGHT', 'Change section focus.');
+    Option ('UP,DOWN',  'Move focused item up or down, also Page Up/Down.');
+    Option ('U', 'Toggle all updatable package statuses.');
     Halt(0);
 end;
 
@@ -1596,6 +1618,7 @@ begin
     FileList := True;
     CheckMark := NormalCheckMarks;
     RunMode := rmStandAlone;
+    AutoUpdate := False;
     I := 1;
     while I <= ParamCount do begin
         S := Ucase(ParamStr(I));
@@ -1613,6 +1636,10 @@ begin
             FileList := False
         else if S = '/FILES' then
             FileList := True
+        else if S = '/NOUPDATE' then
+            AutoUpdate := False
+        else if S = '/UPDATE' then
+            AutoUpdate := True
         else begin
             FWriteLn('invalid parameter "' + ParamStr(I) + '"');
             Halt(100);
