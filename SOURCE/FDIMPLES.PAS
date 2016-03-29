@@ -107,15 +107,15 @@ var
     LastTick : LongInt;
     Startup : boolean;
     Comments : boolean;
+    ListDir : string;
     TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
-
 
 const
     psBase = psFull;
     psAll = psUpgrade;
     psExtra = psReplace;
     NormalCheckMarks : TChecks = (#$20, '+', 'X', 'U', 'R');
-    ListCheckMarks   : TChecks = (#$20, '+', 'B', 'A', 'E');
+    ListCheckMarks   : TChecks = (#$20, '+', 'b', 'a', 'e');
     ThemeRed  : TTheme = (
         Frame:(X:5; Y:4);
         Grps:(X:18; Y:8);
@@ -308,39 +308,91 @@ begin
     );
 end;
 
+function UnixRead(var F : File; var S : String) : integer;
+var
+    P : longInt;
+    N : boolean;
+    C, D, O : integer;
+begin
+    Standby;
+    P := FilePos(F);
+    BlockRead(F, S[1], Sizeof(S) - 10, C);
+    S[0] := chr(C);
+    N := False;
+    if C = 0 then
+        UnixRead := -1
+    else begin
+        O := 0;
+        D := Pos(#$0a, S);
+        if (D <> 0) and (D <= Ord(S[0])) then begin
+            S[0] := Chr(D - 1);
+            Inc(O);
+            N := true;
+        end;
+        D := Pos(#$0d, S);
+        if (D <> 0) and (D <= Ord(S[0])) then begin
+            S[0] := Chr(D - 1);
+            Inc(O);
+            N := true;
+        end;
+ {       D := 1;
+        while (D <= Length(S)) and (S <> '') do begin
+            if (Ord(S[D]) = $0a) or (Ord(S[D]) = $0d) then begin
+                Delete (S, D, 1);
+                Inc(O);
+            end else Inc(D);
+        end;}
+        if N then
+            UnixRead := 1
+        else
+            UnixRead := 0;
+        Seek(F, P + Ord(S[0]) + O);
+    end;
+end;
+
+procedure ReadListFile(Name : string; Prefix : String);
+var
+    F : File;
+    S : String;
+    P : PText;
+    C : integer;
+begin
+    if not FileExists(Name) then exit;
+    FileMode := 0; { not needed }
+    Assign(F, Name);
+    Reset(F,1);
+    repeat
+        C := UnixRead(F, S);
+        S := Trim(Ucase(S));
+        if S[1] = ';' then S := '';
+        if S <> '' then begin
+            P := New(PText);
+            P^.Next := Defaults;
+            P^.Str := StrPtr(Prefix + S);
+            Defaults := P;
+        end;
+        while C = 0 do C := UnixRead(F, S);
+    until C = -1;
+    Close(F);
+end;
+
 procedure ReadDefaults;
 var
-    F : Text;
     S : String;
     L, P : PText;
     D : TSearchRec;
 begin
     Defaults := nil;
-    FileMode := 0; { not needed }
-    if FDIMode then begin
+    if RunMode = rmFDI then begin
         if FileExists(ALLPackages) then
-            Assign(F, ALLPackages)
+            ReadListFile(ALLPackages, '')
         else if FileExists(BASEPackages) then
-            Assign(F, BASEPackages)
+            ReadListFile(BASEPackages, '')
         else exit;
-        Reset(F);
-        L := nil;
-        while Not EOF(F) do begin
-            ReadLn(F, S);
-            S := Trim(Ucase(S));
-            if S[1] = ';' then S := '';
-            if S <> '' then begin
-                P := New(PText);
-                P^.Next := nil;
-                P^.Str := StrPtr(S);
-                if assigned(L) then
-                    L^.Next := P
-                else
-                    Defaults := P;
-                L := P;
-            end;
-        end;
-        Close(F);
+    end else if RunMode = rmList then begin
+        ReadListFile(ListDir + 'PKG_XTRA.LST', 'E* ');
+        ReadListFile(ListDir + 'PKG_ALL.LST',  'A* ');
+        ReadListFile(ListDir + 'PKG_BASE.LST', 'B* ');
     end else begin
         S := Trim(UCase(TailDelim(GetEnv('DOSDIR'))));
         if (S = '') then exit;
@@ -356,11 +408,32 @@ begin
                 else
                     Defaults := P;
                 L := P;
-
             end;
             FindNext(D);
         end;
     end;
+end;
+
+function GetPkgState(S : String) : TStates;
+var
+    P : PText;
+    T : String;
+    V : TStates;
+begin
+    V := psNone;
+    P := Defaults;
+    while assigned(P) and (V = psNone) do begin
+        T := PtrStr(P^.Str);
+        if Copy(T, 2, Length(T)) = '* ' + S then begin
+            case T[1] of
+                'B' : V := psBase;
+                'A' : V := psAll;
+                'E' : V := psExtra;
+            end;
+        end else
+            P := P^.Next;
+    end;
+    GetPkgState := V;
 end;
 
 function CheckDefault(S : String) : boolean;
@@ -431,7 +504,7 @@ var
   J : PItem;
   F : boolean;
 begin
-    if (not FDIMode) then exit;
+    if (RunMode <> rmFDI) then exit;
 
     if not assigned(P) then exit;
 
@@ -565,48 +638,6 @@ begin
         L^.Next := N;
         N^.Prev := L;
         L := N;
-    end;
-end;
-
-function UnixRead(var F : File; var S : String) : integer;
-var
-    P : longInt;
-    N : boolean;
-    C, D, O : integer;
-begin
-    Standby;
-    P := FilePos(F);
-    BlockRead(F, S[1], Sizeof(S) - 10, C);
-    S[0] := chr(C);
-    N := False;
-    if C = 0 then
-        UnixRead := -1
-    else begin
-        O := 0;
-        D := Pos(#$0a, S);
-        if (D <> 0) and (D <= Ord(S[0])) then begin
-            S[0] := Chr(D - 1);
-            Inc(O);
-            N := true;
-        end;
-        D := Pos(#$0d, S);
-        if (D <> 0) and (D <= Ord(S[0])) then begin
-            S[0] := Chr(D - 1);
-            Inc(O);
-            N := true;
-        end;
- {       D := 1;
-        while (D <= Length(S)) and (S <> '') do begin
-            if (Ord(S[D]) = $0a) or (Ord(S[D]) = $0d) then begin
-                Delete (S, D, 1);
-                Inc(O);
-            end else Inc(D);
-        end;}
-        if N then
-            UnixRead := 1
-        else
-            UnixRead := 0;
-        Seek(F, P + Ord(S[0]) + O);
     end;
 end;
 
@@ -928,11 +959,46 @@ begin
     Close(F);
 end;
 
+procedure VerifyGroupState;
+var
+    P : PItem;
+    NS, FS, US, RS, ES : integer;
+begin
+    P := Group^.Items;
+    NS := 0;
+    FS := 0;
+    US := 0;
+    RS := 0;
+    ES := 0;
+    while assigned(P) do begin
+         case P^.State of
+            psNone    : Inc(NS);
+            psFull    : Inc(FS);
+            psUpgrade : Inc(US);
+            psReplace : Inc(RS);
+            psExtra   : Inc(ES);
+         end;
+        P := P^.Next;
+    end;
+    if (FS = 0) and (US = 0) and (RS = 0) and (ES = 0) then
+        Group^.State := psNone
+    else if (NS = 0) and (US = 0) and (RS = 0) and (ES = 0) then
+        Group^.State := psFull
+    else if (NS = 0) and (FS = 0) and (RS = 0) and (ES = 0) then
+        Group^.State := psUpgrade
+    else if (NS = 0) and (FS = 0) and (US = 0) and (ES = 0) then
+        Group^.State := psReplace
+    else if (NS = 0) and (FS = 0) and (RS = 0) and (US = 0) then
+        Group^.State := psExtra
+    else
+        Group^.State := psPartial;
+end;
+
 procedure Init;
 var
    S : TSearchRec;
    P, J, Others : PItem;
-   CS, NS : integer;
+   CS : integer;
    T, M : String;
 
 begin
@@ -996,8 +1062,6 @@ begin
     SortList(GroupFirst, GroupLast);
     P := GroupFirst;
     while Assigned(P) do begin
-        CS := 0;
-        NS := 0;
         PackageFirst := nil;
         PackageLast := nil;
 
@@ -1015,12 +1079,11 @@ begin
                     J^.Locked := LockPackage(J^.Name);
                     J^.Prev := PackageLast;
                     if RunMode = rmList then begin
+                        J^.State := GetPkgState(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name));
                     end else
                     if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
                         J^.State := psFull;
-                        inc(CS);
-                    end else
-                        inc(NS);
+                    end;
                     if not Assigned(PackageFirst) then
                         PackageFirst := J
                     else
@@ -1029,14 +1092,6 @@ begin
                 end;
                 FindNext(S);
             end;
-        end;
-        if CS = 0 then
-            P^.State := psNone
-        else begin
-            if NS = 0 then
-                P^.State := psFull
-            else
-                P^.State := psPartial;
         end;
         P^.Items := PackageFirst;
         P := P^.Next;
@@ -1078,6 +1133,7 @@ begin
                 SearchForData(False);
             Package := Package^.Next;
         end;
+        VerifyGroupState;
         Group := Group^.Next;
     end;
 
@@ -1394,41 +1450,6 @@ begin
     ClrEol;
 end;
 
-procedure VerifyGroupState;
-var
-    P : PItem;
-    NS, FS, US, RS, ES : integer;
-begin
-    P := Group^.Items;
-    NS := 0;
-    FS := 0;
-    US := 0;
-    RS := 0;
-    ES := 0;
-    while assigned(P) do begin
-         case P^.State of
-            psNone    : Inc(NS);
-            psFull    : Inc(FS);
-            psUpgrade : Inc(US);
-            psReplace : Inc(RS);
-            psExtra   : Inc(ES);
-         end;
-        P := P^.Next;
-    end;
-    if (FS = 0) and (US = 0) and (RS = 0) and (ES = 0) then
-        Group^.State := psNone
-    else if (NS = 0) and (US = 0) and (RS = 0) and (ES = 0) then
-        Group^.State := psFull
-    else if (NS = 0) and (FS = 0) and (RS = 0) and (ES = 0) then
-        Group^.State := psUpgrade
-    else if (NS = 0) and (FS = 0) and (US = 0) and (ES = 0) then
-        Group^.State := psReplace
-    else if (NS = 0) and (FS = 0) and (RS = 0) and (US = 0) then
-        Group^.State := psExtra
-    else
-        Group^.State := psPartial;
-end;
-
 procedure GroupToggle;
 var
     P : PItem;
@@ -1660,9 +1681,9 @@ begin
     MakeList('PKG_BASE.LST', psBase, True);
     MakeList('PKG_ALL.LST', psBase, True);
     MakeList('PKG_ALL.LST', psAll, True);
-    MakeList('PKG_EXTRA.LST', psBase, True);
-    MakeList('PKG_EXTRA.LST', psAll, True);
-    MakeList('PKG_EXTRA.LST', psExtra, True);
+    MakeList('PKG_XTRA.LST', psBase, True);
+    MakeList('PKG_XTRA.LST', psAll, True);
+    MakeList('PKG_XTRA.LST', psExtra, True);
     CleanUp;
 end;
 
@@ -1784,6 +1805,7 @@ var
     S : String;
     I : integer;
 begin
+    ListDir := 'D:\FDI\SETTINGS\';
     TickCount := 0;
     StartUp := True;
     FileList := True;
@@ -1798,7 +1820,7 @@ begin
             CommandLineHelp
         else if (S = '/LISTS') then begin
             RunMode := rmList;
-            FileList := False;
+            FileList := True;
             CheckMark := ListCheckMarks;
         end else if S = '/FDI' then begin
             RunMode := rmFDI;
@@ -1821,12 +1843,12 @@ begin
         inc(I);
     end;
     UpdateOn := false;
-    CheckScroll := False;
-    CheckCursor := False;
     SetTheme;
     Init;
     if AutoUpdate then UpdateToggle(True);
     StartUp := False;
+    CheckScroll := False;
+    CheckCursor := False;
     DrawTitle;
     DrawSelector;
     LTab := -1;
