@@ -56,7 +56,7 @@ const
     MinTicks = 7;
 
 type
-    TStates = (psNone, psPartial, psFull, psUpgrade, psReplace, psExtra);
+    TStates = (psNone, psPartial, psFull, psUpgrade, psReplace);
     TModes = (rmFDI, rmStandAlone, rmList);
     TChecks = array [TStates] of Char;
     PItem = ^TItem;
@@ -106,12 +106,16 @@ var
     TickCount : Longint;
     LastTick : LongInt;
     Startup : boolean;
+    Comments : boolean;
     TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
 
 
 const
-    NormalCheckMarks : TChecks = (#$20, '+', 'X', 'U', 'R', '-');
-    ListCheckMarks   : TChecks = (#$20, '+', 'B', 'A', '-', 'E');
+    psBase = psFull;
+    psAll = psUpgrade;
+    psExtra = psReplace;
+    NormalCheckMarks : TChecks = (#$20, '+', 'X', 'U', 'R');
+    ListCheckMarks   : TChecks = (#$20, '+', 'B', 'A', 'E');
     ThemeRed  : TTheme = (
         Frame:(X:5; Y:4);
         Grps:(X:18; Y:8);
@@ -1010,6 +1014,8 @@ begin
                     J := NewPItem(Copy(S.Name, 1, Length(S.Name) - 4), psNone);
                     J^.Locked := LockPackage(J^.Name);
                     J^.Prev := PackageLast;
+                    if RunMode = rmList then begin
+                    end else
                     if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
                         J^.State := psFull;
                         inc(CS);
@@ -1036,7 +1042,7 @@ begin
         P := P^.Next;
     end;
 
-    if (not FDIMode) then
+    if (RunMode = rmStandAlone) then
         AddInstalled(Others);
 
     P := GroupFirst;
@@ -1428,10 +1434,20 @@ var
     P : PItem;
 begin
     if not Assigned(Group) then exit;
-    if Group^.State = psFull then
-        Group^.State := psNone
-    else
-        Group^.State := psFull;
+    if RunMode = rmList then begin
+        case Group^.State of
+            psNone : Group^.State := psBase;
+            psBase : Group^.State := psAll;
+            psAll  : Group^.State := psExtra;
+        else
+            Group^.State := psNone;
+        end;
+    end else begin
+        if Group^.State = psFull then
+            Group^.State := psNone
+        else
+            Group^.State := psFull;
+    end;
     P := Group^.Items;
     while assigned(P) do begin
         StandBy;
@@ -1446,6 +1462,15 @@ end;
 procedure FileToggle;
 begin
     if not assigned(Package) then exit;
+    if RunMode = rmList then begin
+        case Package^.State of
+            psNone : Package^.State := psBase;
+            psBase : Package^.State := psAll;
+            psAll  : Package^.State := psExtra;
+        else
+            Package^.State := psNone;
+        end;
+    end else
     if (not Package^.Locked) then begin
         if Package^.State = psNone then
             Package^.State := psFull
@@ -1578,26 +1603,66 @@ begin
     DrawPackage;
 end;
 
-procedure MakeList;
+procedure MakeList(Name : string; State : TStates; Additional : boolean);
 var
     P, J : PItem;
     F : Text;
     S : String;
 begin
     FileMode := 2;
-    Assign(F, TailDelim(GetEnv('TEMP')) + 'FDIMPLES.LST');
-    Rewrite(F);
+    Assign(F, Name);
+    if FileExists(Name) and Additional and (State <> psBase) then
+        Append(F)
+    else
+        Rewrite(F);
+    if Additional then begin
+        if (State = psBase) then begin
+            WriteLn(F, '; FreeDOS Installer Package List File');
+        end;
+        WriteLn(F);
+        case State of
+            psBase  : WriteLn(F, '; BASE Packages');
+            psAll   : WriteLn(F, '; ALL Packages');
+            psExtra : WriteLn(F, '; EXTRA Packages');
+        end;
+        WriteLn(F);
+    end;
     P := GroupFirst;
     while assigned(P) do begin
         J := P^.Items;
         while assigned(J) do begin
-            if J^.State <> psNone then
+            if J^.State = State then begin
+                if Comments and (PtrStr(J^.Title) <> '') then begin
+                    WriteLn(F, '; ', RSpace(J^.NAME, 12), #32,
+                    RSpace(Copy(PtrStr(J^.MVersion),1,20), 20), #32,
+                    PtrStr(J^.Title));
+                end;
                 WriteLn(F, lcase(P^.Name + Delimiter + J^.Name));
+                if Comments and (PtrStr(J^.Title) <> '') then begin
+                    WriteLn(F);
+                end;
+            end;
             J := J^.Next;
         end;
         P := P^.Next;
     end;
     Close(F);
+end;
+
+procedure MakeFDIList;
+begin
+    MakeList(TailDelim(GetEnv('TEMP')) + 'FDIMPLES.LST', psFull, False);
+    CleanUp;
+end;
+
+procedure MakeLists;
+begin
+    MakeList('PKG_BASE.LST', psBase, True);
+    MakeList('PKG_ALL.LST', psBase, True);
+    MakeList('PKG_ALL.LST', psAll, True);
+    MakeList('PKG_EXTRA.LST', psBase, True);
+    MakeList('PKG_EXTRA.LST', psAll, True);
+    MakeList('PKG_EXTRA.LST', psExtra, True);
     CleanUp;
 end;
 
@@ -1725,6 +1790,7 @@ begin
     CheckMark := NormalCheckMarks;
     RunMode := rmStandAlone;
     AutoUpdate := False;
+    Comments := False;
     I := 1;
     while I <= ParamCount do begin
         S := Ucase(ParamStr(I));
@@ -1736,6 +1802,7 @@ begin
             CheckMark := ListCheckMarks;
         end else if S = '/FDI' then begin
             RunMode := rmFDI;
+            Comments := False;
             FileList := True;
             AutoUpdate := False;
             CheckMark := NormalCheckMarks;
@@ -1809,10 +1876,12 @@ begin
                     0: GroupToggle;
                     1, 2 : FileToggle;
                     3: begin
-                        if FDIMode then
-                            MakeList
+                        if RunMode = rmFDI then
+                            MakeFDIList
+                        else if RunMode = rmStandAlone then
+                            RunList
                         else
-                            RunList;
+                            MakeLists;
                         Quit := True;
                     end;
                     4: begin
