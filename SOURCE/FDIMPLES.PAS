@@ -97,6 +97,7 @@ var
     Theme : TTheme;
     CheckMark : TChecks;
     RunMode : TModes;
+    FileList : boolean;
 
 const
     NormalCheckMarks : TChecks = (#$20, '+', 'X', 'U', '-');
@@ -242,6 +243,14 @@ begin
         Locked := False;
     end;
     NewPItem := P;
+end;
+
+function LockPackage(AName : String) : boolean;
+begin
+    LockPackage := (RunMode = rmStandAlone) and (
+        (AName = 'FDNPKG') { or
+        (AName = 'FDIMPLES') }
+    );
 end;
 
 procedure ReadDefaults;
@@ -605,7 +614,7 @@ var
     S : String;
     C, Pass : integer;
     V : longint;
-    Flag, TMode : boolean;
+    Flag, TMode, Appending : boolean;
     Title, Version, Desc,
     Author, License, X, M : String;
     ISize, IFiles, SSize, SFIles : String;
@@ -661,6 +670,7 @@ var
             Match := False
         else begin
             Match := True;
+            Appending := False;
             V := Trim(Copy(Trim(S), Length(T) + 1, Length(S)));
             if V = '-' then V := '';
         end;
@@ -680,6 +690,7 @@ begin
     IFiles := '';
     SSize := '';
     SFiles := '';
+    Appending := False;
     While Pass < 2 do begin
         Flag := False;
         TMode := False;
@@ -714,11 +725,15 @@ begin
                         Package^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
                     S := Desc;
                     TMode := true;
-                end else
-                    if (Copy(S, 1, 2) = '  ') then S := LTrim(S);
-                if TMode then AddLine(Package, S, C <> 0);
+                    Appending := true;
+                end else if (Copy(S, 1, 2) = '  ') then S := LTrim(S) else
+                begin
+                    if Appending then AddLine(Package, '', True);
+                end;
+                if TMode then AddLine(Package, S, Not Appending);
             end;
         until C = -1;
+        if Appending then AddLine(Package, '', True);
         if Pass = 0 then begin
            if (Not FDIMode) and Assigned(Package^.IVersion) and Assigned(Package^.MVersion) and
             (Ucase(PtrStr(Package^.IVersion)) <> Ucase(PtrStr(Package^.MVersion))) then
@@ -735,6 +750,7 @@ begin
         if (Pass = 1) and (PtrStr(Package^.Title) = '') then
             Package^.Title := StrPtr(Copy(Title, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
         if (Pass = 1) and (ISize <> '') then begin
+            AddLine(Package, '', True);
             X := '';
             { if not FDIMODE then begin }
                 if IFiles <> '' then begin
@@ -810,7 +826,7 @@ var
 begin
     if Group^.Name = '' then begin
         TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', All);
-        if (All and assigned(Package^.Items)) then
+        if (All and assigned(Package^.Items)) and FileList then
             TryLST(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + Package^.Name + '.LST', All);
     end else begin
         if (not assigned(Package^.IVersion)) and (not FDIMode) then
@@ -818,7 +834,7 @@ begin
         FN := TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT';
         while (Copy(FN, 3, 3) = '\..') do Delete(FN, 3, 3);
         TryLSM(FN, All);
-        if (All and assigned(Package^.Items)) then
+        if (All and assigned(Package^.Items)) and FileList then
             TryLST(FN, All);
     end;
 end;
@@ -935,8 +951,7 @@ begin
                 if (S.Attr and (faDirectory or faSystem or faHidden) = 0) and
                 (S.Name <> '.') and ((S.Name <> 'V8POWER.ZIP') or (Not FDIMode)) then begin
                     J := NewPItem(Copy(S.Name, 1, Length(S.Name) - 4), psNone);
-                    if (Not FDIMODE) and ((S.Name = 'FDNPKG.ZIP') or (S.Name = 'FDIMPLES.ZIP')) then
-                        J^.Locked := True;
+                    J^.Locked := LockPackage(J^.Name);
                     J^.Prev := PackageLast;
                     if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
                         J^.State := psFull;
@@ -1547,23 +1562,66 @@ begin
     {$ENDIF}
 end;
 
+procedure CommandLineHelp;
+    procedure Option(S1, S2 : String);
+    begin
+        WriteLn(ChrStr(#$20, 4),RSpace(S1, 10), #$20, S2);
+    end;
+begin
+    WriteLn(AppTitle, ' (', AppName, '), version ', AppVersion);
+    WriteLn('Copyright 2016 Jerome Shidel');
+    WriteLn('Released Under GPL v2.0 License.');
+    WriteLn;
+    WriteLn(AppName, ' provides an easy-to-use user interface to the FDINST command-line');
+    WriteLn('package manager utility.');
+    WriteLn;
+    WriteLn('usage: ', GetExeBase, ' [options]');
+    WriteLn;
+    Option ('/HELP,/?',  'Show this help screen.');
+    Option ('/FILES',    'Show file list in package description.');
+    Option ('/NOFILES',  'Do not show file list in package description.');
+    WriteLn;
+    Option ('/LISTS',    'Create package list files for use with FDI build utility.');
+    Halt(0);
+end;
+
 procedure Main;
 var
     E : TEvent;
     LTab : integer;
     Quit : boolean;
     S : String;
+    I : integer;
 begin
+    FileList := True;
+    CheckMark := NormalCheckMarks;
+    RunMode := rmStandAlone;
+    I := 1;
+    while I <= ParamCount do begin
+        S := Ucase(ParamStr(I));
+        if (S = '/HELP') or (S = '/?') then
+            CommandLineHelp
+        else if (S = '/LISTS') then begin
+            RunMode := rmList;
+            FileList := False;
+            CheckMark := ListCheckMarks;
+        end else if S = '/FDI' then begin
+            RunMode := rmFDI;
+            FileList := True;
+            CheckMark := NormalCheckMarks;
+        end else if S = '/NOFILES' then
+            FileList := False
+        else if S = '/FILES' then
+            FileList := True
+        else begin
+            FWriteLn('invalid parameter "' + ParamStr(I) + '"');
+            Halt(100);
+        end;
+        inc(I);
+    end;
+
     CheckScroll := False;
     CheckCursor := False;
-    CheckMark := NormalCheckMarks;
-    if Ucase(ParamStr(1)) = '/LIST' then begin
-        RunMode := rmList;
-        CheckMark := ListCheckMarks;
-    end else if Ucase(ParamStr(1)) = '/FDI' then
-        RunMode := rmFDI
-    else
-        RunMode := rmStandAlone;
     SetTheme;
     Init;
     DrawTitle;
