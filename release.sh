@@ -1,13 +1,15 @@
 #!/bin/sh
 
-PRERELEASE='.pre'
+# PRERELEASE='.pre'
+PRERELEASE=''
 
 DESTINATION='Downloads'
 RELEASE=0
 FORMAT='zip'
 PROJECT=$(echo ${PWD##*/})
 TODAY=$(date +'%Y-%m-%d')
-VERSION=$(date +'%y.%m.%d')
+# VERSION=$(date +'%y.%m.%d')
+VERSION=$(grep -i AppVersion SOURCE/VERSION.INC | cut -d "'" -f 2);
 
 rm SOURCE/*.EXE >/dev/null
 rm SOURCE/*.TPU >/dev/null
@@ -19,7 +21,9 @@ rm SOURCE/*.TPU >/dev/null
 mkdir -p "${HOME}/${DESTINATION}/${PROJECT}"
 cp -r BIN/* "${HOME}/${DESTINATION}/${PROJECT}/"
 
-ARCHIVE="${PROJECT}-${VERSION}-${RELEASE}${PRERELEASE}.${FORMAT}"
+# ARCHIVE="${PROJECT}-${VERSION}-${RELEASE}${PRERELEASE}.${FORMAT}"
+[[ "${PRERELEASE}" == "" ]] && ARCHIVE="${PROJECT}-${VERSION}.${FORMAT}" || ARCHIVE="${PROJECT}-${VERSION}-${PRERELEASE}.${FORMAT}"
+
 while [[ -f "${HOME}/${DESTINATION}/${ARCHIVE}" ]] ; do
 	(( RELEASE++ ))
 	ARCHIVE="${PROJECT}-${VERSION}-${RELEASE}${PRERELEASE}.${FORMAT}"

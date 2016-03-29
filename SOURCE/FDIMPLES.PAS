@@ -43,8 +43,9 @@ program Test;
 
 uses QDos, QCrtNM, QStrings;
 
+{$I VERSION.INC}
+
 const
-    AppVersion = '0.8.0';
     AppName = 'FDIMPLES';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Installed = 'Installed!'; {Always sorted first -- has only title, no name}
@@ -54,7 +55,7 @@ const
     NoScroll = 1;
 
 type
-    TStates = (psNone, psPartial, psFull, psUpgrade, psExtra);
+    TStates = (psNone, psPartial, psFull, psUpgrade, psReplace, psExtra);
     TModes = (rmFDI, rmStandAlone, rmList);
     TChecks = array [TStates] of Char;
     PItem = ^TItem;
@@ -101,8 +102,8 @@ var
     AutoUpdate : boolean;
 
 const
-    NormalCheckMarks : TChecks = (#$20, '+', 'X', 'U', '-');
-    ListCheckMarks   : TChecks = (#$20, '+', 'B', 'A', 'E');
+    NormalCheckMarks : TChecks = (#$20, '+', 'X', 'U', 'R', '-');
+    ListCheckMarks   : TChecks = (#$20, '+', 'B', 'A', '-', 'E');
     ThemeRed  : TTheme = (
         Frame:(X:5; Y:4);
         Grps:(X:18; Y:8);
@@ -672,7 +673,7 @@ var
         else begin
             Match := True;
             Appending := False;
-            V := Trim(Copy(Trim(S), Length(T) + 1, Length(S)));
+            V := LTrim(Copy(LTrim(S), Length(T) + 1, Length(S)));
             if V = '-' then V := '';
         end;
     end;
@@ -785,8 +786,11 @@ begin
                     end;
                     X := X + Comma(IntStr(V)) + M + PluralStr(V) + ')';
                 end;
-            { end;}
             AddLine(Package, '', True);
+            if Package^.Locked then begin
+                if X <> '' then X := X + ', ';
+                X := X + 'LOCKED';
+            end;
             AddLine(Package, X { + ':' + IFiles + '/' + ISize + ',' + SFiles + '/' + SSize }, True);
         end;
 
@@ -1015,9 +1019,10 @@ begin
             if Not Assigned(Package^.Items) then
                 SearchForData(False);
             if assigned(Package^.IVersion) and assigned(Package^.MVersion) and
-            (PtrStr(Package^.IVersion) <> PtrStr(Package^.MVersion)) and
-            (RunMode = rmStandAlone) and (not Package^.Locked) and AutoUpdate then
-                Package^.State := psUpgrade;
+            (UCase(PtrStr(Package^.IVersion)) < UCase(PtrStr(Package^.MVersion))) and
+            (RunMode = rmStandAlone) and (not Package^.Locked) and AutoUpdate then begin
+                Package^.State := psReplace;
+            end;
             Package := Package^.Next;
         end;
         Group := Group^.Next;
@@ -1339,26 +1344,34 @@ end;
 procedure VerifyGroupState;
 var
     P : PItem;
-    NS, FS, US : integer;
+    NS, FS, US, RS, ES : integer;
 begin
     P := Group^.Items;
     NS := 0;
     FS := 0;
     US := 0;
+    RS := 0;
+    ES := 0;
     while assigned(P) do begin
          case P^.State of
             psNone    : Inc(NS);
             psFull    : Inc(FS);
             psUpgrade : Inc(US);
+            psReplace : Inc(RS);
+            psExtra   : Inc(ES);
          end;
         P := P^.Next;
     end;
-    if (FS = 0) and (US = 0) then
+    if (FS = 0) and (US = 0) and (RS = 0) and (ES = 0) then
         Group^.State := psNone
-    else if (NS = 0) and (US = 0) then
+    else if (NS = 0) and (US = 0) and (RS = 0) and (ES = 0) then
         Group^.State := psFull
-    else if (NS = 0) and (FS = 0) then
+    else if (NS = 0) and (FS = 0) and (RS = 0) and (ES = 0) then
         Group^.State := psUpgrade
+    else if (NS = 0) and (FS = 0) and (US = 0) and (ES = 0) then
+        Group^.State := psReplace
+    else if (NS = 0) and (FS = 0) and (RS = 0) and (US = 0) then
+        Group^.State := psExtra
     else
         Group^.State := psPartial;
 end;
@@ -1391,9 +1404,12 @@ begin
         else if (Package^.State = psFull) and
         assigned(Package^.IVersion) and assigned(Package^.MVersion) and
         (PtrStr(Package^.IVersion) <> PtrStr(Package^.MVersion)) and
-        (RunMode = rmStandAlone) then
-            Package^.State := psUpgrade
-        else
+        (RunMode = rmStandAlone) then begin
+            if (UCase(PtrStr(Package^.IVersion)) < UCase(PtrStr(Package^.MVersion))) then
+                Package^.State := psUpgrade
+            else
+                Package^.State := psReplace
+        end else
             Package^.State := psNone;
     end;
     VerifyGroupState;
@@ -1521,7 +1537,7 @@ begin
         while assigned(J) do begin
             C := { FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or }
                 FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
-            if (J^.State = psNone) or (J^.State = psUpgrade) then begin
+            if (J^.State = psNone) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
                 if C then begin
                     TextAttr := $4F;
                     FWrite ('remove ' + J^.Name);
@@ -1544,7 +1560,7 @@ begin
                 end;
                 C := False;
             end;
-            if (J^.State = psFull) or (J^.State = psUpgrade) then begin
+            if (J^.State = psFull) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
                 if not C then begin
                     TextAttr := $1F;
                     FWrite('install ' + lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
