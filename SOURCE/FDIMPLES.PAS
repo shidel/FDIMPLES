@@ -54,11 +54,12 @@ const
     NoScroll = 1;
 
 type
+    TStates = (psNone, psPartial, psInstalled, psUpgrade);
     PItem = ^TItem;
     TItem = record
         Prev, Next, Items : PItem;
         Name : Str12;
-        State : integer;
+        State : TStates;
         Title, IVersion, MVersion : PString;
         First, Locked : boolean;
     end;
@@ -213,7 +214,7 @@ begin
         Theme := ThemeBlue;
 end;
 
-function NewPItem(const AName: String; const AState : integer) : PItem;
+function NewPItem(const AName: String; const AState : TStates) : PItem;
 var
     P : PItem;
 begin
@@ -364,7 +365,7 @@ begin
 
     if (not CheckDefault(TailDelim(B) + N)) then exit;
 
-    J := NewPItem(N, 1);
+    J := NewPItem(N, psInstalled);
     if not assigned(PackageFirst) then begin
         PackageFirst := J;
         PackageLast := J;
@@ -378,7 +379,7 @@ var
     I : PText;
 begin
     I := Defaults;
-    Others^.State := 1;
+    Others^.State := psInstalled;
     while Assigned(I) do begin
         S := True;
         P := GroupFirst;
@@ -391,7 +392,7 @@ begin
             P := P^.Next;
         end;
         if S then begin
-            J := NewPItem(Copy(PtrStr(I^.Str), 2, 13), 1);
+            J := NewPItem(Copy(PtrStr(I^.Str), 2, 13), psInstalled);
             J^.Next := Others^.Items;
             if assigned(Others^.Items) then
                 Others^.Items^.Prev := J;
@@ -455,7 +456,7 @@ begin
     if not MemCheck(Sizeof(PItem) + Sizeof(String)) then exit;
     L := P^.Items;
     if not assigned(L) then begin
-        L := NewPItem('', 0);
+        L := NewPItem('', psNone);
         P^.Items := L;
     end else begin
         while Assigned(L^.Next) do L := L^.Next;
@@ -467,7 +468,7 @@ begin
         M := W - Length(T);
 
         if ((LastPos(' ', copy(S, 1, M)) = 0) and (T <> '')) or (M < 1) then begin
-            N := NewPItem('',0);
+            N := NewPItem('', psNone);
             L^.Next := N;
             N^.Prev := L;
             L := N;
@@ -485,7 +486,7 @@ begin
     end;
 
     if NewLine then begin
-        N := NewPItem('',0);
+        N := NewPItem('', psNone);
         L^.Next := N;
         N^.Prev := L;
         L := N;
@@ -888,7 +889,7 @@ begin
     ReadDefaults;
     Tab := 0;
     Group := nil;
-    Others := NewPItem('',1);
+    Others := NewPItem('', psInstalled);
     GroupFirst := Others;
     GroupLast := GroupFirst;
     with GroupFirst^ do begin
@@ -898,7 +899,7 @@ begin
     while DosError = 0 do begin
         if (S.Attr and faDirectory = faDirectory) and (S.Name <> '.') and
         (S.Name <> '..') then begin
-            P := NewPItem(S.Name, 0);
+            P := NewPItem(S.Name, psNone);
             P^.Prev := GroupLast;
             GroupLast^.Next := P;
             GroupLast := P;
@@ -923,10 +924,12 @@ begin
             while DosError = 0 do begin
                 if (S.Attr and (faDirectory or faSystem or faHidden) = 0) and
                 (S.Name <> '.') and ((S.Name <> 'V8POWER.ZIP') or (Not FDIMode)) then begin
-                    J := NewPItem(Copy(S.Name, 1, Length(S.Name) - 4), 0);
+                    J := NewPItem(Copy(S.Name, 1, Length(S.Name) - 4), psNone);
+                    if (Not FDIMODE) and ((S.Name = 'FDNPKG.ZIP') or (S.Name = 'FDIMPLES.ZIP')) then
+                        J^.Locked := True;
                     J^.Prev := PackageLast;
                     if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
-                        J^.State := 1;
+                        J^.State := psInstalled;
                         inc(CS);
                     end else
                         inc(NS);
@@ -940,12 +943,12 @@ begin
             end;
         end;
         if CS = 0 then
-            P^.State := 0
+            P^.State := psNone
         else begin
             if NS = 0 then
-                P^.State := 1
+                P^.State := psInstalled
             else
-                P^.State := 2;
+                P^.State := psPartial;
         end;
         P^.Items := PackageFirst;
         P := P^.Next;
@@ -1131,8 +1134,8 @@ begin
         FWrite('[');
         if P <> Package then TextColor(Theme.Check);
         case P^.State of
-            1 : FWrite('X');
-            2 : FWrite('+');
+            psInstalled : FWrite('X');
+            psPartial : FWrite('+');
         else
             FWrite(#32);
         end;
@@ -1198,8 +1201,8 @@ begin
         FWrite('[');
         if P <> Group then TextColor(Theme.Check);
         case P^.State of
-            1 : FWrite('X');
-            2 : FWrite('+');
+            psInstalled : FWrite('X');
+            psPartial : FWrite('+');
         else
             FWrite(#32);
         end;
@@ -1313,49 +1316,60 @@ begin
     ClrEol;
 end;
 
-procedure GroupToggle;
-var
-    P : PItem;
-begin
-    if not Assigned(Group) then exit;
-    Inc(Group^.State);
-    if Group^.State > 1 then Group^.State := 0;
-    P := Group^.Items;
-    while assigned(P) do begin
-{        if (Group^.State <> 0) or ((P^.Name <> 'FDNPKG') and (P^.NAME <> 'FDIMPLES')) then }
-            P^.State := Group^.State;
-        P := P^.Next;
-    end;
-    DrawGroups;
-end;
-
-procedure FileToggle;
+procedure VerifyGroupState;
 var
     P : PItem;
     NS, CS : integer;
 begin
-    if not assigned(Package) then exit;
-    Inc(Package^.State);
-    if Package^.State > 1 then Package^.State := 0;
     P := Group^.Items;
     NS := 0;
     CS := 0;
     while assigned(P) do begin
-         if P^.State > 0 then begin
+         if P^.State <> psNone then begin
             inc(CS);
          end else
             inc(NS);
         P := P^.Next;
     end;
     if CS = 0 then
-        Group^.State := 0
+        Group^.State := psNone
     else begin
         if NS = 0 then
-            Group^.State := 1
+            Group^.State := psInstalled
         else
-            Group^.State := 2;
+            Group^.State := psPartial;
     end;
     DrawGroups;
+end;
+
+procedure GroupToggle;
+var
+    P : PItem;
+begin
+    if not Assigned(Group) then exit;
+    if Group^.State = psInstalled then
+        Group^.State := psNone
+    else
+        Group^.State := psInstalled;
+    P := Group^.Items;
+    while assigned(P) do begin
+        if (Group^.State <> psNone) or (not P^.Locked) then
+            P^.State := Group^.State;
+        P := P^.Next;
+    end;
+    VerifyGroupState;
+end;
+
+procedure FileToggle;
+begin
+    if not assigned(Package) then exit;
+    if (not Package^.Locked) then begin
+        if Package^.State <> psNone then
+            Package^.State := psNone
+        else
+            Package^.State := psInstalled;
+    end;
+    VerifyGroupState;
 end;
 
 procedure GroupUp(T:integer);
@@ -1446,7 +1460,7 @@ begin
     while assigned(P) do begin
         J := P^.Items;
         while assigned(J) do begin
-            if J^.State <> 0 then
+            if J^.State <> psNone then
                 WriteLn(F, lcase(P^.Name + Delimiter + J^.Name));
             J := J^.Next;
         end;
@@ -1479,7 +1493,7 @@ begin
         while assigned(J) do begin
             C := { FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or }
                 FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
-            if J^.State = 0 then begin
+            if J^.State = psNone then begin
                 if C then begin
                     TextAttr := $4F;
                     FWrite ('remove ' + J^.Name);
