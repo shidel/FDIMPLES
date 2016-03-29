@@ -54,7 +54,8 @@ const
     NoScroll = 1;
 
 type
-    TStates = (psNone, psPartial, psFull, psUpgrade);
+    TStates = (psNone, psPartial, psFull, psUpgrade, psExtra);
+    TModes = (rmFDI, rmStandAlone, rmList);
     TChecks = array [TStates] of Char;
     PItem = ^TItem;
     TItem = record
@@ -92,16 +93,15 @@ var
     Package, PackageFirst, PackageTop, PackageBottom, PackageLast : PItem;
     LineTop, LineBottom : PItem;
     FMedia : String;
-    FDIMode : boolean;
     StartCursor : word;
     Theme : TTheme;
     CheckMark : TChecks;
+    RunMode : TModes;
 
 const
-    NormalCheckMarks : TChecks = (
-        ' ', '+', 'X', 'U'
-    );
-    ThemeRed : TTheme = (
+    NormalCheckMarks : TChecks = (#$20, '+', 'X', 'U', '-');
+    ListCheckMarks   : TChecks = (#$20, '+', 'B', 'A', 'E');
+    ThemeRed  : TTheme = (
         Frame:(X:5; Y:4);
         Grps:(X:18; Y:8);
         Border:$4F;
@@ -155,6 +155,11 @@ const
         Bar:$06;
         BarHot:$0e
     );
+
+function FDIMode : boolean;
+begin
+    FDIMode := RunMode = rmFDI;
+end;
 
 procedure CleanUp;
 begin
@@ -855,7 +860,6 @@ var
    T, M : String;
 
 begin
-    CheckMark := NormalCheckMarks;
     if Trim(GetEnv('FMEDIA')) <> '' then begin
         FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))));
     end;
@@ -1552,7 +1556,14 @@ var
 begin
     CheckScroll := False;
     CheckCursor := False;
-    FDIMode := Ucase(ParamStr(1)) = '/FDI';
+    CheckMark := NormalCheckMarks;
+    if Ucase(ParamStr(1)) = '/LIST' then begin
+        RunMode := rmList;
+        CheckMark := ListCheckMarks;
+    end else if Ucase(ParamStr(1)) = '/FDI' then
+        RunMode := rmFDI
+    else
+        RunMode := rmStandAlone;
     SetTheme;
     Init;
     DrawTitle;
