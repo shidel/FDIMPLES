@@ -1155,6 +1155,7 @@ begin
                     DrawLine(1, Y, Lo(WindMax) - Lo(WindMin), lnSingle or lnHorizontal);
                     Window (Theme.Frame.X + 2, Theme.Frame.Y + Theme.Grps.Y + 2,
                     Lo(ScreenMax) - Theme.Frame.X, Hi(ScreenMax)- Theme.Frame.Y + 1);
+                    GotoXY(1,Y);
                 end else begin
                     GotoXY(1,Y);
                     FWrite(#32 + PtrStr(P^.Title));
@@ -1736,6 +1737,7 @@ begin
         end else if S = '/FDI' then begin
             RunMode := rmFDI;
             FileList := True;
+            AutoUpdate := False;
             CheckMark := NormalCheckMarks;
         end else if S = '/NOFILES' then
             FileList := False
