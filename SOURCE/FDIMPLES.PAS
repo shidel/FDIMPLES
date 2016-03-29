@@ -44,14 +44,14 @@ program Test;
 uses QDos, QCrtNM, QStrings;
 
 const
-    LoMem = 10240;
+    AppVersion = '0.7.4';
     AppName = 'FDIMPLES';
-    AppVersion = '0.7.3';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Installed = 'Installed!'; {Always sorted first -- has only title, no name}
-    NoScroll = 1;
     ALLPackages = 'FDPLALL.LST';
     BASEPackages = 'FDPLBASE.LST';
+    LoMem = 10240;
+    NoScroll = 1;
 
 type
     PItem = ^TItem;
@@ -59,10 +59,8 @@ type
         Prev, Next, Items : PItem;
         Name : Str12;
         State : integer;
-        Title : PString;
-        IVersion,
-        MVersion : PString;
-        First : boolean;
+        Title, IVersion, MVersion : PString;
+        First, Locked : boolean;
     end;
     PText = ^TText;
     TText = record
@@ -215,6 +213,26 @@ begin
         Theme := ThemeBlue;
 end;
 
+function NewPItem(const AName: String; const AState : integer) : PItem;
+var
+    P : PItem;
+begin
+    P := New(PItem);
+    with P^ do begin
+        Name := AName;
+        State := AState;
+        Prev := nil;
+        Next := nil;
+        Items := nil;
+        Title := nil;
+        IVersion := nil;
+        MVersion := nil;
+        First := True;
+        Locked := False;
+    end;
+    NewPItem := P;
+end;
+
 procedure ReadDefaults;
 var
     F : Text;
@@ -346,16 +364,7 @@ begin
 
     if (not CheckDefault(TailDelim(B) + N)) then exit;
 
-    J := New(PItem);
-    J^.Name := N;
-    J^.Items := nil;
-    J^.Next := nil;
-    J^.Prev := nil;
-    J^.IVersion := nil;
-    J^.MVersion := nil;
-    J^.Title := nil;
-    J^.First := true;
-    J^.State := 1;
+    J := NewPItem(N, 1);
     if not assigned(PackageFirst) then begin
         PackageFirst := J;
         PackageLast := J;
@@ -382,16 +391,8 @@ begin
             P := P^.Next;
         end;
         if S then begin
-            J := New(PItem);
-            J^.Name := Copy(PtrStr(I^.Str), 2, 13);
-            J^.Items := nil;
+            J := NewPItem(Copy(PtrStr(I^.Str), 2, 13), 1);
             J^.Next := Others^.Items;
-            J^.Prev := nil;
-            J^.Title := nil;
-            J^.IVersion := nil;
-            J^.MVersion := nil;
-            J^.First := true;
-            J^.State := 1;
             if assigned(Others^.Items) then
                 Others^.Items^.Prev := J;
             Others^.Items := J;
@@ -446,7 +447,6 @@ begin
 end;
 
 procedure AddLine(var P : PItem; S : String; NewLine : boolean);
-{ Later add line appending }
 var
     L, N : PItem;
     W, M, X : integer;
@@ -455,11 +455,7 @@ begin
     if not MemCheck(Sizeof(PItem) + Sizeof(String)) then exit;
     L := P^.Items;
     if not assigned(L) then begin
-        L := New(PItem);
-        L^.Next := nil;
-        L^.Prev := nil;
-        L^.Name := '';
-        L^.Title := nil;
+        L := NewPItem('', 0);
         P^.Items := L;
     end else begin
         while Assigned(L^.Next) do L := L^.Next;
@@ -471,13 +467,10 @@ begin
         M := W - Length(T);
 
         if ((LastPos(' ', copy(S, 1, M)) = 0) and (T <> '')) or (M < 1) then begin
-            N := New(PItem);
+            N := NewPItem('',0);
             L^.Next := N;
             N^.Prev := L;
             L := N;
-            L^.Next := nil;
-            L^.Name := '';
-            L^.Title := nil;
         end else begin
             FreeStr(L^.Title);
             if Length(S) < M then
@@ -492,15 +485,11 @@ begin
     end;
 
     if NewLine then begin
-        N := New(PItem);
+        N := NewPItem('',0);
         L^.Next := N;
         N^.Prev := L;
         L := N;
-        L^.Next := nil;
-        L^.Name := '';
-        L^.Title := nil;
     end;
-
 end;
 
 function UnixRead(var F : File; var S : String) : integer;
@@ -752,7 +741,7 @@ begin
                     end;
                 end;
                 X := X + Comma(IntStr(V)) + M + PluralStr(V) + ')';
-                if SFIles <> '' then begin
+                if (SFIles <> '') and ((not FDIMode) or (ucase(GetEnv('OSRC')) <> 'N')) then begin
                     X := X  + '; ';
                     V := StrInt(SFiles);
                     X := X + Comma(IntStr(V)) + ' source file' + PluralStr(V) + ' (';
@@ -899,34 +888,18 @@ begin
     ReadDefaults;
     Tab := 0;
     Group := nil;
-    Others := New(PItem);
+    Others := NewPItem('',1);
     GroupFirst := Others;
     GroupLast := GroupFirst;
     with GroupFirst^ do begin
-        Name := '';
-        Items := nil;
-        Prev := nil;
-        Next := nil;
-        IVersion := nil;
-        MVersion := nil;
-        First := True;
-        State := 1;
         Title := StrPtr(Installed);
     end;
     FindFirst(FMedia + '*.*', faAnyFile, S);
     while DosError = 0 do begin
         if (S.Attr and faDirectory = faDirectory) and (S.Name <> '.') and
         (S.Name <> '..') then begin
-            P := New(PItem);
-            P^.Name := S.Name;
+            P := NewPItem(S.Name, 0);
             P^.Prev := GroupLast;
-            P^.Items := nil;
-            P^.Next := nil;
-            P^.Title := nil;
-            P^.IVersion := nil;
-            P^.MVersion := nil;
-            P^.First := True;
-            P^.State := 0;
             GroupLast^.Next := P;
             GroupLast := P;
         end;
@@ -950,16 +923,8 @@ begin
             while DosError = 0 do begin
                 if (S.Attr and (faDirectory or faSystem or faHidden) = 0) and
                 (S.Name <> '.') and ((S.Name <> 'V8POWER.ZIP') or (Not FDIMode)) then begin
-                    J := New(PItem);
-                    J^.Name := Copy(S.Name, 1, Length(S.Name) - 4);
+                    J := NewPItem(Copy(S.Name, 1, Length(S.Name) - 4), 0);
                     J^.Prev := PackageLast;
-                    J^.Items := nil;
-                    J^.Next := nil;
-                    J^.Title := nil;
-                    J^.IVersion := nil;
-                    J^.MVersion := nil;
-                    J^.First := True;
-                    J^.State := 0;
                     if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
                         J^.State := 1;
                         inc(CS);
