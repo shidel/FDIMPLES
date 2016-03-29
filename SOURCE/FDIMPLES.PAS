@@ -44,7 +44,7 @@ program Test;
 uses QDos, QCrtNM, QStrings;
 
 const
-    AppVersion = '0.7.4';
+    AppVersion = '0.7.5';
     AppName = 'FDIMPLES';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Installed = 'Installed!'; {Always sorted first -- has only title, no name}
@@ -1027,14 +1027,12 @@ begin
     TextColor(Theme.Fore);
     TextBackground(Theme.Back);
     if Tab = 2 then begin
-        {TextAttr := Theme.Choose;}
         TextColor(Theme.TextHot);
     end else begin
         TextColor(Theme.Text);
     end;
     Window (Theme.Frame.X + 2, Theme.Frame.Y + Theme.Grps.Y + 2,
     Lo(ScreenMax) - Theme.Frame.X, Hi(ScreenMax)- Theme.Frame.Y + 1);
-    ClrScr;
     LineBottom := nil;
     if assigned(Package) then begin
         if (Package^.First) or (not assigned(Package^.Items)) then begin
@@ -1043,7 +1041,8 @@ begin
 
         if not assigned(Package^.Items) then begin
             FWrite(RSpace(' ' + Package^.Name + ' - No information',
-            Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll))
+            Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+            ClrEol;
         end else begin
             P := Package^.Items;
             Y := 1;
@@ -1055,7 +1054,6 @@ begin
                 if assigned(P^.Prev) and (P^.Prev^.Prev = Package^.Items) then T := True;
             end;
             while Assigned(P) and (Y <= Hi(WindMax) - Hi(WindMin) + 1)  do begin
-                GotoXY(2,Y);
                 if PtrStr(P^.Title) = '' then T := False;
                 if P = Package^.Items then begin
                     T := True;
@@ -1076,13 +1074,20 @@ begin
                     DrawLine(1, Y, Lo(WindMax) - Lo(WindMin), lnSingle or lnHorizontal);
                     Window (Theme.Frame.X + 2, Theme.Frame.Y + Theme.Grps.Y + 2,
                     Lo(ScreenMax) - Theme.Frame.X, Hi(ScreenMax)- Theme.Frame.Y + 1);
-                end else
-                    FWrite(PtrStr(P^.Title));
+                end else begin
+                    GotoXY(1,Y);
+                    FWrite(#32 + PtrStr(P^.Title));
+                    ClrEol;
+                end;
                 Inc(Y);
                 LineBottom := P;
                 P := P^.Next;
             end;
         end;
+    end;
+    while WhereY < (Hi(WindMax) - Hi(WindMin) + 1) do begin
+        GotoXY(1,WhereY + 1);
+        ClrEol;
     end;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
 end;
