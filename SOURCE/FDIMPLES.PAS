@@ -1805,7 +1805,13 @@ var
     S : String;
     I : integer;
 begin
-    ListDir := 'D:\FDI\SETTINGS\';
+    if DirExists('FDI\SETTINGS\') then
+        ListDir := 'FDI\SETTINGS\'
+    else  if DirExists('\FDI\SETTINGS\') then
+        ListDir := '\FDI\SETTINGS\'
+    else
+        ListDir := '';
+
     TickCount := 0;
     StartUp := True;
     FileList := True;
