@@ -53,6 +53,7 @@ const
     BASEPackages = 'FDPLBASE.LST';
     LoMem = 10240;
     NoScroll = 1;
+    MinTicks = 7;
 
 type
     TStates = (psNone, psPartial, psFull, psUpgrade, psReplace, psExtra);
@@ -64,7 +65,7 @@ type
         Name : Str12;
         State : TStates;
         Title, IVersion, MVersion : PString;
-        First, Locked : boolean;
+        First, Locked, Tested : boolean;
     end;
     PText = ^TText;
     TText = record
@@ -85,6 +86,7 @@ type
         Name, NameHot : byte;
         Author, AuthorHot : byte;
         Bar, BarHot : byte;
+        StandBy : byte;
     end;
 
 var
@@ -100,6 +102,12 @@ var
     RunMode : TModes;
     FileList : boolean;
     AutoUpdate : boolean;
+    UpdateOn : boolean;
+    TickCount : Longint;
+    LastTick : LongInt;
+    Startup : boolean;
+    TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
+
 
 const
     NormalCheckMarks : TChecks = (#$20, '+', 'X', 'U', 'R', '-');
@@ -129,7 +137,8 @@ const
         Author:$03;
         AuthorHot:$0B;
         Bar:$06;
-        BarHot:$0e
+        BarHot:$0e;
+        StandBy:$1c
     );
     ThemeBlue : TTheme = (
         Frame:(X:1; Y:2);
@@ -156,8 +165,47 @@ const
         Author:$03;
         AuthorHot:$0B;
         Bar:$06;
-        BarHot:$0e
+        BarHot:$0e;
+        StandBy:$0e
     );
+
+procedure StandBy;
+const
+    Ticks : string[4] = '/-\|';
+    Speed = 2;
+var
+    WMin, WMax, X, Y, A : integer;
+begin
+    if RunMode = rmFDI then exit;
+    if LastTick = TimerTick then exit;
+    LastTick := TimerTick;
+    Inc(TickCount);
+    if (TickCount < MinTicks) and (not Startup) then exit;
+    if Startup then begin
+        if TickCount > 1 then GotoXY(WhereX -1, WhereY);
+        FWrite(Ticks[((TickCount) div Speed) mod Length(Ticks) + 1]);
+    end else begin
+        WMin := WindMin;
+        WMax := WindMax;
+        X := WhereX;
+        Y := WhereY;
+        A := TextAttr;
+
+        Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+        gotoXY(1,Hi(WindMax));
+        TextAttr := Theme.StandBy;
+        if TickCount = MinTicks then begin
+            FWrite(' Standby');
+            ClrEol;
+        end;
+        GotoXY(10, Hi(WindMax));
+        FWrite(Ticks[((TickCount - MinTicks) div Speed) mod Length(Ticks) + 1]);
+        WindMin := WMin;
+        WindMax := WMax;
+        GotoXY(X, Y);
+        TextAttr := A;
+    end;
+end;
 
 function FDIMode : boolean;
 begin
@@ -243,6 +291,7 @@ begin
         MVersion := nil;
         First := True;
         Locked := False;
+        Tested := False;
     end;
     NewPItem := P;
 end;
@@ -433,6 +482,7 @@ begin
         FreeStr(P^.Title);
         Dispose(P);
         P := N;
+        StandBy;
     end;
     Pkg^.First := true;
     Pkg^.Items := nil;
@@ -520,6 +570,7 @@ var
     N : boolean;
     C, D, O : integer;
 begin
+    Standby;
     P := FilePos(F);
     BlockRead(F, S[1], Sizeof(S) - 10, C);
     S[0] := chr(C);
@@ -950,6 +1001,7 @@ begin
         AddCustomItems(P, 'UTIL', 'V8POWER');
 
         if P^.NAME <> '' then begin
+            StandBy;
             FindFirst(FMedia + TailDelim(P^.NAME) + '*.ZIP', faAnyFile, S);
 
             while DosError = 0 do begin
@@ -1018,11 +1070,6 @@ begin
         while Assigned(Package) do begin
             if Not Assigned(Package^.Items) then
                 SearchForData(False);
-            if assigned(Package^.IVersion) and assigned(Package^.MVersion) and
-            (UCase(PtrStr(Package^.IVersion)) < UCase(PtrStr(Package^.MVersion))) and
-            (RunMode = rmStandAlone) and (not Package^.Locked) and AutoUpdate then begin
-                Package^.State := psReplace;
-            end;
             Package := Package^.Next;
         end;
         Group := Group^.Next;
@@ -1038,10 +1085,6 @@ begin
     PackageBottom := nil;
     LineTop := nil;
     LineBottom := nil;
-    if not FDIMode then begin
-        GotoXY(1,WhereY);
-        ClrEol;
-    end;
 end;
 
 procedure FetchData;
@@ -1295,6 +1338,7 @@ end;
 procedure DrawTitle;
 begin
     if FDIMode then exit;
+    Window(1, 1, Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
     TextAttr := Theme.Title;
     GotoXY(1,1);
     ClrEol;
@@ -1309,6 +1353,8 @@ end;
 procedure DrawStatus;
 begin
     if FDIMode then Exit;
+    LastTick := TimerTick;
+    TickCount := 0;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
     gotoXY(1,Hi(WindMax));
     TextAttr := Theme.Status;
@@ -1387,6 +1433,7 @@ begin
         Group^.State := psFull;
     P := Group^.Items;
     while assigned(P) do begin
+        StandBy;
         if (Group^.State <> psNone) or (not P^.Locked) then
             P^.State := Group^.State;
         P := P^.Next;
@@ -1403,7 +1450,7 @@ begin
             Package^.State := psFull
         else if (Package^.State = psFull) and
         assigned(Package^.IVersion) and assigned(Package^.MVersion) and
-        (PtrStr(Package^.IVersion) <> PtrStr(Package^.MVersion)) and
+        (Ucase(PtrStr(Package^.IVersion)) <> UCase(PtrStr(Package^.MVersion))) and
         (RunMode = rmStandAlone) then begin
             if (UCase(PtrStr(Package^.IVersion)) < UCase(PtrStr(Package^.MVersion))) then
                 Package^.State := psUpgrade
@@ -1413,6 +1460,45 @@ begin
             Package^.State := psNone;
     end;
     VerifyGroupState;
+    DrawGroups;
+end;
+
+procedure UpdateToggle(All : boolean);
+var
+    P, G : PItem;
+begin
+    UpdateOn := not UpdateOn;
+    G := Group;
+    P := Package;
+    if All then Group := GroupFirst;
+    while Assigned(Group) do begin
+        Package := Group^.Items;
+        while Assigned(Package) do begin
+            StandBy;
+            if Package^.Tested = False then SearchForData(false);
+            Package^.Tested := True;
+            if Assigned(Package^.IVersion) and Assigned(Package^.MVersion) and
+            (Package^.State <> psReplace) and (Package^.Locked = false) and
+            (Ucase(PtrStr(Package^.IVersion)) <> UCase(PtrStr(Package^.MVersion))) then
+                case UpdateOn of
+                    False : Package^.State := psFull;
+                    True : begin
+                        if (Ucase(PtrStr(Package^.IVersion)) < UCase(PtrStr(Package^.MVersion))) then
+                            Package^.State := psUpgrade
+                        else
+                            Package^.State := psFull;
+                    end;
+                end;
+            Package := Package^.Next;
+        end;
+        VerifyGroupState;
+        if All then
+            Group := Group^.Next
+        else
+            Group := nil;
+    end;
+    Group := G;
+    Package := P;
     DrawGroups;
 end;
 
@@ -1619,6 +1705,7 @@ begin
     Option ('SPACE,ENTER', 'Toggle selection.');
     Option ('TAB,LEFT,RIGHT', 'Change section focus.');
     Option ('UP,DOWN',  'Move focused item up or down, also Page Up/Down.');
+    Option ('u', 'Toggle all updatable package statuses in group.');
     Option ('U', 'Toggle all updatable package statuses.');
     Halt(0);
 end;
@@ -1631,6 +1718,8 @@ var
     S : String;
     I : integer;
 begin
+    TickCount := 0;
+    StartUp := True;
     FileList := True;
     CheckMark := NormalCheckMarks;
     RunMode := rmStandAlone;
@@ -1662,11 +1751,13 @@ begin
         end;
         inc(I);
     end;
-
+    UpdateOn := false;
     CheckScroll := False;
     CheckCursor := False;
     SetTheme;
     Init;
+    if AutoUpdate then UpdateToggle(True);
+    StartUp := False;
     DrawTitle;
     DrawSelector;
     LTab := -1;
@@ -1739,10 +1830,13 @@ begin
                     else
                         Dec(Tab);
                 end;
+                $0055, $0075 : if RunMode = rmStandAlone then begin {u/U}
+                    UpdateToggle(E.KeyCode = $0055);
+                end;
 {                else
                     GotoXY(1, Hi(WindMax) - 1);
                     FWrite(HexStr(E.KeyCode));
-                    ClrEol; }
+                    ClrEol;}
             end;
     until Quit;
 end;
