@@ -59,6 +59,7 @@ type
     TStates = (psNone, psPartial, psFull, psUpgrade, psReplace);
     TModes = (rmFDI, rmStandAlone, rmList);
     TChecks = array [TStates] of Char;
+    TCheckColors = array [TStates] of byte;
     PItem = ^TItem;
     TItem = record
         Prev, Next, Items : PItem;
@@ -81,12 +82,13 @@ type
         Double, Shadow : boolean;
         Title, TitleHot : byte;
         Status, StatusHot : byte;
-        Brace, Check : byte;
+        Brace : byte;
         Text, TextHot : byte;
         Name, NameHot : byte;
         Author, AuthorHot : byte;
         Bar, BarHot : byte;
         StandBy : byte;
+        Checks : TCheckColors;
     end;
 
 var
@@ -115,7 +117,7 @@ const
     psAll = psUpgrade;
     psExtra = psReplace;
     NormalCheckMarks : TChecks = (#$20, '+', 'X', 'U', 'R');
-    ListCheckMarks   : TChecks = (#$20, '+', 'b', 'a', 'e');
+    ListCheckMarks   : TChecks = (#$20, '+', 'B', 'A', 'e');
     ThemeRed  : TTheme = (
         Frame:(X:5; Y:4);
         Grps:(X:18; Y:8);
@@ -133,7 +135,6 @@ const
         Status:$47;
         StatusHot:$4f;
         Brace:$08;
-        Check:$07;
         Text:$07;
         TextHot:$0F;
         Name:$02;
@@ -142,7 +143,8 @@ const
         AuthorHot:$0B;
         Bar:$06;
         BarHot:$0e;
-        StandBy:$1c
+        StandBy:$1c;
+        Checks:($07, $0F, $0F, $0E, $0E)
     );
     ThemeBlue : TTheme = (
         Frame:(X:1; Y:2);
@@ -161,7 +163,6 @@ const
         Status:$08;
         StatusHot:$07;
         Brace:$08;
-        Check:$07;
         Text:$07;
         TextHot:$0F;
         Name:$02;
@@ -170,7 +171,8 @@ const
         AuthorHot:$0B;
         Bar:$06;
         BarHot:$0e;
-        StandBy:$0e
+        StandBy:$0e;
+        Checks:($07, $0F, $0E, $0B, $0C)
     );
 
 procedure StandBy;
@@ -1281,7 +1283,7 @@ begin
         FWrite(' ');
         if P <> Package then TextColor(Theme.Brace);
         FWrite('[');
-        if P <> Package then TextColor(Theme.Check);
+        if P <> Package then TextColor(Theme.Checks[P^.State]);
         FWrite(CheckMark[P^.State]);
         if P <> Package then TextColor(Theme.Brace);
         FWrite(']');
@@ -1343,7 +1345,7 @@ begin
         FWrite(' ');
         if P <> Group then TextColor(Theme.Brace);
         FWrite('[');
-        if P <> Group then TextColor(Theme.Check);
+        if P <> Group then TextColor(Theme.Checks[P^.State]);
         FWrite(CheckMark[P^.State]);
         if P <> Group then TextColor(Theme.Brace);
         FWrite(']');
