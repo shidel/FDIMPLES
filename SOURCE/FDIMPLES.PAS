@@ -57,7 +57,7 @@ const
 
 type
     TStates = (psNone, psPartial, psFull, psUpgrade, psReplace);
-    TModes = (rmFDI, rmStandAlone, rmList);
+    TModes = (rmFDI, rmStandAlone, rmList, rmConfig);
     TChecks = array [TStates] of Char;
     TCheckColors = array [TStates] of byte;
     PItem = ^TItem;
@@ -392,10 +392,15 @@ begin
         else if FileExists(BASEPackages) then
             ReadListFile(BASEPackages, '')
         else exit;
-    end else if RunMode = rmList then begin
-        ReadListFile(ListDir + 'PKG_XTRA.LST', 'E* ');
-        ReadListFile(ListDir + 'PKG_ALL.LST',  'A* ');
-        ReadListFile(ListDir + 'PKG_BASE.LST', 'B* ');
+    end else if (RunMode = rmList) or (RunMode = rmConfig) then begin
+        if RunMode = rmConfig then begin
+            ReadListFile(ListDir + 'FDPLALL.LST',  'A* ');
+            ReadListFile(ListDir + 'FDPLBASE.LST', 'B* ');
+        end else begin
+            ReadListFile(ListDir + 'PKG_XTRA.LST', 'E* ');
+            ReadListFile(ListDir + 'PKG_ALL.LST',  'A* ');
+            ReadListFile(ListDir + 'PKG_BASE.LST', 'B* ');
+        end;
     end else begin
         S := Trim(UCase(TailDelim(GetEnv('DOSDIR'))));
         if (S = '') then exit;
@@ -1088,7 +1093,7 @@ begin
                     J := NewPItem(Copy(S.Name, 1, Length(S.Name) - 4), psNone);
                     J^.Locked := LockPackage(J^.Name);
                     J^.Prev := PackageLast;
-                    if RunMode = rmList then begin
+                    if (RunMode = rmList) or (RunMode = rmConfig) then begin
                         J^.State := GetPkgState(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name));
                     end else
                     if CheckDefault(Ucase(TailDelim(P^.Name)) + Ucase(J^.Name)) then begin
@@ -1465,11 +1470,16 @@ var
     P : PItem;
 begin
     if not Assigned(Group) then exit;
-    if RunMode = rmList then begin
+    if (RunMode = rmList) or (RunMode = rmConfig) then begin
         case Group^.State of
             psNone : Group^.State := psBase;
             psBase : Group^.State := psAll;
-            psAll  : Group^.State := psExtra;
+            psAll  : begin
+                if RunMode = rmConfig then
+                    Group^.State := psNone
+                else
+                    Group^.State := psExtra;
+            end
         else
             Group^.State := psNone;
         end;
@@ -1493,11 +1503,16 @@ end;
 procedure FileToggle;
 begin
     if not assigned(Package) then exit;
-    if RunMode = rmList then begin
+    if (RunMode = rmList) or (RunMode = rmConfig) then begin
         case Package^.State of
             psNone : Package^.State := psBase;
             psBase : Package^.State := psAll;
-            psAll  : Package^.State := psExtra;
+            psAll  : begin
+                if RunMode = rmConfig then
+                    Package^.State := psNone
+                else
+                    Package^.State := psExtra;
+            end
         else
             Package^.State := psNone;
         end;
@@ -1688,12 +1703,18 @@ end;
 
 procedure MakeLists;
 begin
-    MakeList('PKG_BASE.LST', psBase, True);
-    MakeList('PKG_ALL.LST', psBase, True);
-    MakeList('PKG_ALL.LST', psAll, True);
-    MakeList('PKG_XTRA.LST', psBase, True);
-    MakeList('PKG_XTRA.LST', psAll, True);
-    MakeList('PKG_XTRA.LST', psExtra, True);
+    if RunMode = rmConfig then begin
+        MakeList(ListDir + 'FDPLBASE.LST', psBase, True);
+        MakeList(ListDir + 'FDPLALL.LST', psBase, True);
+        MakeList(ListDir + 'FDPLALL.LST', psAll, True);
+    end else begin
+        MakeList('PKG_BASE.LST', psBase, True);
+        MakeList('PKG_ALL.LST', psBase, True);
+        MakeList('PKG_ALL.LST', psAll, True);
+        MakeList('PKG_XTRA.LST', psBase, True);
+        MakeList('PKG_XTRA.LST', psAll, True);
+        MakeList('PKG_XTRA.LST', psExtra, True);
+    end;
     CleanUp;
 end;
 
@@ -1796,6 +1817,7 @@ begin
     Option ('/[NO]UPDATE', '[DO NOT] Automatically select updatable packages.');
     WriteLn;
     Option ('/LISTS',    'Create package list files for use with FDI build utility.');
+    Option ('/CONFIG',   'Reconfigure FDI installer BASE and ALL package lists.');
     WriteLn;
     WriteLn('User interface keyboard commands:');
     WriteLn;
@@ -1838,6 +1860,14 @@ begin
             RunMode := rmList;
             FileList := True;
             CheckMark := ListCheckMarks;
+        end else if (S = '/CONFIG') then begin
+            RunMode := rmConfig;
+            FileList := True;
+            CheckMark := ListCheckMarks;
+            if DirExists('\FDSETUP\SETUP\') then
+                ListDir := '\FDSETUP\SETUP\'
+            else
+                ListDir := '';
         end else if S = '/FDI' then begin
             RunMode := rmFDI;
             Comments := False;
