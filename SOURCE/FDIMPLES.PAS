@@ -186,8 +186,9 @@ begin
     Inc(TickCount);
     if (TickCount < MinTicks) and (not Startup) then exit;
     if Startup then begin
-        if TickCount > 1 then GotoXY(WhereX -1, WhereY);
-        FWrite(Ticks[((TickCount) div Speed) mod Length(Ticks) + 1]);
+        if TickCount < 2 then exit;
+        if TickCount > 2 then GotoXY(WhereX -1, WhereY);
+        FWrite(Ticks[((TickCount - 2) div Speed) mod Length(Ticks) + 1]);
     end else begin
         WMin := WindMin;
         WMax := WindMax;
@@ -814,12 +815,19 @@ begin
                     S := Desc;
                     TMode := true;
                     Appending := true;
-                end else if (Copy(S, 1, 2) = '  ') then S := LTrim(S) else
-                begin
+                end else if (Copy(S, 1, 2) = '  ') then
+                    S := LTrim(S)
+                else begin
                     if Appending then AddLine(Package, '', True);
                 end;
-                if TMode then AddLine(Package, S, Not Appending);
             end;
+            repeat
+                if TMode then AddLine(Package, S, Not Appending);
+                if (C = 0) then
+                    C := UnixRead(F, S)
+                else
+                    S := '';
+            until (C <> 0) and (S = '');
         until C = -1;
         if Appending then AddLine(Package, '', True);
         if Pass = 0 then begin

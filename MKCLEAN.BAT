@@ -1,7 +1,7 @@
 @echo off
 
 rem Make and Clean bin directory
-if exist BIN\NUL del BIN\*.*
+if exist BIN\NUL deltree /y BIN\*.* >nul
 if exist BIN\NUL rmdir BIN
 
 rem Clean up previous builds if needed.
