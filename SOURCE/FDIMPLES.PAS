@@ -1909,7 +1909,10 @@ begin
         end;
         DrawStatus;
         ClearEvent(E);
-        While E.What = evNothing do GetEvent(E);
+        While E.What = evNothing do begin
+            asm HLT end;
+            GetEvent(E);
+        end;
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
                 $0003 : begin
