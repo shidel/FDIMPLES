@@ -511,12 +511,17 @@ procedure AddCustomItems(P : PItem; B, N : String);
 var
   J : PItem;
   F : boolean;
+  FN : String;
 begin
     if (RunMode <> rmFDI) then exit;
 
     if not assigned(P) then exit;
 
     if not (P^.Name = B) then exit;
+
+    FN := TailDelim(GetEnv('FINSP')) + 'PACKAGES';
+    if not DirExists(FN) then exit;
+    if not FileExists(TailDelim(FN) + TailDelim(B) + N + '.ZIP') then exit;
 
     if (not CheckDefault(TailDelim(B) + N)) then exit;
 
@@ -1089,7 +1094,7 @@ begin
 
             while DosError = 0 do begin
                 if (S.Attr and (faDirectory or faSystem or faHidden) = 0) and
-                (S.Name <> '.') and ((S.Name <> 'V8POWER.ZIP') or (Not FDIMode)) then begin
+                (S.Name <> '.') then begin
                     J := NewPItem(Copy(S.Name, 1, Length(S.Name) - 4), psNone);
                     J^.Locked := LockPackage(J^.Name);
                     J^.Prev := PackageLast;
