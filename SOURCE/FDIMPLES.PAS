@@ -955,8 +955,8 @@ begin
     IsMediaDrive := False;
     S := TailDelim(S);
     if DirExists(S) and
-    FileExists(TailDelim(S + 'BASE') + 'COMMAND.ZIP') and
-    FileExists(TailDelim(S + 'BASE') + 'KERNEL.ZIP') then begin
+    FileExists(TailDelim(S + 'BASE') + 'COMMAND.ZIP') (* and
+    FileExists(TailDelim(S + 'BASE') + 'KERNEL.ZIP') *) then begin
         FMedia := S;
         IsMediaDrive := True;
     end;
