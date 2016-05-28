@@ -2282,8 +2282,8 @@ begin
 {                else
                     GotoXY(1, Hi(WindMax) - 1);
                     FWrite(HexStr(E.KeyCode));
-                    ClrEol;
-            end;}
+                    ClrEol;}
+            end;
     until Quit;
 end;
 
