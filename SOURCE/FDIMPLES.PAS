@@ -1389,7 +1389,7 @@ begin
     FWrite( CSpace('Cancel', 10));
 end;
 
-procedure DrawSelector;
+procedure DrawMainBox;
 begin
     { Back Drop }
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
@@ -1408,6 +1408,11 @@ begin
     if not Theme.Double then
         DrawBox(Theme.Frame.X + 1, Theme.Frame.Y, Lo(ScreenMax) + 1 - Theme.Frame.X,
         Hi(ScreenMax) + 2 - Theme.Frame.Y, bxSingle);
+end;
+
+procedure DrawSelector;
+begin
+    DrawMainBox;
     DrawLine(Theme.Frame.X + 1, Theme.Frame.Y + Theme.Grps.Y + 1, Lo(ScreenMax) - Theme.Frame.X * 2 + 1,
     lnSingle or lnHorizontal);
     DrawLine(Theme.Frame.X + Theme.Grps.X + 3 - NoScroll, Theme.Frame.Y, Theme.Grps.Y + 2,
@@ -1802,36 +1807,161 @@ begin
     {$ENDIF}
 end;
 
-procedure CommandLineHelp;
-    procedure Option(S1, S2 : String);
-    begin
-        WriteLn(ChrStr(#$20, 4),RSpace(S1, 16), #$20, S2);
-    end;
+var
+    HelpStart, HelpLine, HelpLast : integer;
+    HelpMore, HelpCmd : boolean;
+
+procedure HelpWriteLn(S2 : String);
+var
+    S3 : String;
+    W, N : integer;
 begin
-    WriteLn(AppTitle, ' (', AppName, '), version ', AppVersion);
-    WriteLn('Copyright 2016 Jerome Shidel');
-    WriteLn('Released Under GPL v2.0 License.');
-    WriteLn;
-    WriteLn(AppName, ' provides an easy-to-use user interface to the FDINST package');
-    WriteLn('manager command-line utility.');
-    WriteLn;
-    WriteLn('usage: ', GetExeBase, ' [options]');
-    WriteLn;
-    Option ('/HELP,/?',  'Show this help screen.');
-    Option ('/[NO]FILES',  '[DO NOT] Show file list in package description.');
-    Option ('/[NO]UPDATE', '[DO NOT] Automatically select updatable packages.');
-    WriteLn;
-    Option ('/LISTS',    'Create package list files for use with FDI build utility.');
-    Option ('/CONFIG',   'Reconfigure FDI installer BASE and ALL package lists.');
-    WriteLn;
-    WriteLn('User interface keyboard commands:');
-    WriteLn;
-    Option ('SPACE,ENTER', 'Toggle selection.');
-    Option ('TAB,LEFT,RIGHT', 'Change section focus.');
-    Option ('UP,DOWN',  'Move focused item up or down, also Page Up/Down.');
-    Option ('u', 'Toggle all updatable package statuses in group.');
-    Option ('U', 'Toggle all updatable package statuses.');
+    repeat
+        W := Lo(WindMax) - Lo(WindMin);
+        if Length(S2) > W then begin
+            N := LastPos(' ', Copy(S2, 1, W));
+            if N > 1 then W := N;
+        end;
+        S3 := Copy(S2, 1, W);
+        Delete(S2, 1, W);
+        HelpMore := (HelpLine - HelpStart > Hi(WindMax) - Hi(WindMin));
+        if HelpCmd or ((HelpLine >= HelpStart) and (not HelpMore)) then begin
+            if not HelpCmd then GotoXY(1,HelpLine - HelpStart + 1);
+            if HelpCmd and HelpMore then begin
+                HelpLine := 1;
+                Write('Press a key...');
+                while not Keypressed do asm Hlt; end;
+                While KeyPressed do ReadKey;
+                GotoXY(1, WhereY);
+            end;
+            Write(S3);
+            ClrEol;
+            if HelpCmd then WriteLn;
+        end;
+        Inc(HelpLine);
+    until S2 = '';
+end;
+
+procedure HelpOption(S1, S2 : String);
+var
+    S3 : String;
+    W, N : integer;
+begin
+    while S2 <> '' do begin
+        W := Lo(WindMax) - Lo(WindMin) - 21;
+        if Length(S2) > W then begin
+            N := LastPos(' ', Copy(S2, 1, W));
+            if N > 1 then W := N;
+        end;
+        S3 := Copy(S2, 1, W);
+        Delete(S2, 1, W);
+        HelpWriteLn(ChrStr(#$20, 4) + RSpace(S1, 16) + #$20 + S3);
+        S1 := '';
+    end;
+end;
+
+procedure HelpNotice;
+begin
+    HelpWriteLn('Copyright 2016 Jerome Shidel');
+    HelpWriteLn('Released Under GPL v2.0 License.');
+    HelpWriteLn('');
+    HelpWriteLn(AppName + ' provides an easy-to-use text user interface to ' +
+        'the FDINST package manager command-line utility.');
+    HelpWriteLn('');
+end;
+
+procedure HelpSwitches;
+begin
+    if FDIMode then exit;
+    HelpWriteLn('usage: '+ GetExeBase + ' [options]');
+    HelpWriteLn('');
+    HelpOption ('/HELP,/?',  'Show this help screen.');
+    HelpOption ('/[NO]FILES',  '[DO NOT] Show file list in package description.');
+    HelpOption ('/[NO]UPDATE', '[DO NOT] Automatically select updatable packages.');
+    HelpWriteLn('');
+    HelpOption ('/LISTS',    'Create package list files for use with FDI build utility.');
+    HelpOption ('/CONFIG',   'Reconfigure FDI installer BASE and ALL package lists.');
+    HelpWriteLn('');
+end;
+
+procedure HelpKeyboard;
+begin
+    HelpWriteLn('User interface keyboard commands:');
+    HelpWriteLn('');
+    HelpOption ('SPACE,ENTER', 'Toggle selection.');
+    HelpOption ('TAB,LEFT,RIGHT', 'Change section of focus.');
+    HelpOption ('UP,DOWN',  'Move focused item up or down, also Page Up/Down.');
+    HelpWriteLn('');
+    HelpOption ('h,H,F1', 'Display help screen.');
+    if FDIMode or HelpCmd then begin
+        HelpWriteLn('');
+        exit;
+    end;
+    HelpOption ('u', 'Toggle all updatable package statuses in group.');
+    HelpOption ('U', 'Toggle all updatable package statuses.');
+    HelpWriteLn('');
+end;
+
+procedure HelpReset;
+begin
+    HelpMore := False;
+    HelpCmd := False;
+    HelpStart := 0;
+    HelpLine := 0;
+    HelpLast := -1;
+end;
+
+procedure CommandLineHelp;
+begin
+    HelpReset;
+    Inc(HelpLine);
+    HelpCmd := True;
+    HelpWriteLn(AppTitle + ' (' + AppName + '), version ' + AppVersion);
+    HelpNotice;
+    HelpSwitches;
+    HelpKeyboard;
     Halt(0);
+end;
+
+procedure Redraw;
+begin
+    DrawTitle;
+    DrawSelector;
+    PurgeEvents;
+    DrawGroups;
+    DrawButtons;
+end;
+
+procedure Help;
+var
+    E : TEvent;
+    Quit : boolean;
+begin
+    PurgeEvents;
+    DrawTitle;
+    DrawMainBox;
+    Window (Theme.Frame.X + 2, Theme.Frame.Y + 1,
+    Lo(ScreenMax) - Theme.Frame.X, Hi(ScreenMax) - Theme.Frame.Y + 1);
+    HelpReset;
+    Quit := False;
+    repeat
+        HelpLine := 0;
+        HelpNotice;
+        HelpSwitches;
+        HelpKeyboard;
+        ClearEvent(E);
+        While E.What = evNothing do begin
+            asm HLT end;
+            GetEvent(E);
+        end;
+        if E.What and evKeyDown = evKeyDown then
+            case E.KeyCode of
+                $001b : Quit := True;
+                $4800 : if HelpStart > 0 then Dec(HelpStart);
+                $5000 : if HelpMore then Inc(HelpStart);
+            end;
+    until Quit;
+    Redraw;
 end;
 
 procedure Main;
@@ -1928,6 +2058,9 @@ begin
                     CleanUp;
                     Halt(1); { Esacpe }
                 end;
+                $0048, $0068, $3B00 : begin
+                    Help; { h, H, F1 }
+                end;
                 $4800 : case Tab of
                     0: GroupUp(1);
                     1: FileUp(1);
@@ -1980,10 +2113,10 @@ begin
                 $0055, $0075 : if RunMode = rmStandAlone then begin {u/U}
                     UpdateToggle(E.KeyCode = $0055);
                 end;
-{                else
+                else
                     GotoXY(1, Hi(WindMax) - 1);
                     FWrite(HexStr(E.KeyCode));
-                    ClrEol;}
+                    ClrEol;
             end;
     until Quit;
 end;
