@@ -1903,16 +1903,15 @@ begin
     if not HelpCmd then HelpWriteLn('');
     HelpOption ('h,H,F1', 'Display help screen.');
     HelpWriteLn('');
-    if FDIMode or HelpCmd then begin
-        exit;
-    end;
     if RunMode = rmStandAlone then begin
         HelpOption ('u', 'Toggle all updatable package statuses in group.');
         HelpOption ('U', 'Toggle all updatable package statuses.');
         HelpWriteLn('');
         HelpOption ('v,V', 'View pending changes.');
-        HelpOption ('c,C', 'Clear pending changes.');
-        HelpWriteLn('');
+    end;
+    HelpOption ('c,C', 'Clear pending changes.');
+    HelpWriteLn('');
+    if RunMode = rmStandAlone then begin
         HelpOption ('w,W', 'Write a custom package list.');
         HelpOption ('r,R', 'Read a custom package list.');
         HelpWriteLn('');
@@ -1974,8 +1973,14 @@ begin
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
                 $001b : Quit := True;
-                $4800 : if HelpStart > 0 then Dec(HelpStart);
-                $5000 : if HelpMore then Inc(HelpStart);
+                $4800 : begin if HelpStart > 0 then
+                    Dec(HelpStart) else PurgeEvents;
+                end;
+                $5000 : begin if HelpMore then
+                    Inc(HelpStart) else PurgeEvents;
+                end;
+            else
+                Quit := True;
             end;
     until Quit;
     Redraw;
@@ -2046,13 +2051,17 @@ begin
         end;
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
-                $001b, $0056, $0076 : Quit := True;
-                $4800 : if HelpStart > 0 then begin
-                    Dec(HelpStart);
+                $001b : Quit := True;
+                $4800 : begin if HelpStart > 0 then
+                    Dec(HelpStart) else PurgeEvents;
+
                 end;
-                $5000 : if HelpMore then begin
-                    Inc(HelpStart);
+                $5000 : begin if HelpMore then
+                    Inc(HelpStart) else PurgeEvents;
                 end;
+            else
+                Quit := True;
+
             end;
     until Quit;
     Redraw;
