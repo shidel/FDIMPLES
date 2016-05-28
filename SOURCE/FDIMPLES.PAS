@@ -749,7 +749,7 @@ var
         if Trade(V, '-at-', '@') then exit;
         if Trade(V, '_at_', '@') then exit;
         if Trade(V, ' (#) ', '@') then exit;
-
+        if Trade(V, '(#)', '@') then exit;
     end;
 
     procedure IgnoreVersion;
@@ -1891,15 +1891,23 @@ begin
     HelpOption ('SPACE,ENTER', 'Toggle selection.');
     HelpOption ('TAB,LEFT,RIGHT', 'Change section of focus.');
     HelpOption ('UP,DOWN',  'Move focused item up or down, also Page Up/Down.');
-    HelpWriteLn('');
+    HelpOption ('ESC',  'Quit without making changes.');
+    if not HelpCmd then HelpWriteLn('');
     HelpOption ('h,H,F1', 'Display help screen.');
+    HelpWriteLn('');
     if FDIMode or HelpCmd then begin
-        HelpWriteLn('');
         exit;
     end;
-    HelpOption ('u', 'Toggle all updatable package statuses in group.');
-    HelpOption ('U', 'Toggle all updatable package statuses.');
-    HelpWriteLn('');
+    if RunMode = rmStandAlone then begin
+        HelpOption ('u', 'Toggle all updatable package statuses in group.');
+        HelpOption ('U', 'Toggle all updatable package statuses.');
+        HelpWriteLn('');
+        HelpOption ('v,V', 'View pending changes.');
+        HelpWriteLn('');
+        HelpOption ('w,W', 'Write a custom package list.');
+        HelpOption ('r,R', 'Read a custom package list.');
+        HelpWriteLn('');
+    end;
 end;
 
 procedure HelpReset;
