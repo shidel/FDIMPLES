@@ -1870,8 +1870,8 @@ end;
 
 procedure HelpNotice;
 begin
+    HelpWriteLn('Released under the GNU General Public License, Version 2.0');
     HelpWriteLn('Copyright 2016 Jerome Shidel');
-    HelpWriteLn('Released Under GPL v2.0 License.');
     HelpWriteLn('');
     HelpWriteLn(AppName + ' provides an easy-to-use text user interface to ' +
         'the FDINST package manager command-line utility.');
@@ -1897,9 +1897,9 @@ begin
     HelpWriteLn('User interface keyboard commands:');
     HelpWriteLn('');
     HelpOption ('SPACE,ENTER', 'Toggle selection.');
-    HelpOption ('TAB,LEFT,RIGHT', 'Change section of focus.');
-    HelpOption ('UP,DOWN',  'Move focused item up or down, also Page Up/Down.');
-    HelpOption ('ESC',  'Quit without making changes.');
+    HelpOption ('TAB,LEFT,RIGHT', 'Change what section or button has focus.');
+    HelpOption ('UP,DOWN',  'Move focus up or down an item, also Page Up/Down.');
+    HelpOption ('ESC',  'Quit without making or saving changes.');
     if not HelpCmd then HelpWriteLn('');
     HelpOption ('h,H,F1', 'Display help screen.');
     HelpWriteLn('');
@@ -1909,7 +1909,7 @@ begin
         HelpWriteLn('');
         HelpOption ('v,V', 'View pending changes.');
     end;
-    HelpOption ('c,C', 'Clear pending changes.');
+    HelpOption ('c,C', 'Clear all pending changes.');
     HelpWriteLn('');
     if RunMode = rmStandAlone then begin
         HelpOption ('w,W', 'Write a custom package list.');
