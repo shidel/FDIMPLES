@@ -89,6 +89,7 @@ type
         Bar, BarHot : byte;
         StandBy : byte;
         Checks : TCheckColors;
+        Inst, Remv : byte;
     end;
 
 var
@@ -144,7 +145,9 @@ const
         Bar:$06;
         BarHot:$0e;
         StandBy:$1c;
-        Checks:($07, $0F, $0F, $0E, $0E)
+        Checks:($07, $0F, $0F, $0E, $0E);
+        Inst:$4F;
+        Remv:$4E
     );
     ThemeBlue : TTheme = (
         Frame:(X:1; Y:2);
@@ -172,7 +175,9 @@ const
         Bar:$06;
         BarHot:$0e;
         StandBy:$0e;
-        Checks:($07, $0F, $0E, $0B, $0C)
+        Checks:($07, $0F, $0E, $0B, $0C);
+        Inst:$1F;
+        Remv:$4F
     );
 
 procedure StandBy;
@@ -1814,7 +1819,7 @@ var
 procedure HelpWriteLn(S2 : String);
 var
     S3 : String;
-    W, N : integer;
+    W, N, A : integer;
 begin
     repeat
         W := Lo(WindMax) - Lo(WindMin);
@@ -1829,14 +1834,17 @@ begin
             if not HelpCmd then GotoXY(1,HelpLine - HelpStart + 1);
             if HelpCmd and HelpMore then begin
                 HelpLine := 1;
-                Write('Press a key...');
+                A := TextAttr;
+                TextAttr := $0A;
+                FWrite('Press a key...');
+                TextAttr := A;
                 while not Keypressed do asm Hlt; end;
                 While KeyPressed do ReadKey;
                 GotoXY(1, WhereY);
             end;
-            Write(S3);
+            FWrite(S3);
             ClrEol;
-            if HelpCmd then WriteLn;
+            if HelpCmd then FWriteLn('');
         end;
         Inc(HelpLine);
     until S2 = '';
@@ -1903,6 +1911,7 @@ begin
         HelpOption ('U', 'Toggle all updatable package statuses.');
         HelpWriteLn('');
         HelpOption ('v,V', 'View pending changes.');
+        HelpOption ('c,C', 'Clear pending changes.');
         HelpWriteLn('');
         HelpOption ('w,W', 'Write a custom package list.');
         HelpOption ('r,R', 'Read a custom package list.');
@@ -1970,6 +1979,91 @@ begin
             end;
     until Quit;
     Redraw;
+end;
+
+procedure ShowPending;
+var
+    E : TEvent;
+    Quit : boolean;
+    P, J : PItem;
+    C : boolean;
+begin
+    PurgeEvents;
+    DrawTitle;
+    DrawMainBox;
+    Window (Theme.Frame.X + 2, Theme.Frame.Y + 1,
+    Lo(ScreenMax) - Theme.Frame.X, Hi(ScreenMax) - Theme.Frame.Y + 1);
+    HelpReset;
+    Quit := False;
+    repeat
+        HelpLine := 0;
+        HelpMore := false;
+        P := GroupFirst;
+        TextColor(Theme.Fore);
+        TextBackground(Theme.Back);
+        HelpWriteLn('Pending package changes: ');
+        HelpWriteLn('');
+        while assigned(P) and (not HelpMore) do begin
+            J := P^.Items;
+            while assigned(J) do begin
+                C := { FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or }
+                    FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
+                if (J^.State = psNone) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
+                    if C then begin
+                        TextAttr := Theme.Remv;
+                        HelpWriteLn ('remove ' + J^.Name);
+                    end;
+                    C := False;
+                end;
+                if (J^.State = psFull) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
+                    if not C then begin
+                        TextAttr := Theme.Inst;
+                        HelpWriteLn('install ' + lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
+                    end;
+                end;
+                J := J^.Next;
+            end;
+            P := P^.Next;
+        end;
+        TextColor(Theme.Fore);
+        TextBackground(Theme.Back);
+        HelpWriteLn('');
+        ClearEvent(E);
+        While E.What = evNothing do begin
+            asm HLT end;
+            GetEvent(E);
+        end;
+        if E.What and evKeyDown = evKeyDown then
+            case E.KeyCode of
+                $001b, $0056, $0076 : Quit := True;
+                $4800 : if HelpStart > 0 then begin
+                    Dec(HelpStart);
+                end;
+                $5000 : if HelpMore then begin
+                    Inc(HelpStart);
+                end;
+            end;
+    until Quit;
+    Redraw;
+end;
+
+procedure LoadCustom;
+begin
+    Redraw;
+end;
+
+procedure SaveCustom;
+begin
+    Redraw;
+end;
+
+procedure ClearChanges;
+begin
+    Redraw;
+end;
+
+procedure GetDefaults;
+begin
 end;
 
 procedure Main;
@@ -2043,6 +2137,7 @@ begin
     LTab := -1;
     Quit := False;
     PurgeEvents;
+    GetDefaults;
     repeat
         if Group = nil then Tab := 4;
         if LTab <> Tab then begin
@@ -2069,6 +2164,16 @@ begin
                 $0048, $0068, $3B00 : begin
                     Help; { h, H, F1 }
                 end;
+                $0056, $0076 : case RunMode of
+                    rmStandAlone : ShowPending;
+                end;
+                $0052, $0072 : case RunMode of
+                    rmStandAlone : LoadCustom;
+                end;
+                $0057, $0077 : case RunMode of
+                    rmStandAlone : SaveCustom;
+                end;
+                $0043, $0063 : ClearChanges;
                 $4800 : case Tab of
                     0: GroupUp(1);
                     1: FileUp(1);
