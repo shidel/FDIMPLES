@@ -64,7 +64,7 @@ type
     TItem = record
         Prev, Next, Items : PItem;
         Name : Str12;
-        State : TStates;
+        State, Original : TStates;
         Title, IVersion, MVersion : PString;
         First, Locked, Tested : boolean;
     end;
@@ -1987,6 +1987,7 @@ var
     Quit : boolean;
     P, J : PItem;
     C : boolean;
+    M : integer;
 begin
     PurgeEvents;
     DrawTitle;
@@ -2003,6 +2004,7 @@ begin
         TextBackground(Theme.Back);
         HelpWriteLn('Pending package changes: ');
         HelpWriteLn('');
+        M := 0;
         while assigned(P) and (not HelpMore) do begin
             J := P^.Items;
             while assigned(J) do begin
@@ -2012,6 +2014,7 @@ begin
                     if C then begin
                         TextAttr := Theme.Remv;
                         HelpWriteLn ('remove ' + J^.Name);
+                        Inc(M);
                     end;
                     C := False;
                 end;
@@ -2019,6 +2022,7 @@ begin
                     if not C then begin
                         TextAttr := Theme.Inst;
                         HelpWriteLn('install ' + lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
+                        Inc(M);
                     end;
                 end;
                 J := J^.Next;
@@ -2027,6 +2031,13 @@ begin
         end;
         TextColor(Theme.Fore);
         TextBackground(Theme.Back);
+        if M = 0 then HelpWriteLn('No changes.') else begin
+            HelpWriteLn('');
+            if M = 1 then
+                HelpWriteLn('1 change.')
+            else
+                HelpWriteLn(IntStr(M) + ' changes.');
+        end;
         HelpWriteLn('');
         ClearEvent(E);
         While E.What = evNothing do begin
@@ -2058,12 +2069,45 @@ begin
 end;
 
 procedure ClearChanges;
+var
+    P, G : PItem;
 begin
-    Redraw;
+    G := Group;
+    P := Package;
+    Group := GroupFirst;
+    while Assigned(Group) do begin
+        Package := Group^.Items;
+        while Assigned(Package) do begin
+            StandBy;
+            Package^.State := Package^.Original;
+            Package := Package^.Next;
+        end;
+        VerifyGroupState;
+        Group := Group^.Next;
+    end;
+    Group := G;
+    Package := P;
+    DrawGroups;
 end;
 
 procedure GetDefaults;
+var
+    P, G : PItem;
 begin
+    G := Group;
+    P := Package;
+    Group := GroupFirst;
+    while Assigned(Group) do begin
+        Package := Group^.Items;
+        while Assigned(Package) do begin
+            StandBy;
+            Package^.Original := Package^.State;
+            Package := Package^.Next;
+        end;
+        Group := Group^.Next;
+    end;
+    Group := G;
+    Package := P;
 end;
 
 procedure Main;
