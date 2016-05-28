@@ -2279,11 +2279,11 @@ begin
                 $0055, $0075 : if RunMode = rmStandAlone then begin {u/U}
                     UpdateToggle(E.KeyCode = $0055);
                 end;
-                else
+{                else
                     GotoXY(1, Hi(WindMax) - 1);
                     FWrite(HexStr(E.KeyCode));
                     ClrEol;
-            end;
+            end;}
     until Quit;
 end;
 
