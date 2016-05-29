@@ -2079,7 +2079,7 @@ var
 
 procedure DrawFileBox(Title : String);
 const
-    Height = 12;
+    Height = 8;
 var
     Mid : integer;
 begin
@@ -2094,7 +2094,7 @@ begin
     DrawShadow(Theme.Frame.X + 5, Mid - Height div 2,
         Lo(ScreenMax) - Theme.Frame.X - 5, Mid + Height div 2, bsDoubleWide);
     Window (Theme.Frame.X + 7, Mid - Height div 2 + 2,
-        Lo(ScreenMax) - Theme.Frame.X - 7, Mid + Height div 2 - 2);
+        Lo(ScreenMax) - Theme.Frame.X - 7, Mid + Height div 2);
     FWriteLn(' ' + Title);
 end;
 
@@ -2152,9 +2152,12 @@ begin
     if Saving then begin
     end else begin
     end;
-    GotoXY(GetMaxX div 2 - 5, GetMaxY);
+    GotoXY(GetMaxX - 25, GetMaxY);
     if Focus = 2 then TextAttr := $1F else TextAttr := $70;
-    FWrite(CSpace('OK', 12));
+    FWrite( CSpace('OK', 10));
+    GotoXY (WhereX + 5, WhereY);
+    if Focus = 3 then TextAttr := $1F else TextAttr := $70;
+    FWrite( CSpace('Cancel', 10));
 end;
 
 function RunFileBox(Saving : boolean) : boolean;
@@ -2187,13 +2190,17 @@ begin
         end;
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
-                $000d : if Focus = 2 then begin
-                    RunFileBox := True;
-                    Quit := True;
+                $000d, $0020 : case Focus of
+                    1 : CustomRemovals := not CustomRemovals;
+                    2 : begin
+                        RunFileBox := True;
+                        Quit := True;
+                    end;
+                    3 : Quit := True;
                 end;
                 $001b : Quit := True;
                 $0009 : begin
-                   if Focus < 2 then
+                   if Focus < 3 then
                         Inc(Focus)
                     else
                         Focus := 0;
@@ -2202,7 +2209,7 @@ begin
                    if Focus > 0 then
                         Dec(Focus)
                     else
-                        Focus := 2;
+                        Focus := 3;
                 end;
             else
                 Focus := 0;
