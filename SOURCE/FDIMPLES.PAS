@@ -1451,28 +1451,31 @@ begin
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
     gotoXY(1,Hi(WindMax));
     TextAttr := Theme.Status;
-    if MaxAvail < LoMem then TextAttr := Theme.StatusHot;
-    FWrite(' ' + IntStr(MaxAvail));
-    TextAttr := Theme.Status;
-    FWrite('/');
-    if MemAvail < LoMem then TextAttr := Theme.StatusHot;
-    FWrite(IntStr(MemAvail)+ ' ');
-    TextAttr := Theme.Status;
+    if Lo(ScreenMax) >= 79 then begin
+        if MaxAvail < LoMem then TextAttr := Theme.StatusHot;
+        FWrite(' ' + IntStr(MaxAvail));
+        TextAttr := Theme.Status;
+        FWrite('/');
+        if MemAvail < LoMem then TextAttr := Theme.StatusHot;
+        FWrite(IntStr(MemAvail)+ ' ');
+        TextAttr := Theme.Status;
+    end;
     if Not Assigned(Group) then begin
         FWrite(NoTailDelim(FMedia));
     end else begin
         if Group^.Name <> '' then begin
-            FWrite(TailDelim(FMedia) + TailDelim(Group^.Name));
-            if Assigned(Package) then FWrite(Package^.Name + '.ZIP');
+            FWrite(Copy(TailDelim(FMedia) + TailDelim(Group^.Name), 1, Lo(ScreenMax) + 1 - WhereX));
+            if Assigned(Package) then
+                FWrite(Copy(Package^.Name + '.ZIP', 1, Lo(ScreenMax) + 1 - WhereX));
         end else begin
             if Assigned(Package) then begin
                 FWrite( 'Package ');
                 TextAttr := Theme.StatusHot;
                 FWrite(Package^.Name);
                 TextAttr := Theme.Status;
-                FWrite(' not found under ');
+                FWrite(Copy(' not found under ', 1, Lo(ScreenMax) + 1 - WhereX) );
                 TextAttr := Theme.StatusHot;
-                FWrite(NoTailDelim(FMedia));
+                FWrite(Copy(NoTailDelim(FMedia), 1, Lo(ScreenMax) + 1 - WhereX));
                 TextAttr := Theme.Status;
             end;
         end;
@@ -1904,8 +1907,8 @@ begin
     HelpOption ('h,H,F1', 'Display help screen.');
     HelpWriteLn('');
     if RunMode = rmStandAlone then begin
-        HelpOption ('u', 'Toggle all updatable package statuses in group.');
-        HelpOption ('U', 'Toggle all updatable package statuses.');
+        HelpOption ('u', 'Toggle the status of all updatable packages in group.');
+        HelpOption ('U', 'Toggle the status of all updatable packages.');
         HelpWriteLn('');
         HelpOption ('v,V', 'View pending changes.');
     end;
@@ -2067,13 +2070,59 @@ begin
     Redraw;
 end;
 
+procedure DrawFileBox(Title : String);
+begin
+    TextAttr := $71;
+    Window (Theme.Frame.X + 5, Hi(ScreenMax) div 2 - 3,
+        Lo(ScreenMax) - Theme.Frame.X - 5, Hi(ScreenMax) div 2 + 5);
+    ClrScr;
+    Window (1, 1, Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+    DrawBox(Theme.Frame.X + 6, Hi(ScreenMax) div 2 - 3,
+        Lo(ScreenMax) - Theme.Frame.X - 6, Hi(ScreenMax) div 2 + 5, bxSingle);
+    DrawShadow(Theme.Frame.X + 5, Hi(ScreenMax) div 2 - 3,
+        Lo(ScreenMax) - Theme.Frame.X - 5, Hi(ScreenMax) div 2 + 5, bsDoubleWide);
+end;
+
+procedure RunFileBox(Saving : boolean);
+var
+    E : TEvent;
+    Quit : boolean;
+begin
+    Quit := False;
+    repeat
+        ClearEvent(E);
+        While E.What = evNothing do begin
+            asm HLT end;
+            GetEvent(E);
+        end;
+        if E.What and evKeyDown = evKeyDown then
+            case E.KeyCode of
+                $001b : Quit := True;
+{
+               $4800 : begin if HelpStart > 0 then
+                    Dec(HelpStart) else PurgeEvents;
+                end;
+                $5000 : begin if HelpMore then
+                    Inc(HelpStart) else PurgeEvents;
+                end;
+}
+            else
+                Quit := True;
+            end;
+    until Quit;
+end;
+
 procedure LoadCustom;
 begin
+    DrawFileBox('Load custom package list');
+    RunFileBox(false);
     Redraw;
 end;
 
 procedure SaveCustom;
 begin
+    DrawFileBox('Save custom package list');
+    RunFileBox(true);
     Redraw;
 end;
 
@@ -2279,10 +2328,12 @@ begin
                 $0055, $0075 : if RunMode = rmStandAlone then begin {u/U}
                     UpdateToggle(E.KeyCode = $0055);
                 end;
-{                else
+{
+                else
                     GotoXY(1, Hi(WindMax) - 1);
                     FWrite(HexStr(E.KeyCode));
-                    ClrEol;}
+                    ClrEol;
+}
             end;
     until Quit;
 end;
