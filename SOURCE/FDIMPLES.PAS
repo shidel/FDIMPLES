@@ -176,8 +176,8 @@ const
         BarHot:$0e;
         StandBy:$0e;
         Checks:($07, $0F, $0E, $0B, $0C);
-        Inst:$1F;
-        Remv:$4F
+        Inst:$1A;
+        Remv:$4E
     );
 
 procedure StandBy;
@@ -2016,21 +2016,23 @@ begin
         while assigned(P) and (not HelpMore) do begin
             J := P^.Items;
             while assigned(J) do begin
-                C := { FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or }
-                    FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
-                if (J^.State = psNone) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
-                    if C then begin
-                        TextAttr := Theme.Remv;
-                        HelpWriteLn ('remove ' + J^.Name);
-                        Inc(M);
+                if J^.State <> J^.Original then begin
+                    C := { FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or }
+                        FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
+                    if (J^.State = psNone) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
+                        if C then begin
+                            TextAttr := Theme.Remv;
+                            HelpWriteLn (' remove ' + J^.Name);
+                            Inc(M);
+                        end;
+                        C := False;
                     end;
-                    C := False;
-                end;
-                if (J^.State = psFull) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
-                    if not C then begin
-                        TextAttr := Theme.Inst;
-                        HelpWriteLn('install ' + lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
-                        Inc(M);
+                    if (J^.State = psFull) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
+                        if not C then begin
+                            TextAttr := Theme.Inst;
+                            HelpWriteLn(' install ' + lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
+                            Inc(M);
+                        end;
                     end;
                 end;
                 J := J^.Next;
@@ -2070,58 +2072,154 @@ begin
     Redraw;
 end;
 
+var
+    CustomFile : String;
+    CustomRemovals : boolean;
+
+
 procedure DrawFileBox(Title : String);
+const
+    Height = 12;
+var
+    Mid : integer;
 begin
-    TextAttr := $71;
-    Window (Theme.Frame.X + 5, Hi(ScreenMax) div 2 - 3,
-        Lo(ScreenMax) - Theme.Frame.X - 5, Hi(ScreenMax) div 2 + 5);
+    TextAttr := $70;
+    Mid := (Hi(ScreenMax) + 1) div 2;
+    Window (Theme.Frame.X + 5, Mid - Height div 2,
+        Lo(ScreenMax) - Theme.Frame.X - 5, Mid + Height div 2);
     ClrScr;
     Window (1, 1, Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
-    DrawBox(Theme.Frame.X + 6, Hi(ScreenMax) div 2 - 3,
-        Lo(ScreenMax) - Theme.Frame.X - 6, Hi(ScreenMax) div 2 + 5, bxSingle);
-    DrawShadow(Theme.Frame.X + 5, Hi(ScreenMax) div 2 - 3,
-        Lo(ScreenMax) - Theme.Frame.X - 5, Hi(ScreenMax) div 2 + 5, bsDoubleWide);
+    DrawBox(Theme.Frame.X + 6, Mid - Height div 2,
+        Lo(ScreenMax) - Theme.Frame.X - 6, Mid + Height div 2, bxSingle);
+    DrawShadow(Theme.Frame.X + 5, Mid - Height div 2,
+        Lo(ScreenMax) - Theme.Frame.X - 5, Mid + Height div 2, bsDoubleWide);
+    Window (Theme.Frame.X + 7, Mid - Height div 2 + 2,
+        Lo(ScreenMax) - Theme.Frame.X - 7, Mid + Height div 2 - 2);
+    FWriteLn(' ' + Title);
 end;
 
-procedure RunFileBox(Saving : boolean);
+function EditCustomFile : word;
+var
+    Cursor  : Word;
+    ESize   : word;
+    TempStr : String;
+    Event   : TEvent;
+    Wide    : byte;
+    X, Y    : Byte;
+    I       : word;
+begin
+    EditCustomFile := 0;
+    GotoXY(1, 3);
+    TextAttr := $1F;
+    if ESize > Sizeof(TempStr) then
+    ESize := Sizeof(TempStr) - 1;
+    X := WhereX;
+    Y := WhereY;
+    Cursor  := GetCursor;
+    HideCursor;
+    TempStr := CustomFile;
+    if CheckScroll then
+        Wide := GetMaxX - X
+    else
+        Wide := GetMaxX - X + 1;
+    if Not EditLn(TempStr, True, ESize, Wide, Event) then
+        repeat
+            if Event.What = evKeyDown then case Event.KeyCode of
+                $001b, $0009, $0f00 : begin
+                    EditCustomFile := Event.KeyCode;
+                    Break;
+                end;
+            end;
+            GotoXY ( X, Y );
+        until EditLn(TempStr, False, ESize, Wide, Event);
+    SetCursor ( Cursor );
+    CustomFile := TempStr;
+    TextAttr := $71;
+    GotoXY(1, 3);
+    FWrite(' ' + Copy(CustomFile, 1, GetMaxX - 1));
+    ClrEol;
+end;
+
+procedure DrawBoxParts(Saving : boolean; Focus : integer);
+begin
+    TextAttr := $71;
+    GotoXY(2, 3);
+    FWrite(Copy(CustomFile, 1, GetMaxX - 1));
+    GotoXY(1, 4);
+    FWriteLn('');
+    if Focus = 1 then TextAttr := $1F else TextAttr := $70;
+    FWriteLn(' [' + WhichStr(CustomRemovals, ' ', 'X') + '] Include package removals. ');
+    if Saving then begin
+    end else begin
+    end;
+    GotoXY(GetMaxX div 2 - 5, GetMaxY);
+    if Focus = 2 then TextAttr := $1F else TextAttr := $70;
+    FWrite(CSpace('OK', 12));
+end;
+
+function RunFileBox(Saving : boolean) : boolean;
 var
     E : TEvent;
     Quit : boolean;
+    Focus : integer;
+    EF : word;
 begin
+    RunFileBox := False;
+    Focus := 0;
     Quit := False;
     repeat
-        ClearEvent(E);
-        While E.What = evNothing do begin
-            asm HLT end;
-            GetEvent(E);
+        DrawBoxParts(Saving, Focus);
+        if Focus = 0 then begin
+            repeat
+                EF := EditCustomFile
+            until EF <> 0;
+        end else
+            EF := 0;
+        if EF = 0 then begin
+            ClearEvent(E);
+            While E.What = evNothing do begin
+                asm HLT end;
+                GetEvent(E);
+            end;
+        end else begin
+            E.What := evKeyDown;
+            E.KeyCode := EF;
         end;
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
+                $000d : if Focus = 2 then begin
+                    RunFileBox := True;
+                    Quit := True;
+                end;
                 $001b : Quit := True;
-{
-               $4800 : begin if HelpStart > 0 then
-                    Dec(HelpStart) else PurgeEvents;
+                $0009 : begin
+                   if Focus < 2 then
+                        Inc(Focus)
+                    else
+                        Focus := 0;
                 end;
-                $5000 : begin if HelpMore then
-                    Inc(HelpStart) else PurgeEvents;
+                $0F00 : begin
+                   if Focus > 0 then
+                        Dec(Focus)
+                    else
+                        Focus := 2;
                 end;
-}
             else
-                Quit := True;
+                Focus := 0;
             end;
     until Quit;
 end;
 
 procedure LoadCustom;
 begin
-    DrawFileBox('Load custom package list');
+    DrawFileBox('Load package list customizations:');
     RunFileBox(false);
     Redraw;
 end;
 
 procedure SaveCustom;
 begin
-    DrawFileBox('Save custom package list');
+    DrawFileBox('Save package list customizations:');
     RunFileBox(true);
     Redraw;
 end;
@@ -2176,6 +2274,10 @@ var
     S : String;
     I : integer;
 begin
+    GetDir(0, CustomFile);
+    CustomFile := TailDelim(CustomFile) + 'PACKAGES.LST';
+    CustomRemovals := False;
+
     if DirExists('FDI\SETTINGS\') then
         ListDir := 'FDI\SETTINGS\'
     else  if DirExists('\FDI\SETTINGS\') then
