@@ -1713,6 +1713,53 @@ begin
     Close(F);
 end;
 
+procedure MakeCustomList(Name : string; Removals : boolean);
+const
+    Comments = false;
+var
+    P, J : PItem;
+    F : Text;
+    S : String;
+begin
+    FileMode := 2;
+    Assign(F, Name);
+    if FileExists(Name) and (Removals) then
+        Append(F)
+    else begin
+        Rewrite(F);
+        WriteLn(F, '; FDIMPLES Package List Customization File');
+    end;
+    WriteLn(F);
+    if Removals then
+        WriteLn(F, '; Package Removals')
+    else
+        WriteLn(F, '; Package Additions');
+    WriteLn(F);
+    P := GroupFirst;
+    while assigned(P) do begin
+        J := P^.Items;
+        while assigned(J) do begin
+            if (J^.State <> J^.Original) and
+            (((J^.State = psNone) and Removals) or
+            ((J^.State <> psNone) and (not Removals))) then begin
+                if Comments and (PtrStr(J^.Title) <> '') then begin
+                    WriteLn(F, '; ', RSpace(J^.NAME, 12), #32,
+                    RSpace(Copy(PtrStr(J^.MVersion),1,20), 20), #32,
+                    PtrStr(J^.Title));
+                end;
+                if J^.State = psNone then S := '-' else S := '+';
+                WriteLn(F, S + ' ' + lcase(P^.Name + Delimiter + J^.Name));
+                if Comments then begin
+                    WriteLn(F);
+                end;
+            end;
+            J := J^.Next;
+        end;
+        P := P^.Next;
+    end;
+    Close(F);
+end;
+
 procedure MakeFDIList;
 begin
     MakeList(TailDelim(GetEnv('TEMP')) + 'FDIMPLES.LST', psFull, False);
@@ -1910,11 +1957,12 @@ begin
         HelpOption ('u', 'Toggle the status of all updatable packages in group.');
         HelpOption ('U', 'Toggle the status of all updatable packages.');
         HelpWriteLn('');
-        HelpOption ('v,V', 'View pending changes.');
     end;
+    if (RunMode = rmStandAlone) or FDIMode then
+        HelpOption ('v,V', 'View pending changes.');
     HelpOption ('c,C', 'Clear all pending changes.');
     HelpWriteLn('');
-    if RunMode = rmStandAlone then begin
+    if (RunMode = rmStandAlone) or FDIMode then begin
         HelpOption ('w,W', 'Write a custom package list.');
         HelpOption ('r,R', 'Read a custom package list.');
         HelpWriteLn('');
@@ -2228,6 +2276,8 @@ procedure SaveCustom;
 begin
     DrawFileBox('Save package list customizations:');
     RunFileBox(true);
+    MakeCustomList(CustomFile, false);
+    if CustomRemovals then MakeCustomList(CustomFile, true);
     Redraw;
 end;
 
@@ -2376,13 +2426,13 @@ begin
                     Help; { h, H, F1 }
                 end;
                 $0056, $0076 : case RunMode of
-                    rmStandAlone : ShowPending;
+                    rmStandAlone, rmFDI : ShowPending;
                 end;
                 $0052, $0072 : case RunMode of
-                    rmStandAlone : LoadCustom;
+                    rmStandAlone, rmFDI : LoadCustom;
                 end;
                 $0057, $0077 : case RunMode of
-                    rmStandAlone : SaveCustom;
+                    rmStandAlone, rmFDI : SaveCustom;
                 end;
                 $0043, $0063 : ClearChanges;
                 $4800 : case Tab of
