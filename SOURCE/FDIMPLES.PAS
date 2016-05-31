@@ -1713,9 +1713,7 @@ begin
     Close(F);
 end;
 
-procedure MakeCustomList(Name : string; Removals : boolean);
-const
-    Comments = false;
+procedure WriteCustomList(Name : string; Removals : boolean);
 var
     P, J : PItem;
     F : Text;
@@ -2276,8 +2274,8 @@ procedure SaveCustom;
 begin
     DrawFileBox('Save package list customizations:');
     RunFileBox(true);
-    MakeCustomList(CustomFile, false);
-    if CustomRemovals then MakeCustomList(CustomFile, true);
+    WriteCustomList(CustomFile, false);
+    if CustomRemovals then WriteCustomList(CustomFile, true);
     Redraw;
 end;
 
