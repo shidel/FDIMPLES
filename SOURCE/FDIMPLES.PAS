@@ -1737,6 +1737,7 @@ begin
     while assigned(P) do begin
         J := P^.Items;
         while assigned(J) do begin
+            StandBy;
             if (J^.State <> J^.Original) and
             (((J^.State = psNone) and Removals) or
             ((J^.State <> psNone) and (not Removals))) then begin
@@ -1756,6 +1757,63 @@ begin
         P := P^.Next;
     end;
     Close(F);
+end;
+
+procedure ReadCustomList(Name : string; Removals : boolean);
+var
+    P, G : PItem;
+    F : File;
+    S : String;
+    C : integer;
+    X : boolean;
+
+begin
+    FileMode := 2;
+    Assign(F, Name);
+    if not FileExists(Name) then exit;
+    P := Package;
+    G := Group;
+    Reset(F, 1);
+    repeat
+        C := UnixRead(F, S);
+        S := Trim(UCase(S));
+        if (Length(S) > 2) and ((S[1] = '-') or (S[1] = '+')) then begin
+            X := S[1] = '+';
+            Delete(S,1,1);
+            if Pos('\', S) > 0 then
+                Delete(S, 1, LastPos('\', S));
+            S := Trim(S);
+            Group := GroupFirst;
+            while assigned(Group) do begin
+                Package := Group^.Items;
+                while assigned(Package) do begin
+                    StandBy;
+                    if (Ucase(Package^.Name) = S) and (not Package^.Locked) then begin
+                        if Package^.Tested = False then SearchForData(false);
+                        Package^.Tested := True;
+                        if X then begin
+                            if assigned(Package^.IVersion) and assigned(Package^.MVersion) and
+                            (Ucase(PtrStr(Package^.IVersion)) <> UCase(PtrStr(Package^.MVersion))) and
+                            (RunMode = rmStandAlone) then begin
+                                if (UCase(PtrStr(Package^.IVersion)) < UCase(PtrStr(Package^.MVersion))) then
+                                    Package^.State := psUpgrade
+                                else
+                                    Package^.State := psReplace
+                            end else
+                                Package^.State := psFull;
+                        end else if Removals then
+                            Package^.State := psNone;
+                    end;
+                    Package := Package^.Next;
+                end;
+                Group := Group^.Next;
+            end;
+        end;
+    until C = -1;
+    Group := G;
+    Package := P;
+    Close(F);
+    VerifyGroupState;
 end;
 
 procedure MakeFDIList;
@@ -1961,8 +2019,8 @@ begin
     HelpOption ('c,C', 'Clear all pending changes.');
     HelpWriteLn('');
     if (RunMode = rmStandAlone) or FDIMode then begin
-        HelpOption ('w,W', 'Write a custom package list.');
-        HelpOption ('r,R', 'Read a custom package list.');
+        HelpOption ('w,W', 'Write a package list customization file that contains changes.');
+        HelpOption ('r,R', 'Read a package list customization file and apply changes.');
         HelpWriteLn('');
     end;
 end;
@@ -2123,12 +2181,12 @@ var
     CustomRemovals : boolean;
 
 
-procedure DrawFileBox(Title : String);
-const
-    Height = 8;
+procedure DrawFileBox(Title : String; Extra : integer);
 var
     Mid : integer;
+    Height : integer;
 begin
+    Height := 8 + Extra;
     TextAttr := $70;
     Mid := (Hi(ScreenMax) + 1) div 2;
     Window (Theme.Frame.X + 5, Mid - Height div 2,
@@ -2195,9 +2253,11 @@ begin
     FWriteLn('');
     if Focus = 1 then TextAttr := $1F else TextAttr := $70;
     FWriteLn(' [' + WhichStr(CustomRemovals, ' ', 'X') + '] Include package removals. ');
+{
     if Saving then begin
     end else begin
     end;
+}
     GotoXY(GetMaxX - 25, GetMaxY);
     if Focus = 2 then TextAttr := $1F else TextAttr := $70;
     FWrite( CSpace('OK', 10));
@@ -2265,17 +2325,19 @@ end;
 
 procedure LoadCustom;
 begin
-    DrawFileBox('Load package list customizations:');
-    RunFileBox(false);
+    DrawFileBox('Load package list customizations:', 0);
+    if RunFileBox(false) then
+    ReadCustomList(CustomFile, CustomRemovals);
     Redraw;
 end;
 
 procedure SaveCustom;
 begin
-    DrawFileBox('Save package list customizations:');
-    RunFileBox(true);
-    WriteCustomList(CustomFile, false);
-    if CustomRemovals then WriteCustomList(CustomFile, true);
+    DrawFileBox('Save package list customizations:', 0);
+    if RunFileBox(true) then begin
+        WriteCustomList(CustomFile, false);
+        if CustomRemovals then WriteCustomList(CustomFile, true);
+    end;
     Redraw;
 end;
 
