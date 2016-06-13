@@ -949,6 +949,10 @@ begin
             TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', false);
         FN := TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT';
         while (Copy(FN, 3, 3) = '\..') do Delete(FN, 3, 3);
+        if not FileExists(FN) then begin
+            FN := TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKG-INFO') + Package^.Name + '.TXT';
+            while (Copy(FN, 3, 3) = '\..') do Delete(FN, 3, 3);
+        end;
         TryLSM(FN, All);
         if (All and assigned(Package^.Items)) and FileList then
             TryLST(FN, All);
@@ -960,8 +964,8 @@ begin
     IsMediaDrive := False;
     S := TailDelim(S);
     if DirExists(S) and
-    FileExists(TailDelim(S + 'BASE') + 'COMMAND.ZIP') (* and
-    FileExists(TailDelim(S + 'BASE') + 'KERNEL.ZIP') *) then begin
+    FileExists(TailDelim(S + 'BASE') + 'COMMAND.ZIP') or
+    FileExists(TailDelim(S + 'BASE') + 'KERNEL.ZIP') then begin
         FMedia := S;
         IsMediaDrive := True;
     end;
