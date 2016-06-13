@@ -111,6 +111,7 @@ var
     Startup : boolean;
     Comments : boolean;
     ListDir : string;
+    PackageInfo : string;
     TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
 
 const
@@ -947,12 +948,7 @@ begin
     end else begin
         if (not assigned(Package^.IVersion)) and (not FDIMode) then
             TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', false);
-        FN := TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKGINFO') + Package^.Name + '.TXT';
-        while (Copy(FN, 3, 3) = '\..') do Delete(FN, 3, 3);
-        if not FileExists(FN) then begin
-            FN := TailDelim(FMEDIA) + TailDelim('..') + TailDelim('PKG-INFO') + Package^.Name + '.TXT';
-            while (Copy(FN, 3, 3) = '\..') do Delete(FN, 3, 3);
-        end;
+        FN := TailDelim(PackageInfo) + Package^.Name + '.TXT';
         TryLSM(FN, All);
         if (All and assigned(Package^.Items)) and FileList then
             TryLST(FN, All);
@@ -1031,6 +1027,7 @@ var
    T, M : String;
 
 begin
+    PackageInfo := '';
     if Trim(GetEnv('FMEDIA')) <> '' then begin
         FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))));
     end;
@@ -1067,6 +1064,18 @@ begin
     if FMedia = '' then
         FMedia := Dir('\');
     end;
+
+    PackageInfo := TailDelim(FMEDIA) + TailDelim('..') + NoTailDelim('PKGINFO');
+    while (Copy(PackageInfo, 3, 3) = '\..') do Delete(PackageInfo, 3, 3);
+    if not DirExists(PackageInfo) then begin
+        PackageInfo := TailDelim(FMEDIA) + TailDelim('..') + NoTailDelim('PKG_INFO');
+        while (Copy(PackageInfo, 3, 3) = '\..') do Delete(PackageInfo, 3, 3);
+    end;
+    if not DirExists(PackageInfo) then begin
+        PackageInfo := TailDelim(FMEDIA) + TailDelim('..') + NoTailDelim('PKG-INFO');
+        while (Copy(PackageInfo, 3, 3) = '\..') do Delete(PackageInfo, 3, 3);
+    end;
+
     ReadDefaults;
     Tab := 0;
     Group := nil;
@@ -2453,6 +2462,14 @@ begin
     UpdateOn := false;
     SetTheme;
     Init;
+{
+    WriteLn;
+    WriteLn(FMEDIA);
+    WriteLn(PackageInfo, ', ',
+     DirExists(PackageInfo), ', ',
+      FileExists(TailDelim(PackageInfo) + 'command.txt'));
+    ReadKey;
+}
     if AutoUpdate then UpdateToggle(True);
     StartUp := False;
     CheckScroll := False;

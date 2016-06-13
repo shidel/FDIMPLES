@@ -1165,7 +1165,8 @@ uses QStrings;
   var
 	Search : TSearchRec;
   begin
-	FindFirst(FileExpand(AFileName), faAnyFile, Search);
+{	FindFirst(FileExpand(AFileName), faAnyFile, Search); }
+	FindFirst(AFileName, faAnyFile, Search);
 	Exists := (DosError = 0);
   end;
 
@@ -1173,6 +1174,7 @@ uses QStrings;
   var
 	Search : TSearchRec;
   begin
+{	FindFirst(FileExpand(AFileName), faAnyFile, Search);}
 	FindFirst(FileExpand(AFileName), faAnyFile, Search);
 	FileExists := (DosError = 0) and (Search.Attr and faDirectory <> faDirectory);
   end;
@@ -1181,8 +1183,9 @@ uses QStrings;
   var
 	Search : TSearchRec;
   begin
-	FindFirst(Dir(AFileName) + '*.*', faAnyFile, Search);
-	DirExists := (DosError = 0);
+{    FindFirst(Dir(AFileName) + '*.*', faAnyFile, Search); }
+    FindFirst(TailDelim(AFileName) + '*.*', faAnyFile, Search);
+	DirExists := (DosError = 0) and (Search.Attr and faDirectory = faDirectory);
   end;
 
   function MakeDir(ADir : String) : integer;
