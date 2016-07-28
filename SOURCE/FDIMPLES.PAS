@@ -25,7 +25,7 @@
         Current working directory = FDI files.
 
         FDPLBASE.LST is list of BASE only package install files.
-        FDPLALL.LST is list of ALL package install files.
+        FDPLFULL.LST is list of ALL package install files.
 
     On exit,
 
@@ -49,7 +49,7 @@ const
     AppName = 'FDIMPLES';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     Installed = 'Installed!'; {Always sorted first -- has only title, no name}
-    ALLPackages = 'FDPLALL.LST';
+    ALLPackages = 'FDPLFULL.LST';
     BASEPackages = 'FDPLBASE.LST';
     LoMem = 10240;
     NoScroll = 1;
@@ -400,11 +400,11 @@ begin
         else exit;
     end else if (RunMode = rmList) or (RunMode = rmConfig) then begin
         if RunMode = rmConfig then begin
-            ReadListFile(ListDir + 'FDPLALL.LST',  'A* ');
+            ReadListFile(ListDir + 'FDPLFULL.LST',  'A* ');
             ReadListFile(ListDir + 'FDPLBASE.LST', 'B* ');
         end else begin
             ReadListFile(ListDir + 'PKG_XTRA.LST', 'E* ');
-            ReadListFile(ListDir + 'PKG_ALL.LST',  'A* ');
+            ReadListFile(ListDir + 'PKG_FULL.LST',  'A* ');
             ReadListFile(ListDir + 'PKG_BASE.LST', 'B* ');
         end;
     end else begin
@@ -1839,12 +1839,12 @@ procedure MakeLists;
 begin
     if RunMode = rmConfig then begin
         MakeList(ListDir + 'FDPLBASE.LST', psBase, True);
-        MakeList(ListDir + 'FDPLALL.LST', psBase, True);
-        MakeList(ListDir + 'FDPLALL.LST', psAll, True);
+        MakeList(ListDir + 'FDPLFULL.LST', psBase, True);
+        MakeList(ListDir + 'FDPLFULL.LST', psAll, True);
     end else begin
         MakeList('PKG_BASE.LST', psBase, True);
-        MakeList('PKG_ALL.LST', psBase, True);
-        MakeList('PKG_ALL.LST', psAll, True);
+        MakeList('PKG_FULL.LST', psBase, True);
+        MakeList('PKG_FULL.LST', psAll, True);
         MakeList('PKG_XTRA.LST', psBase, True);
         MakeList('PKG_XTRA.LST', psAll, True);
         MakeList('PKG_XTRA.LST', psExtra, True);
