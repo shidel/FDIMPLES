@@ -34,7 +34,11 @@
         errorlevel 0, ok, and %TEMP%\FDIMPLES.LST contains package list.
 }
 
-{$M 50000,51200,204800} (* Memory: Largest Stack, 100K Minimum / Maximum *)
+{ Original Prior to 0.9.8 Memory Settings }
+{ M 50000,51200,204800} (* Memory: Largest Stack, 100K Minimum / Maximum *)
+
+{ Post 0.9.7 Memory settings }
+{$M 32768,51200,102400}
 
 {$I QCRT.DEF}
 program Test;
