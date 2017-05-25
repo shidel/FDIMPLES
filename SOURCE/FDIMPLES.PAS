@@ -70,7 +70,7 @@ type
         Name : Str12;
         State, Original : TStates;
         Title, IVersion, MVersion : PString;
-        First, Locked, Tested : boolean;
+        First, Locked, Tested, Skipped : boolean;
     end;
     PText = ^TText;
     TText = record
@@ -85,7 +85,7 @@ type
         FillChar : Char;
         Double, Shadow : boolean;
         Title, TitleHot : byte;
-        Status, StatusHot : byte;
+        Status, StatusHot, StatusErr : byte;
         Brace : byte;
         Text, TextHot : byte;
         Name, NameHot : byte;
@@ -140,6 +140,7 @@ const
         TitleHot:$4e;
         Status:$47;
         StatusHot:$4f;
+        StatusErr:$4e;
         Brace:$08;
         Text:$07;
         TextHot:$0F;
@@ -170,6 +171,7 @@ const
         TitleHot:$74;
         Status:$08;
         StatusHot:$07;
+        StatusErr:$0c;
         Brace:$08;
         Text:$07;
         TextHot:$0F;
@@ -309,6 +311,7 @@ begin
         First := True;
         Locked := False;
         Tested := False;
+        Skipped := False;
     end;
     NewPItem := P;
 end;
@@ -586,6 +589,7 @@ begin
     end;
     Pkg^.First := true;
     Pkg^.Items := nil;
+    Pkg^.Skipped := False;
 end;
 
 function FreeSomeMem(Factor : Longint) : boolean;
@@ -937,8 +941,11 @@ begin
         else
         if Flag and (C > -1) and (S<>'') then
             AddLine(Package, lcase(S), C <> 0);
-    until C = -1;
-    Close(F)
+    until (C = -1) or Keypressed;
+    Close(F);
+    if Keypressed then begin
+        Package^.Skipped := true;
+    end;
 end;
 
 procedure SearchForData(All:boolean);
@@ -1029,9 +1036,11 @@ var
    P, J, Others : PItem;
    CS : integer;
    T, M : String;
+   PlsWait:String;
 
 begin
     PackageInfo := '';
+    PlsWait :='Please standby...';
     if Trim(GetEnv('FMEDIA')) <> '' then begin
         FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))));
     end;
@@ -1048,7 +1057,7 @@ begin
         end;
         StartCursor := GetCursor;
         HideCursor;
-        FWrite('Please standby...');
+        FWrite(PlsWait);
         M := ucase(trim(ReadCfg));
         GetDir(0, T);
         if (FMEDIA = '') and (M <> '') then IsMediaDrive(Copy(T,1,2) + M);
@@ -1078,6 +1087,12 @@ begin
     if not DirExists(PackageInfo) then begin
         PackageInfo := TailDelim(FMEDIA) + TailDelim('..') + NoTailDelim('PKG-INFO');
         while (Copy(PackageInfo, 3, 3) = '\..') do Delete(PackageInfo, 3, 3);
+    end;
+
+    if (not FDIMode) and (FMedia = '') then begin
+        GotoXY (1, WhereY);
+        FWriteLn('Package media not found!');
+        FWrite(PlsWait);
     end;
 
     ReadDefaults;
@@ -1225,7 +1240,8 @@ begin
         end;
 
         if not assigned(Package^.Items) then begin
-            FWrite(RSpace(' ' + Package^.Name + ' - No information',
+            if not Package^.Skipped then
+                FWrite(RSpace(' ' + Package^.Name + ' - No information',
             Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
             ClrEol;
         end else begin
@@ -1484,6 +1500,12 @@ begin
             FWrite(Copy(TailDelim(FMedia) + TailDelim(Group^.Name), 1, Lo(ScreenMax) + 1 - WhereX));
             if Assigned(Package) then
                 FWrite(Copy(Package^.Name + '.ZIP', 1, Lo(ScreenMax) + 1 - WhereX));
+        end else if FMedia = '' then begin
+            TextAttr := Theme.StatusErr;
+            FWrite('Package media not found!');
+            TextAttr := Theme.StatusHot;
+            FWrite(' Only installed packages are shown.');
+            TextAttr := Theme.Status;
         end else begin
             if Assigned(Package) then begin
                 FWrite( 'Package ');
@@ -2407,6 +2429,7 @@ var
     Quit : boolean;
     S : String;
     I : integer;
+    Attempt : boolean;
 begin
     GetDir(0, CustomFile);
     CustomFile := TailDelim(CustomFile) + 'PACKAGES.LST';
@@ -2493,9 +2516,19 @@ begin
         end;
         DrawStatus;
         ClearEvent(E);
-        While E.What = evNothing do begin
+        Attempt := True;
+        While (E.What = evNothing) do begin
             asm HLT end;
             GetEvent(E);
+            if (E.What = evNothing) and Assigned(Package) and Package^.Skipped and Attempt then begin
+                SearchForData(True);
+                if not Package^.Skipped then begin
+                    DrawGroups;
+                    DrawButtons;
+                    DrawStatus;
+                end;
+                Attempt := False;
+            end;
         end;
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
