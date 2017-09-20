@@ -5,5 +5,6 @@ if exist BIN\NUL deltree /y BIN\*.* >nul
 if exist BIN\NUL rmdir BIN
 
 rem Clean up previous builds if needed.
+if exist SOURCE\FDIMPLES.EXE del SOURCE\*.EXE
 if exist SOURCE\QCRT.OBJ del SOURCE\*.OBJ
 if exist SOURCE\QCRT.TPU del SOURCE\*.TPU

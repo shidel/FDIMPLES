@@ -45,7 +45,7 @@ program Test;
 
 {$DEFINE USEBAT}
 
-uses QDos, QCrtNM, QStrings;
+uses QDos, QCrtNM, QCrt, QStrings;
 
 {$I VERSION.INC}
 
@@ -103,7 +103,6 @@ var
     Package, PackageFirst, PackageTop, PackageBottom, PackageLast : PItem;
     LineTop, LineBottom : PItem;
     FMedia : String;
-    StartCursor : word;
     Theme : TTheme;
     CheckMark : TChecks;
     RunMode : TModes;
@@ -202,7 +201,7 @@ begin
     if Startup then begin
         if TickCount < 2 then exit;
         if TickCount > 2 then GotoXY(WhereX -1, WhereY);
-        FWrite(Ticks[((TickCount - 2) div Speed) mod Length(Ticks) + 1]);
+        WriteRawPStr(Ticks[((TickCount - 2) div Speed) mod Length(Ticks) + 1]);
     end else begin
         WMin := WindMin;
         WMax := WindMax;
@@ -214,11 +213,11 @@ begin
         gotoXY(1,Hi(WindMax));
         TextAttr := Theme.StandBy;
         if TickCount = MinTicks then begin
-            FWrite(' Standby');
+            WriteRawPStr(' Standby');
             ClrEol;
         end;
         GotoXY(10, Hi(WindMax));
-        FWrite(Ticks[((TickCount - MinTicks) div Speed) mod Length(Ticks) + 1]);
+        WriteRawPStr(Ticks[((TickCount - MinTicks) div Speed) mod Length(Ticks) + 1]);
         WindMin := WMin;
         WindMax := WMax;
         GotoXY(X, Y);
@@ -236,10 +235,10 @@ begin
     if FDIMode then exit;
     TextAttr := 7;
     window(1,1,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
-    CheckCursor := True;
+(*    CheckCursor := True; *)
     CheckScroll := True;
     ClrScr;
-    SetCursor(StartCursor);
+    NormalCursor;
 end;
 
 function ValueOf(S:String; D : integer) : Integer;
@@ -1048,16 +1047,15 @@ begin
     if not FDIMode then begin
         if (FMedia <> '') and (not DirExists(FMedia)) then FMedia := '';
         if Not FileExists(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE') then begin
-            FWriteLn('unable to located package manager FDINST.');
+            WriteLn('unable to located package manager FDINST.');
             Halt(100);
         end;
         if (GetEnv('TEMP') = '') or (not DirExists(GetEnv('TEMP'))) then begin
-            FWriteLn('TEMP environment variable is not set.');
+            WriteLn('TEMP environment variable is not set.');
             Halt(2);
         end;
-        StartCursor := GetCursor;
         HideCursor;
-        FWrite(PlsWait);
+        WriteRawPStr(PlsWait);
         M := ucase(trim(ReadCfg));
         GetDir(0, T);
         if (FMEDIA = '') and (M <> '') then IsMediaDrive(Copy(T,1,2) + M);
@@ -1091,8 +1089,8 @@ begin
 
     if (not FDIMode) and (FMedia = '') then begin
         GotoXY (1, WhereY);
-        FWriteLn('Package media not found!');
-        FWrite(PlsWait);
+        WriteLn('Package media not found!');
+        WriteRawPStr(PlsWait);
     end;
 
     ReadDefaults;
@@ -1241,7 +1239,7 @@ begin
 
         if not assigned(Package^.Items) then begin
             if not Package^.Skipped then
-                FWrite(RSpace(' ' + Package^.Name + ' - No information',
+                WriteRawPStr(RSpace(' ' + Package^.Name + ' - No information',
             Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
             ClrEol;
         end else begin
@@ -1278,7 +1276,7 @@ begin
                     GotoXY(1,Y);
                 end else begin
                     GotoXY(1,Y);
-                    FWrite(#32 + PtrStr(P^.Title));
+                    WriteRawPStr(#32 + PtrStr(P^.Title));
                     ClrEol;
                 end;
                 Inc(Y);
@@ -1328,13 +1326,13 @@ begin
             else
                 TextAttr := Theme.Choose;
         end;
-        FWrite(' ');
+        WriteRawPStr(' ');
         if P <> Package then TextColor(Theme.Brace);
-        FWrite('[');
+        WriteRawPStr('[');
         if P <> Package then TextColor(Theme.Checks[P^.State]);
-        FWrite(CheckMark[P^.State]);
+        WriteRawPStr(CheckMark[P^.State]);
         if P <> Package then TextColor(Theme.Brace);
-        FWrite(']');
+        WriteRawPStr(']');
         if P <> Package then
             TextColor(Theme.Fore)
         else begin
@@ -1347,7 +1345,7 @@ begin
         if assigned(P^.Title) then
             S := Trim(Copy(RSpace(P^.Name, 9) + ' ' + PtrStr(P^.Title), 1,
             Lo(WindMax) - Lo(WindMin) - WhereX + NoScroll));
-        FWrite(RSpace(' ' + S, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+        WriteRawPStr(RSpace(' ' + S, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         PackageBottom := P;
         P := P^.Next;
         Inc(Y);
@@ -1355,7 +1353,7 @@ begin
     TextColor(Theme.Fore);
     TextBackground(Theme.Back);
     while (Y <= Theme.Grps.Y) do begin
-        FWrite(RSpace('', Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+        WriteRawPStr(RSpace('', Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         Inc(Y);
     end;
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
@@ -1390,18 +1388,18 @@ begin
             else
                 TextAttr := Theme.Choose;
         end;
-        FWrite(' ');
+        WriteRawPStr(' ');
         if P <> Group then TextColor(Theme.Brace);
-        FWrite('[');
+        WriteRawPStr('[');
         if P <> Group then TextColor(Theme.Checks[P^.State]);
-        FWrite(CheckMark[P^.State]);
+        WriteRawPStr(CheckMark[P^.State]);
         if P <> Group then TextColor(Theme.Brace);
-        FWrite(']');
+        WriteRawPStr(']');
         if P <> Group then TextColor(Theme.Fore);
         S := P^.Name;
         if assigned(P^.Title) then S := PtrStr(P^.Title);
         S := Trim(Copy(S , 1, Lo(WindMax) - Lo(WindMin) - WhereX + NoScroll));
-        FWrite(RSpace(' ' + S, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
+        WriteRawPStr(RSpace(' ' + S, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         GroupBottom := P;
         P := P^.Next;
         Inc(Y);
@@ -1418,13 +1416,13 @@ begin
     TextBackground(Theme.Back);
     if Tab = 3 then
         TextAttr := Theme.Choose;
-    FWrite( CSpace('OK', 10));
+    WriteRawPStr( CSpace('OK', 10));
     GotoXY (WhereX + 5, WhereY);
     TextColor(Theme.Fore);
     TextBackground(Theme.Back);
     if Tab = 4 then
         TextAttr := Theme.Choose;
-    FWrite( CSpace('Cancel', 10));
+    WriteRawPStr( CSpace('Cancel', 10));
 end;
 
 procedure DrawMainBox;
@@ -1432,10 +1430,10 @@ begin
     { Back Drop }
     Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
     TextAttr := Theme.FillAttr;
-    TextChar := Theme.FillChar;
+    (*TextChar := Theme.FillChar; *)
     ClrScr;
     { Window Box }
-    TextChar := #32;
+    (*TextChar := #32; *)
     TextAttr := Theme.Border;
     Window(Theme.Frame.X, Theme.Frame.Y, Lo(ScreenMax) + 2 - Theme.Frame.X, Hi(ScreenMax) + 2 - Theme.Frame.Y);
     ClrScr;
@@ -1469,11 +1467,11 @@ begin
     GotoXY(1,1);
     ClrEol;
     GotoXY(40 - (Length(AppTitle + ' ' + AppVersion + ' ()' + AppName ) div 2), 1);
-    FWrite(AppTitle + ' ');
+    WriteRawPStr(AppTitle + ' ');
     TextAttr := Theme.TitleHot;
-    FWrite(AppVersion);
+    WriteRawPStr(AppVersion);
     TextAttr := Theme.Title;
-    FWrite(' (' + AppName + ')');
+    WriteRawPStr(' (' + AppName + ')');
 end;
 
 procedure DrawStatus;
@@ -1486,35 +1484,35 @@ begin
     TextAttr := Theme.Status;
     if Lo(ScreenMax) >= 79 then begin
         if MaxAvail < LoMem then TextAttr := Theme.StatusHot;
-        FWrite(' ' + IntStr(MaxAvail));
+        WriteRawPStr(' ' + IntStr(MaxAvail));
         TextAttr := Theme.Status;
-        FWrite('/');
+        WriteRawPStr('/');
         if MemAvail < LoMem then TextAttr := Theme.StatusHot;
-        FWrite(IntStr(MemAvail)+ ' ');
+        WriteRawPStr(IntStr(MemAvail)+ ' ');
         TextAttr := Theme.Status;
     end;
     if Not Assigned(Group) then begin
-        FWrite(NoTailDelim(FMedia));
+        WriteRawPStr(NoTailDelim(FMedia));
     end else begin
         if Group^.Name <> '' then begin
-            FWrite(Copy(TailDelim(FMedia) + TailDelim(Group^.Name), 1, Lo(ScreenMax) + 1 - WhereX));
+            WriteRawPStr(Copy(TailDelim(FMedia) + TailDelim(Group^.Name), 1, Lo(ScreenMax) + 1 - WhereX));
             if Assigned(Package) then
-                FWrite(Copy(Package^.Name + '.ZIP', 1, Lo(ScreenMax) + 1 - WhereX));
+                WriteRawPStr(Copy(Package^.Name + '.ZIP', 1, Lo(ScreenMax) + 1 - WhereX));
         end else if FMedia = '' then begin
             TextAttr := Theme.StatusErr;
-            FWrite('Package media not found!');
+            WriteRawPStr('Package media not found!');
             TextAttr := Theme.StatusHot;
-            FWrite(' Only installed packages are shown.');
+            WriteRawPStr(' Only installed packages are shown.');
             TextAttr := Theme.Status;
         end else begin
             if Assigned(Package) then begin
-                FWrite( 'Package ');
+                WriteRawPStr( 'Package ');
                 TextAttr := Theme.StatusHot;
-                FWrite(Package^.Name);
+                WriteRawPStr(Package^.Name);
                 TextAttr := Theme.Status;
-                FWrite(Copy(' not found under ', 1, Lo(ScreenMax) + 1 - WhereX) );
+                WriteRawPStr(Copy(' not found under ', 1, Lo(ScreenMax) + 1 - WhereX) );
                 TextAttr := Theme.StatusHot;
-                FWrite(Copy(NoTailDelim(FMedia), 1, Lo(ScreenMax) + 1 - WhereX));
+                WriteRawPStr(Copy(NoTailDelim(FMedia), 1, Lo(ScreenMax) + 1 - WhereX));
                 TextAttr := Theme.Status;
             end;
         end;
@@ -1904,10 +1902,10 @@ begin
             if (J^.State = psNone) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
                 if C then begin
                     TextAttr := $4F;
-                    FWrite ('remove ' + J^.Name);
+                    WriteRawPStr ('remove ' + J^.Name);
                     ClrEOl;
                     TextAttr := $07;
-                    FWriteLn('');
+                    WriteLn('');
                     SwapIntVecs;
                     {$IFDEF USEBAT}
 
@@ -1916,9 +1914,9 @@ begin
                         Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'remove ' + J^.Name);
                     {$ENDIF}
                     SwapIntVecs;
-                    InitQCrt;
+                    (* InitQCrt; *)
                     if DosError <> 0 then begin
-                        FWriteLn('Aborted.');
+                        WriteLn('Aborted.');
                         Halt(100);
                     end;
                 end;
@@ -1927,10 +1925,10 @@ begin
             if (J^.State = psFull) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
                 if not C then begin
                     TextAttr := $1F;
-                    FWrite('install ' + lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
+                    WriteRawPStr('install ' + lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
                     ClrEOl;
                     TextAttr := $07;
-                    FWriteLn('');
+                    WriteLn('');
                     SwapIntVecs;
                     {$IFDEF USEBAT}
                         Exec(GetEnv('COMSPEC'), '/C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT install ' +
@@ -1940,9 +1938,9 @@ begin
                         TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
                     {$ENDIF}
                     SwapIntVecs;
-                    InitQCrt;
+                    (* InitQCrt; *)
                     if DosError <> 0 then begin
-                        FWriteLn('Aborted.');
+                        WriteLn('Aborted.');
                         Halt(100);
                     end;
                 end;
@@ -1981,15 +1979,15 @@ begin
                 HelpLine := 1;
                 A := TextAttr;
                 TextAttr := $0A;
-                FWrite('Press a key...');
+                WriteRawPStr('Press a key...');
                 TextAttr := A;
                 while not Keypressed do asm Hlt; end;
                 While KeyPressed do ReadKey;
                 GotoXY(1, WhereY);
             end;
-            FWrite(S3);
+            WriteRawPStr(S3);
             ClrEol;
-            if HelpCmd then FWriteLn('');
+            if HelpCmd then WriteLn('');
         end;
         Inc(HelpLine);
     until S2 = '';
@@ -2238,7 +2236,7 @@ begin
         Lo(ScreenMax) - Theme.Frame.X - 5, Mid + Height div 2, bsDoubleWide);
     Window (Theme.Frame.X + 7, Mid - Height div 2 + 2,
         Lo(ScreenMax) - Theme.Frame.X - 7, Mid + Height div 2);
-    FWriteLn(' ' + Title);
+    WriteLn(' ' + Title);
 end;
 
 function EditCustomFile : word;
@@ -2256,15 +2254,9 @@ begin
     TextAttr := $1F;
     if ESize > Sizeof(TempStr) then
     ESize := Sizeof(TempStr) - 1;
-    X := WhereX;
-    Y := WhereY;
-    Cursor  := GetCursor;
-    HideCursor;
     TempStr := CustomFile;
-    if CheckScroll then
-        Wide := GetMaxX - X
-    else
-        Wide := GetMaxX - X + 1;
+    Wide := lo(WindMax) - lo(WindMin) + 1;
+
     if Not EditLn(TempStr, True, ESize, Wide, Event) then
         repeat
             if Event.What = evKeyDown then case Event.KeyCode of
@@ -2273,36 +2265,42 @@ begin
                     Break;
                 end;
             end;
-            GotoXY ( X, Y );
         until EditLn(TempStr, False, ESize, Wide, Event);
-    SetCursor ( Cursor );
+
+    HideCursor;
     CustomFile := TempStr;
     TextAttr := $71;
     GotoXY(1, 3);
-    FWrite(' ' + Copy(CustomFile, 1, GetMaxX - 1));
+    WriteRawPStr(' ' + Copy(CustomFile, 1, GetMaxX - 1));
     ClrEol;
 end;
 
 procedure DrawBoxParts(Saving : boolean; Focus : integer);
+var
+    WMin, WMax : word;
 begin
+    WMin := WindMin;
+    WMax := WindMax;
     TextAttr := $71;
     GotoXY(2, 3);
-    FWrite(Copy(CustomFile, 1, GetMaxX - 1));
+    WriteRawPStr(Copy(CustomFile, 1, GetMaxX - 1));
     GotoXY(1, 4);
-    FWriteLn('');
+    WriteLn('');
     if Focus = 1 then TextAttr := $1F else TextAttr := $70;
-    FWriteLn(' [' + WhichStr(CustomRemovals, ' ', 'X') + '] Include package removals. ');
+    WriteLn(' [' + WhichStr(CustomRemovals, ' ', 'X') + '] Include package removals. ');
 {
     if Saving then begin
     end else begin
     end;
 }
-    GotoXY(GetMaxX - 25, GetMaxY);
+    Window(0,0,GetMaxX, GetMaxY);
+    GotoXY(lo(WMax) - 23, Hi(WMax) + 2);
     if Focus = 2 then TextAttr := $1F else TextAttr := $70;
-    FWrite( CSpace('OK', 10));
+    WriteRawPStr( CSpace('OK', 10));
     GotoXY (WhereX + 5, WhereY);
     if Focus = 3 then TextAttr := $1F else TextAttr := $70;
-    FWrite( CSpace('Cancel', 10));
+    WriteRawPStr( CSpace('Cancel', 10));
+    Window(lo(WMin) + 1, hi(WMin) + 1, lo(WMax) + 1, hi(WMax) + 1);
 end;
 
 function RunFileBox(Saving : boolean) : boolean;
@@ -2481,7 +2479,7 @@ begin
         else if S = '/UPDATE' then
             AutoUpdate := True
         else begin
-            FWriteLn('invalid parameter "' + ParamStr(I) + '"');
+            WriteLn('invalid parameter "' + ParamStr(I) + '"');
             Halt(100);
         end;
         inc(I);
@@ -2500,7 +2498,7 @@ begin
     if AutoUpdate then UpdateToggle(True);
     StartUp := False;
     CheckScroll := False;
-    CheckCursor := False;
+    (* CheckCursor := False; *)
     DrawTitle;
     DrawSelector;
     LTab := -1;
@@ -2608,7 +2606,7 @@ begin
 {
                 else
                     GotoXY(1, Hi(WindMax) - 1);
-                    FWrite(HexStr(E.KeyCode));
+                    WriteRawPStr(HexStr(E.KeyCode));
                     ClrEol;
 }
             end;

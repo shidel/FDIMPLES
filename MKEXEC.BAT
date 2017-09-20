@@ -7,6 +7,7 @@ if exist %DOSDIR%\LINKS\%TPC%.BAT set TPC=call %TPC%
 call MKCLEAN.BAT
 
 cd SOURCE
+copy ..\qcrt\pascal\*.* .
 
 :TPRetry
 %TPC% /b FDIMPLES.PAS
