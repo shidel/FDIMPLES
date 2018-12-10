@@ -1,4 +1,4 @@
-{ Copyright 1990-2016 Jerome Shidel }
+{ Copyright 1990-2018 Jerome Shidel }
 
 (*
 
@@ -257,7 +257,7 @@ interface
   function NoTailDelim(APath : String) : String;
   function TailDelim(APath : String) : String;
 
-  function Language : String;
+  function GetLanguage : String;
   function SwitchChar : char;
 
 implementation
@@ -1537,15 +1537,15 @@ begin
 		TailDelim := APath + Delimiter;
 end;
 
-function Language : String;
+function GetLanguage : String;
 var
   R : String[12];
 begin
-    R := GetEnv('LANG');
+    R := UCase(GetEnv('LANG'));
     if R = '' then
-        Language := 'EN'
+        GetLanguage := 'EN'
     else
-        Language := R;
+        GetLanguage := R;
 end;
 
 function SwitchChar : char;

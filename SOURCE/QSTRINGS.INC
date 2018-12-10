@@ -1,4 +1,4 @@
-{ Copyright 1990-2016 Jerome Shidel }
+{ Copyright 1990-2018 Jerome Shidel }
 
 (*
 

@@ -1,4 +1,4 @@
-{ Copyright 1990-2016 Jerome Shidel }
+{ Copyright 1990-2018 Jerome Shidel }
 
 (*
 
@@ -618,7 +618,7 @@ implementation
       ChrStr := S;
     end;
 
-  function BoolStr  ( B : Boolean ) : Str5;
+  function BoolStr( B : Boolean ) : Str5;
     begin
       if B then BoolStr := 'TRUE' else BoolStr := 'FALSE';
     end;
