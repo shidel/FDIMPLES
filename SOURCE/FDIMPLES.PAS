@@ -743,7 +743,7 @@ var
     C, Pass : integer;
     V : longint;
     Flag, TMode, Appending, HasSummary : boolean;
-    Title, Version, Desc,
+    Title, Version,
     Author, License, X : String;
     M : BooleanStrings;
     ISize, IFiles, SSize, SFIles : String;
@@ -793,6 +793,16 @@ var
         end;
     end;
 
+    procedure IgnoreSummary;
+    begin
+        HasSummary := True;
+        if Pass = 1 then begin
+            S := X;
+            TMode := true;
+            Appending := true;
+        end;
+    end;
+
     function Match(T : string; var V : string) : boolean;
     begin
         T := Ucase(Trim(T)) + ':';
@@ -805,6 +815,7 @@ var
             if V = '-' then V := '';
         end;
     end;
+
 
 begin
     {$IFDEF DEBUG}
@@ -825,6 +836,7 @@ begin
     SSize := '';
     SFiles := '';
     Appending := False;
+    HasSummary := False;
     While Pass < 2 do begin
         {$IFDEF DEBUG}
         Log('PASS: ' + IntStr(Pass));
@@ -856,13 +868,14 @@ begin
             if Match('Primary-site', X) then Ignore else
             if Match('Alternate-site', X) then Ignore else
             if Match('Changes', X) then Ignore else
+            if Match('Summary', X) then IgnoreSummary else
 
             if Flag and (C > -1) and (S <> '') and (Pass = 1) then begin
-                if Match('description', Desc) then begin
+                if Match('description', X) then begin
                     if PtrStr(Package^.Title) = '' then
-                        Package^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
-                    S := Desc;
-                    TMode := true;
+                        Package^.Title := StrPtr(Copy(X, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
+                    S := X;
+                    TMode := not HasSummary;
                     Appending := true;
                 end else if (Copy(S, 1, 2) = '  ') then
                     S := LTrim(S)
