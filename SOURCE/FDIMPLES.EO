@@ -1,0 +1,45 @@
+; Provizita de Google Traduki
+
+0:EO
+1:nevalida parametro
+2:Bonvolu stari ...
+3:Rezulto
+4:Premu slosilon ...
+5:Instalita!
+6:Pako-amaskomunikiloj ne troveblas!
+7:Nur instalitaj pakoj estas montritaj.
+8:nekapabla trovi pakajministrajon FDINST.
+9:TEMP-medio-variablo ne estas aro.
+10:nekonata
+11:instalita
+12:Neniu informo
+13:LITAJ
+14:Pako
+15:ne trovita sub
+16:Pendantaj pakasanggoj:
+17:forigi
+18:instali
+19:Neniuj Sangoj.
+
+{Pluraj String Valoroj}
+20:sangoj
+21:sangi
+22:bajtoj
+23:bajto
+24:Kilobitoj
+25:Kilobito
+26:Megabajtoj
+27:Megabajto
+28:dosieroj
+29:dosiero
+30:fontaj dosieroj
+31:fonta dosiero
+
+{Baza Sargo kaj savi stuff}
+32:Inkluzivi pakasangojn.
+33:Sargu pakajon listaj personigoj:
+34:Konservu pakajn listajn agordojn:
+
+{Butonoj}
+35:Akceptu
+36:Nuligi
