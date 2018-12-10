@@ -1,0 +1,45 @@
+; FDIMPLES Language Translation File
+
+0:EN
+1:invalid parameter
+2:Please standby...
+3:Standby
+4:Press a key...
+5:Installed!
+6:Package media not found!
+7:Only installed packages are shown.
+8:unable to locate package manager FDINST.
+9:TEMP environment variable is not set.
+10:unknown
+11:installed
+12:No information
+13:LOCKED
+14:Package
+15:not found under
+16:Pending package changes:
+17:remove
+18:install
+19:No Changes.
+
+; Plural String Values
+20:changes
+21:change
+22:bytes
+23:byte
+24:Kbytes
+25:Kbyte
+26:Mbytes
+27:Mbyte
+28:files
+29:file
+30:source files
+31:source file
+
+; Basic Load and save stuff
+32:Include package removals.
+33:Load package list customizations:
+34:Save package list customizations:
+
+; Buttons
+35:OK
+36:Cancel

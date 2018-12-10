@@ -15,8 +15,10 @@ if not exist FDIMPLES.EXE goto TPFailed
 
 if not exist ..\BIN\NUL mkdir ..\BIN>NUL
 copy FDIMPLES.EXE ..\BIN\ >NUL
+copy FDIMPLES.EN ..\BIN\ >NUL
+copy FDIMPLES.DE ..\BIN\ >NUL
 
-dir ..\BIN\*.exe
+dir ..\BIN\*.*
 
 goto DONE
 

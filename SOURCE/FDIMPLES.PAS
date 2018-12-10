@@ -42,7 +42,7 @@
 {$I QCRT.DEF}
 program Test;
 
-uses QDos, QCrtNM, QCrt, QStrings, Language;
+uses QDos, QCrtNM, QCrt, QStrings, Language, FileIO;
 
 {$I VERSION.INC}
 
@@ -213,10 +213,10 @@ begin
         gotoXY(1,Hi(WindMax));
         TextAttr := Theme.StandBy;
         if TickCount = MinTicks then begin
-            WriteRawPStr(' ' + NLS.Standby);
+            WriteRawPStr(' ' + NLS(nlsStandby));
             ClrEol;
         end;
-        GotoXY(Length(NLS.Standby) + 3, Hi(WindMax));
+        GotoXY(Length(NLS(nlsStandby)) + 3, Hi(WindMax));
         WriteRawPStr(Ticks[((TickCount - MinTicks) div Speed) mod Length(Ticks) + 1]);
         WindMin := WMin;
         WindMax := WMax;
@@ -331,48 +331,6 @@ begin
         (AName = 'FDNPKG') or
         (AName = 'FDIMPLES')
     );
-end;
-
-function UnixRead(var F : File; var S : String) : integer;
-var
-    P : longInt;
-    N : boolean;
-    C, D, O : integer;
-begin
-    Standby;
-    P := FilePos(F);
-    BlockRead(F, S[1], Sizeof(S) - 10, C);
-    S[0] := chr(C);
-    N := False;
-    if C = 0 then
-        UnixRead := -1
-    else begin
-        O := 0;
-        D := Pos(#$0a, S);
-        if (D <> 0) and (D <= Ord(S[0])) then begin
-            S[0] := Chr(D - 1);
-            Inc(O);
-            N := true;
-        end;
-        D := Pos(#$0d, S);
-        if (D <> 0) and (D <= Ord(S[0])) then begin
-            S[0] := Chr(D - 1);
-            Inc(O);
-            N := true;
-        end;
- {       D := 1;
-        while (D <= Length(S)) and (S <> '') do begin
-            if (Ord(S[D]) = $0a) or (Ord(S[D]) = $0d) then begin
-                Delete (S, D, 1);
-                Inc(O);
-            end else Inc(D);
-        end;}
-        if N then
-            UnixRead := 1
-        else
-            UnixRead := 0;
-        Seek(F, P + Ord(S[0]) + O);
-    end;
 end;
 
 procedure ReadListFile(Name : string; Prefix : String);
@@ -745,7 +703,7 @@ var
     Flag, TMode, Appending, HasSummary, HasLang : boolean;
     Title, Version,
     Author, License, X : String;
-    M : BooleanStrings;
+    M : Integer;
     ISize, IFiles, SSize, SFIles : String;
 
     procedure Ignore;
@@ -830,7 +788,7 @@ begin
 
     LPass := 0;
     LastLine := 0;
-    Title := NLS.InfoUnknown;
+    Title := NLS(nlsInfoUnknown);
     Version := Title;
     Author := '';
     License := '';
@@ -933,7 +891,7 @@ begin
                if (Not FDIMode) and Assigned(Package^.IVersion) and Assigned(Package^.MVersion) and
                 (Ucase(PtrStr(Package^.IVersion)) <> Ucase(PtrStr(Package^.MVersion))) then
                     AddText(Package, Title + ' (' + PtrStr(Package^.MVersion)  + ', ' +
-                    PtrStr(Package^.IVersion) + ' ' + NLS.InfoInstalled + ')', True)
+                    PtrStr(Package^.IVersion) + ' ' + NLS(nlsInfoInstalled) + ')', True)
                 else
                     AddText(Package, Title + ' (' + Version + ')', True);
                 if Author <> '' then
@@ -950,15 +908,15 @@ begin
                 { if not FDIMODE then begin }
                     if IFiles <> '' then begin
                         V := StrInt(IFiles) - StrInt(SFiles);
-                        X := Comma(IntStr(V)) + ' ' + PluralNLS(V, NLS.InfoFile) + ' (';
+                        X := Comma(IntStr(V)) + ' ' + PluralNLS(V, nlsInfoFile) + ' (';
                     end;
                     V := StrInt(trim(ISize)) - StrInt(trim(SSize));
-                    M := NLS.InfoByte;
+                    M := nlsInfoByte;
                     if V > 10239 then begin
-                        M := NLS.InfoKByte;
+                        M := nlsInfoKByte;
                         V := V div 1024;
                         if V > 5119 then begin
-                            M := NLS.InfoMByte;
+                            M := nlsInfoMByte;
                             V := V div 1024;
                         end;
                     end;
@@ -966,14 +924,14 @@ begin
                     if (SFIles <> '') and ((not FDIMode) or (ucase(GetEnv('OSRC')) <> 'N')) then begin
                         X := X  + '; ';
                         V := StrInt(SFiles);
-                        X := X + Comma(IntStr(V)) + ' ' + PluralNLS(V, NLS.InfoSourceFile) + ' (';
+                        X := X + Comma(IntStr(V)) + ' ' + PluralNLS(V, nlsInfoSourceFile) + ' (';
                         V := StrInt(trim(SSize));
-                        M := NLS.InfoByte;
+                        M := nlsInfoByte;
                         if V > 10239 then begin
-                            M := NLS.InfoKByte;
+                            M := nlsInfoKByte;
                             V := V div 1024;
                             if V > 5119 then begin
-                                M := NLS.InfoMByte;
+                                M := nlsInfoMByte;
                                 V := V div 1024;
                             end;
                         end;
@@ -982,7 +940,7 @@ begin
                 AddText(Package, '', True);
                 if Package^.Locked then begin
                     if X <> '' then X := X + ', ';
-                    X := X + NLS.InfoLocked;
+                    X := X + NLS(nlsInfoLocked);
                 end;
                 AddText(Package, X { + ':' + IFiles + '/' + ISize + ',' + SFiles + '/' + SSize }, True);
             end;
@@ -1129,7 +1087,7 @@ var
 
 begin
     PackageInfo := '';
-    PlsWait := NLS.PleaseStandby;
+    PlsWait := NLS(nlsPleaseStandby);
     if Trim(GetEnv('FMEDIA')) <> '' then begin
         FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))));
     end;
@@ -1137,11 +1095,11 @@ begin
     if not FDIMode then begin
         if (FMedia <> '') and (not DirExists(FMedia)) then FMedia := '';
         if Not FileExists(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE') then begin
-            WriteLn(NLS.NoFDINST);
+            WriteLn(NLS(nlsNoFDINST));
             Halt(100);
         end;
         if (GetEnv('TEMP') = '') or (not DirExists(GetEnv('TEMP'))) then begin
-            WriteLn(NLS.NoTemp);
+            WriteLn(NLS(nlsNoTemp));
             Halt(2);
         end;
         HideCursor;
@@ -1179,7 +1137,7 @@ begin
 
     if (not FDIMode) and (FMedia = '') then begin
         GotoXY (1, WhereY);
-        WriteLn(NLS.PackageMediaNotFound);
+        WriteLn(NLS(nlsPackageMediaNotFound));
         WriteRawPStr(PlsWait);
     end;
 
@@ -1190,7 +1148,7 @@ begin
     GroupFirst := Others;
     GroupLast := GroupFirst;
     with GroupFirst^ do begin
-        Title := StrPtr(NLS.InstalledOnly);
+        Title := StrPtr(NLS(nlsInstalledOnly));
     end;
     FindFirst(FMedia + '*.*', faAnyFile, S);
     while DosError = 0 do begin
@@ -1331,7 +1289,7 @@ begin
 
         if not Assigned(Package^.Items) then begin
             if not Package^.Skipped then
-                WriteRawPStr(RSpace(' ' + Package^.Name + ' - ' + NLS.InfoNoInfo,
+                WriteRawPStr(RSpace(' ' + Package^.Name + ' - ' + NLS(nlsInfoNoInfo),
             Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
             ClrEol;
         end else begin
@@ -1504,20 +1462,20 @@ procedure DrawOKCancel(TabPos, TabFirst, HotAttr : integer );
 var
     W, A : integer;
 begin
-    W := Length(NLS.ButtonOK);
-    if W < Length(NLS.ButtonCancel) then
-        W := Length(NLS.ButtonCancel);
+    W := Length(NLS(nlsButtonOK));
+    if W < Length(NLS(nlsButtonCancel)) then
+        W := Length(NLS(nlsButtonCancel));
     W := W + 4;
     Gotoxy (WhereX - W * 2 , WhereY);
     A := TextAttr;
     if TabPos = TabFirst then
         TextAttr := HotAttr;
-    WriteRawPStr( CSpace(NLS.ButtonOK, W));
+    WriteRawPStr( CSpace(NLS(nlsButtonOK), W));
     GotoXY (WhereX + 5, WhereY);
     TextAttr := A;
     if TabPos = TabFirst + 1 then
         TextAttr := HotAttr;
-    WriteRawPStr( CSpace(NLS.ButtonCancel, W));
+    WriteRawPStr( CSpace(NLS(nlsButtonCancel), W));
     TextAttr := A;
 end;
 
@@ -1605,17 +1563,17 @@ begin
                 WriteRawPStr(Copy(Package^.Name + '.ZIP', 1, Lo(ScreenMax) + 1 - WhereX));
         end else if FMedia = '' then begin
             TextAttr := Theme.StatusErr;
-            WriteRawPStr(NLS.PackageMediaNotFound);
+            WriteRawPStr(NLS(nlsPackageMediaNotFound));
             TextAttr := Theme.StatusHot;
-            WriteRawPStr(' ' + NLS.OnlyInstalledShown );
+            WriteRawPStr(' ' + NLS(nlsOnlyInstalledShown) );
             TextAttr := Theme.Status;
         end else begin
             if Assigned(Package) then begin
-                WriteRawPStr( NLS.BarPackage + ' ');
+                WriteRawPStr( NLS(nlsBarPackage) + ' ');
                 TextAttr := Theme.StatusHot;
                 WriteRawPStr(Package^.Name);
                 TextAttr := Theme.Status;
-                WriteRawPStr(Copy(' ' + NLS.BarNotFound + ' ', 1, Lo(ScreenMax) + 1 - WhereX) );
+                WriteRawPStr(Copy(' ' + NLS(nlsBarNotFound) + ' ', 1, Lo(ScreenMax) + 1 - WhereX) );
                 TextAttr := Theme.StatusHot;
                 WriteRawPStr(Copy(NoTailDelim(FMedia), 1, Lo(ScreenMax) + 1 - WhereX));
                 TextAttr := Theme.Status;
@@ -2085,7 +2043,7 @@ begin
                 HelpLine := 1;
                 A := TextAttr;
                 TextAttr := $0A;
-                WriteRawPStr(NLS.PressAKey);
+                WriteRawPStr(NLS(nlsPressAKey));
                 TextAttr := A;
                 while not Keypressed do asm Hlt; end;
                 While KeyPressed do ReadKey;
@@ -2257,7 +2215,7 @@ begin
         P := GroupFirst;
         TextColor(Theme.Fore);
         TextBackground(Theme.Back);
-        HelpWriteLn( NLS.PendingChanges + ' ');
+        HelpWriteLn( NLS(nlsPendingChanges) + ' ');
         HelpWriteLn('');
         M := 0;
         while Assigned(P) and (not HelpMore) do begin
@@ -2269,7 +2227,7 @@ begin
                     if (J^.State = psNone) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
                         if C then begin
                             TextAttr := Theme.Remv;
-                            HelpWriteLn (' ' + NLS.RemoveChange + ' ' + J^.Name);
+                            HelpWriteLn (' ' + NLS(nlsRemoveChange) + ' ' + J^.Name);
                             Inc(M);
                         end;
                         C := False;
@@ -2277,7 +2235,7 @@ begin
                     if (J^.State = psFull) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
                         if not C then begin
                             TextAttr := Theme.Inst;
-                            HelpWriteLn(' ' + NLS.InstallChange + ' ' + lcase(TailDelim(FMedia) +
+                            HelpWriteLn(' ' + NLS(nlsInstallChange) + ' ' + lcase(TailDelim(FMedia) +
                                 TailDelim(P^.Name) + J^.Name + '.zip'));
                             Inc(M);
                         end;
@@ -2289,9 +2247,9 @@ begin
         end;
         TextColor(Theme.Fore);
         TextBackground(Theme.Back);
-        if M = 0 then HelpWriteLn(NLS.NoChanges) else begin
+        if M = 0 then HelpWriteLn(NLS(nlsNoChanges)) else begin
             HelpWriteLn('');
-            HelpWriteLn(IntStr(M) + PluralNLS(M, NLS.TotalChanges) + '.');
+            HelpWriteLn(IntStr(M) + PluralNLS(M, nlsTotalChanges) + '.');
         end;
         HelpWriteLn('');
         ClearEvent(E);
@@ -2391,7 +2349,7 @@ begin
     GotoXY(1, 4);
     WriteLn('');
     if Focus = 1 then TextAttr := $1F else TextAttr := $70;
-    WriteLn(' [' + WhichStr(CustomRemovals, ' ', 'X') + '] ' + NLS.IncludeRemovals + ' ');
+    WriteLn(' [' + WhichStr(CustomRemovals, ' ', 'X') + '] ' + NLS(nlsIncludeRemovals) + ' ');
 {
     if Saving then begin
     end else begin
@@ -2463,7 +2421,7 @@ end;
 
 procedure LoadCustom;
 begin
-    DrawFileBox(NLS.LoadCustom, 0);
+    DrawFileBox(NLS(nlsLoadCustom), 0);
     if RunFileBox(false) then
     ReadCustomList(CustomFile, CustomRemovals);
     Redraw;
@@ -2471,7 +2429,7 @@ end;
 
 procedure SaveCustom;
 begin
-    DrawFileBox(NLS.SaveCustom, 0);
+    DrawFileBox(NLS(nlsSaveCustom), 0);
     if RunFileBox(true) then begin
         WriteCustomList(CustomFile, false);
         if CustomRemovals then WriteCustomList(CustomFile, true);
@@ -2537,6 +2495,7 @@ begin
     Log('Begin');
     {$ENDIF}
 
+    StandByProc := StandBy;
 
     GetDir(0, CustomFile);
     CustomFile := TailDelim(CustomFile) + 'PACKAGES.LST';
@@ -2588,7 +2547,7 @@ begin
         else if S = SwitchChar + 'UPDATE' then
             AutoUpdate := True
         else begin
-            WriteLn(NLS.InvalidParam + ' "' + ParamStr(I) + '"');
+            WriteLn(NLS(nlsInvalidParam) + ' "' + ParamStr(I) + '"');
             Halt(100);
         end;
         inc(I);
