@@ -41,9 +41,12 @@
 {$M 32768,51200,102400}
 
 {$I QCRT.DEF}
+{$S+}
 program Test;
 
 {$DEFINE USEBAT}
+
+{ DEFINE LOG}
 
 uses QDos, QCrtNM, QCrt, QStrings;
 
@@ -116,6 +119,10 @@ var
     ListDir : string;
     PackageInfo : string;
     TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
+
+    {$IFDEF LOG}
+    LOGFILE : Text;
+    {$ENDIF}
 
 const
     psBase = psFull;
@@ -240,6 +247,16 @@ begin
     ClrScr;
     NormalCursor;
 end;
+
+{$IFDEF LOG}
+procedure Log(AMsg : String);
+begin
+    Assign(LOGFILE, 'FDIMPLES.LOG');
+    Append(LOGFILE);
+    WriteLn(LOGFILE, AMsg);
+    Close(LOGFILE);
+end;
+{$ENDIF}
 
 function ValueOf(S:String; D : integer) : Integer;
 const
@@ -373,7 +390,7 @@ var
     C : integer;
 begin
     if not FileExists(Name) then exit;
-    FileMode := 0; { not needed }
+    FileMode := 0;
     Assign(F, Name);
     Reset(F,1);
     repeat
@@ -414,6 +431,7 @@ begin
             ReadListFile(ListDir + 'PKG_BASE.LST', 'B* ');
         end;
     end else begin
+        { Installed LST files }
         S := Trim(UCase(TailDelim(GetEnv('DOSDIR'))));
         if (S = '') then exit;
         FindFirst(S + TailDelim('PACKAGES') + '*.LST', faAnyFile, D);
@@ -423,6 +441,9 @@ begin
                 P := New(PText);
                 P^.Next := nil;
                 P^.Str := StrPtr(Delimiter + copy(D.Name, 1, length(D.Name) - 4));
+                {$IFDEF LOG}
+                Log('Installed LST File: ' + Delimiter + copy(D.Name, 1, length(D.Name) - 4));
+                {$ENDIF}
                 if assigned(L) then
                     L^.Next := P
                 else
@@ -684,8 +705,8 @@ begin
     Name := FMedia + TailDelim(AGroup^.Name) + 'INDEX.LST';
     if not FileExists(Name) then exit;
 
-    FileMode := 0;
     Assign(F, Name);
+    FileMode := 0;
     Reset(F, 1);
     repeat
         C := UnixRead(F, B);
@@ -768,7 +789,8 @@ var
     procedure IgnoreVersion;
     begin
         TMode := False;
-        if FileExtension(LSM) = 'TXT' then begin
+{        if FileExtension(LSM) = 'TXT' then begin }
+        if FilePath(LSM) = TailDelim(PackageInfo) then begin
             FreeStr(Package^.MVersion);
             Package^.MVersion := StrPtr(Trim(Version));
         end else begin
@@ -791,9 +813,13 @@ var
     end;
 
 begin
+    {$IFDEF LOG}
+    Log('TryLSM: ' + LSM);
+    {$ENDIF}
     if not FileExists(LSM) then exit;
     ClearPackage(Package);
     Assign(F, LSM);
+    FileMode := 0;
     Reset(F, 1);
     Pass := 0;
     Title := 'unknown';
@@ -806,6 +832,9 @@ begin
     SFiles := '';
     Appending := False;
     While Pass < 2 do begin
+        {$IFDEF LOG}
+        Log('PASS: ' + IntStr(Pass));
+        {$ENDIF}
         Flag := False;
         TMode := False;
         Seek(F, 0);
@@ -832,6 +861,7 @@ begin
             if Match('keywords', X) then Ignore else
             if Match('Primary-site', X) then Ignore else
             if Match('Alternate-site', X) then Ignore else
+            if Match('Changes', X) then Ignore else
 
             if Flag and (C > -1) and (S <> '') and (Pass = 1) then begin
                 if Match('description', Desc) then begin
@@ -918,18 +948,23 @@ begin
     Close(F)
 end;
 
-procedure TryLST(LST : string; All : boolean);
+function TryLST(LST : string; All : boolean) : integer;
 var
     F : File;
     S : String;
-    C : integer;
+    C, X : integer;
     Flag : boolean;
 begin
+    {$IFDEF LOG}
+    Log('TryLST: ' + LST);
+    {$ENDIF}
+    TryLST := 0;
     if not FileExists(LST) then exit;
-    AddLine(Package, ' ' + ChrStr(#$c4, Lo(ScreenMax) - Theme.Frame.X * 2 - 5), true);
     Assign(F, LST);
+    FileMode := 0;
     Reset(F, 1);
     Flag := True;
+    X := 0;
     repeat
         C := UnixRead(F, S);
         if Trim(Ucase(S)) = 'END' then
@@ -938,13 +973,18 @@ begin
         if Trim(Ucase(S)) = 'BEGIN3' then
             Flag := False
         else
-        if Flag and (C > -1) and (S<>'') then
+        if Flag and (C > -1) and (S<>'') then begin
+            if X = 0 then
+                AddLine(Package, ' ' + ChrStr(#$c4, Lo(ScreenMax) - Theme.Frame.X * 2 - 5), true);
             AddLine(Package, lcase(S), C <> 0);
+            Inc(X);
+        end
     until (C = -1) or Keypressed;
     Close(F);
     if Keypressed then begin
         Package^.Skipped := true;
     end;
+    TryLST := X;
 end;
 
 procedure SearchForData(All:boolean);
@@ -958,10 +998,13 @@ begin
     end else begin
         if (not assigned(Package^.IVersion)) and (not FDIMode) then
             TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', false);
-        FN := TailDelim(PackageInfo) + Package^.Name + '.TXT';
+{        FN := TailDelim(PackageInfo) + Package^.Name + '.TXT'; }
+        FN := TailDelim(PackageInfo) + Package^.Name + '.LSM';
         TryLSM(FN, All);
-        if (All and assigned(Package^.Items)) and FileList then
-            TryLST(FN, All);
+        if (All and assigned(Package^.Items)) and FileList then begin
+            if TryLST(FN, All) = 0 then
+                TryLST(TailDelim(PackageInfo) + Package^.Name + '.LST', All);
+        end
     end;
 end;
 
@@ -985,7 +1028,8 @@ begin
     ReadCfg := '';
     if not FileExists(TailDelim(GetExePath) + GetExeBase + '.DAT') then exit;
     assign(F, TailDelim(GetExePath) + GetExeBase + '.DAT');
-    reset(F);
+    FileMode := 0;
+    Reset(F);
     while Not eof(F) do begin
         ReadLn(F, T);
         T := Trim(T);
@@ -1810,6 +1854,7 @@ begin
     if not FileExists(Name) then exit;
     P := Package;
     G := Group;
+    FileMode := 0;
     Reset(F, 1);
     repeat
         C := UnixRead(F, S);
@@ -2614,5 +2659,14 @@ begin
 end;
 
 begin
+    {$IFDEF LOG}
+    Assign(LOGFILE, 'FDIMPLES.LOG');
+    Rewrite(LOGFILE);
+    Close(LOGFILE);
+    Log('Begin');
+    {$ENDIF}
     Main;
+    {$IFDEF LOG}
+    Log('End');
+    {$ENDIF}
 end.

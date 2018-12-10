@@ -233,6 +233,7 @@ interface
 
   { Expands a file or dir name to full path }
   function FileExpand(AFileName : String) : String;
+  function FilePath(AFileName : String) : String;
   function FileExtension(AFileName : String) : String;
 
   { Returns 0, if the dir exists or was able to be created. Or
@@ -1504,6 +1505,17 @@ begin
 		FileExtension := ''
 	else
 		FileExtension := UCase(Copy(AFileName, I + 1, 3));
+end;
+
+function FilePath(AFileName : String) : String;
+var
+	I : integer;
+begin
+	I := LastPos('\', AFilename);
+	if (I < 1) then
+		FilePath := ''
+	else
+		FilePath := UCase(Copy(AFileName, 1, I));
 end;
 
 function NoTailDelim(APath : String) : String;
