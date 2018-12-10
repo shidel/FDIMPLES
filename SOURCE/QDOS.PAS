@@ -257,6 +257,9 @@ interface
   function NoTailDelim(APath : String) : String;
   function TailDelim(APath : String) : String;
 
+  function Language : String;
+  function SwitchChar : char;
+
 implementation
 
 uses QStrings;
@@ -1532,6 +1535,28 @@ begin
 		TailDelim := APath
 	else
 		TailDelim := APath + Delimiter;
+end;
+
+function Language : String;
+var
+  R : String[12];
+begin
+    R := GetEnv('LANG');
+    if R = '' then
+        Language := 'EN'
+    else
+        Language := R;
+end;
+
+function SwitchChar : char;
+var
+  R : String[12];
+begin
+    R := GetEnv('SWITCHCHAR');
+    if R = '' then
+        SwitchChar := '/'
+    else
+        SwitchChar := R[1];
 end;
 
 begin

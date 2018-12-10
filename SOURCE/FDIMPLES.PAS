@@ -41,12 +41,7 @@
 {$M 32768,51200,102400}
 
 {$I QCRT.DEF}
-{$S+}
 program Test;
-
-{$DEFINE USEBAT}
-
-{ DEFINE LOG}
 
 uses QDos, QCrtNM, QCrt, QStrings;
 
@@ -120,7 +115,7 @@ var
     PackageInfo : string;
     TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
 
-    {$IFDEF LOG}
+    {$IFDEF DEBUG}
     LOGFILE : Text;
     {$ENDIF}
 
@@ -248,7 +243,7 @@ begin
     NormalCursor;
 end;
 
-{$IFDEF LOG}
+{$IFDEF DEBUG}
 procedure Log(AMsg : String);
 begin
     Assign(LOGFILE, 'FDIMPLES.LOG');
@@ -441,10 +436,10 @@ begin
                 P := New(PText);
                 P^.Next := nil;
                 P^.Str := StrPtr(Delimiter + copy(D.Name, 1, length(D.Name) - 4));
-                {$IFDEF LOG}
+                {$IFDEF DEBUG}
                 Log('Installed LST File: ' + Delimiter + copy(D.Name, 1, length(D.Name) - 4));
                 {$ENDIF}
-                if assigned(L) then
+                if Assigned(L) then
                     L^.Next := P
                 else
                     Defaults := P;
@@ -463,7 +458,7 @@ var
 begin
     V := psNone;
     P := Defaults;
-    while assigned(P) and (V = psNone) do begin
+    while Assigned(P) and (V = psNone) do begin
         T := PtrStr(P^.Str);
         if Copy(T, 2, Length(T)) = '* ' + S then begin
             case T[1] of
@@ -484,7 +479,7 @@ begin
     CheckDefault := false;
     P := Defaults;
     if FDIMode then begin
-        while assigned(P) do begin
+        while Assigned(P) do begin
             if PtrStr(P^.Str) = S then begin
                 CheckDefault := true;
                 exit;
@@ -492,7 +487,7 @@ begin
             P := P^.Next;
         end;
     end else begin
-        while assigned(P) do begin
+        while Assigned(P) do begin
             if PtrStr(P^.Str) = Copy(S, Pos(Delimiter, S), Length(S)) then begin
                 CheckDefault := true;
                 exit;
@@ -508,25 +503,25 @@ var
 begin
     P := First;
     L := nil;
-    while assigned(P) do begin
+    while Assigned(P) do begin
         N := P^.Next;
         P^.Next := nil;
         P^.Prev := nil;
-        if assigned(L) then begin
-            while assigned(L^.Prev) and (P^.NAME < L^.NAME) do
+        if Assigned(L) then begin
+            while Assigned(L^.Prev) and (P^.NAME < L^.NAME) do
                 L := L^.Prev;
-            while assigned(L^.Next) and (P^.NAME > L^.NAME) do
+            while Assigned(L^.Next) and (P^.NAME > L^.NAME) do
                 L := L^.Next;
             if P^.Name < L^.Name then begin
                 P^.Next := L;
                 P^.Prev := L^.Prev;
-                if assigned(L^.Prev) then
+                if Assigned(L^.Prev) then
                     L^.Prev^.Next := P;
                 L^.Prev := P;
             end else begin
                 P^.Prev := L;
                 P^.Next := L^.Next;
-                if assigned(L^.Next) then
+                if Assigned(L^.Next) then
                     L^.Next^.Prev := P;
                 L^.Next := P;
             end;
@@ -535,9 +530,9 @@ begin
         P := N;
     end;
     First := L;
-    While assigned(First^.Prev) do First := First^.Prev;
+    While Assigned(First^.Prev) do First := First^.Prev;
     Last := L;
-    While assigned(Last^.Next) do Last := Last^.Next;
+    While Assigned(Last^.Next) do Last := Last^.Next;
 end;
 
 procedure AddCustomItems(P : PItem; B, N : String);
@@ -548,7 +543,7 @@ var
 begin
     if (RunMode <> rmFDI) then exit;
 
-    if not assigned(P) then exit;
+    if not Assigned(P) then exit;
 
     if not (P^.Name = B) then exit;
 
@@ -559,7 +554,7 @@ begin
     if (not CheckDefault(TailDelim(B) + N)) then exit;
 
     J := NewPItem(N, psFull);
-    if not assigned(PackageFirst) then begin
+    if not Assigned(PackageFirst) then begin
         PackageFirst := J;
         PackageLast := J;
     end;
@@ -576,9 +571,9 @@ begin
     while Assigned(I) do begin
         S := True;
         P := GroupFirst;
-        while S and assigned(P) do begin
+        while S and Assigned(P) do begin
             J := P^.Items;
-            while S and assigned(J) do begin
+            while S and Assigned(J) do begin
                 S := '\' + J^.Name <> PtrStr(I^.Str);
                 J := J^.Next;
             end;
@@ -587,7 +582,7 @@ begin
         if S then begin
             J := NewPItem(Copy(PtrStr(I^.Str), 2, 13), psFull);
             J^.Next := Others^.Items;
-            if assigned(Others^.Items) then
+            if Assigned(Others^.Items) then
                 Others^.Items^.Prev := J;
             Others^.Items := J;
         end;
@@ -650,7 +645,7 @@ var
 begin
     if not MemCheck(Sizeof(PItem) + Sizeof(String)) then exit;
     L := P^.Items;
-    if not assigned(L) then begin
+    if not Assigned(L) then begin
         L := NewPItem('', psNone);
         P^.Items := L;
     end else begin
@@ -719,13 +714,13 @@ begin
                 AGroup^.Title := StrPtr(WCase(Desc));
             end;
             X := AGroup^.Items;
-            while assigned(X) do begin
-                if (UCase(Name) = UCase(X^.Name)) and (not assigned(X^.Items)) then begin
+            while Assigned(X) do begin
+                if (UCase(Name) = UCase(X^.Name)) and (not Assigned(X^.Items)) then begin
                     if Not Assigned(X^.Title) then
                         X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
                     if Not Assigned(X^.MVersion) then
                         X^.MVersion := StrPtr(Ver);
-                    if not assigned(X^.Items) then begin
+                    if not Assigned(X^.Items) then begin
                         AddLine(X, Name + ' (' + Ver + ')', True);
                         AddLine(X, '', True);
                         AddLine(X, Desc, C <> 0);
@@ -813,7 +808,7 @@ var
     end;
 
 begin
-    {$IFDEF LOG}
+    {$IFDEF DEBUG}
     Log('TryLSM: ' + LSM);
     {$ENDIF}
     if not FileExists(LSM) then exit;
@@ -832,7 +827,7 @@ begin
     SFiles := '';
     Appending := False;
     While Pass < 2 do begin
-        {$IFDEF LOG}
+        {$IFDEF DEBUG}
         Log('PASS: ' + IntStr(Pass));
         {$ENDIF}
         Flag := False;
@@ -955,7 +950,7 @@ var
     C, X : integer;
     Flag : boolean;
 begin
-    {$IFDEF LOG}
+    {$IFDEF DEBUG}
     Log('TryLST: ' + LST);
     {$ENDIF}
     TryLST := 0;
@@ -993,15 +988,15 @@ var
 begin
     if Group^.Name = '' then begin
         TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', All);
-        if (All and assigned(Package^.Items)) and FileList then
+        if (All and Assigned(Package^.Items)) and FileList then
             TryLST(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + Package^.Name + '.LST', All);
     end else begin
-        if (not assigned(Package^.IVersion)) and (not FDIMode) then
+        if (not Assigned(Package^.IVersion)) and (not FDIMode) then
             TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', false);
 {        FN := TailDelim(PackageInfo) + Package^.Name + '.TXT'; }
         FN := TailDelim(PackageInfo) + Package^.Name + '.LSM';
         TryLSM(FN, All);
-        if (All and assigned(Package^.Items)) and FileList then begin
+        if (All and Assigned(Package^.Items)) and FileList then begin
             if TryLST(FN, All) = 0 then
                 TryLST(TailDelim(PackageInfo) + Package^.Name + '.LST', All);
         end
@@ -1049,7 +1044,7 @@ begin
     US := 0;
     RS := 0;
     ES := 0;
-    while assigned(P) do begin
+    while Assigned(P) do begin
          case P^.State of
             psNone    : Inc(NS);
             psFull    : Inc(FS);
@@ -1211,11 +1206,11 @@ begin
             SortList(PackageFirst, PackageLast);
             J^.Items := PackageFirst;
         end else begin
-            if assigned(J^.Prev) then
+            if Assigned(J^.Prev) then
                 J^.Prev^.Next := J^.Next
             else
                 GroupFirst := J^.Next;
-            if assigned(J^.Next) then
+            if Assigned(J^.Next) then
                 J^.Next^.Prev := J^.Prev
             else
                 GroupLast := J^.Prev;
@@ -1251,7 +1246,7 @@ end;
 procedure FetchData;
 begin
     SearchForData(true);
-    if Not assigned(Package^.Items) then begin
+    if Not Assigned(Package^.Items) then begin
         Group^.First := True;
         FreeSomeMem(20);
         CacheGroup(Group);
@@ -1276,12 +1271,12 @@ begin
     Window (Theme.Frame.X + 2, Theme.Frame.Y + Theme.Grps.Y + 2,
     Lo(ScreenMax) - Theme.Frame.X, Hi(ScreenMax)- Theme.Frame.Y + 1);
     LineBottom := nil;
-    if assigned(Package) then begin
-        if (Package^.First) or (not assigned(Package^.Items)) then begin
+    if Assigned(Package) then begin
+        if (Package^.First) or (not Assigned(Package^.Items)) then begin
             FetchData;
         end;
 
-        if not assigned(Package^.Items) then begin
+        if not Assigned(Package^.Items) then begin
             if not Package^.Skipped then
                 WriteRawPStr(RSpace(' ' + Package^.Name + ' - No information',
             Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
@@ -1294,7 +1289,7 @@ begin
             T := False;
             if Assigned(P) then begin
                 if (P^.Prev = Package^.Items) then T := True;
-                if assigned(P^.Prev) and (P^.Prev^.Prev = Package^.Items) then T := True;
+                if Assigned(P^.Prev) and (P^.Prev^.Prev = Package^.Items) then T := True;
             end;
             while Assigned(P) and (Y <= Hi(WindMax) - Hi(WindMin) + 1)  do begin
                 if PtrStr(P^.Title) = '' then T := False;
@@ -1348,7 +1343,7 @@ begin
     Lo(ScreenMax) - Theme.Frame.X, Theme.Frame.Y + Theme.Grps.Y);
     if not Assigned(Group) then exit;
     { ClrScr; }
-    if not assigned(PackageFirst) then begin
+    if not Assigned(PackageFirst) then begin
         Package := Group^.Items;
         PackageFirst := Package;
         PackageTop := Package;
@@ -1386,7 +1381,7 @@ begin
                 TextAttr := Theme.Choose;
         end;
         S := P^.Name;
-        if assigned(P^.Title) then
+        if Assigned(P^.Title) then
             S := Trim(Copy(RSpace(P^.Name, 9) + ' ' + PtrStr(P^.Title), 1,
             Lo(WindMax) - Lo(WindMin) - WhereX + NoScroll));
         WriteRawPStr(RSpace(' ' + S, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
@@ -1441,7 +1436,7 @@ begin
         WriteRawPStr(']');
         if P <> Group then TextColor(Theme.Fore);
         S := P^.Name;
-        if assigned(P^.Title) then S := PtrStr(P^.Title);
+        if Assigned(P^.Title) then S := PtrStr(P^.Title);
         S := Trim(Copy(S , 1, Lo(WindMax) - Lo(WindMin) - WhereX + NoScroll));
         WriteRawPStr(RSpace(' ' + S, Lo(WindMax) - Lo(WindMin) - WhereX + 1 + NoScroll));
         GroupBottom := P;
@@ -1589,7 +1584,7 @@ begin
             Group^.State := psFull;
     end;
     P := Group^.Items;
-    while assigned(P) do begin
+    while Assigned(P) do begin
         StandBy;
         if (Group^.State <> psNone) or (not P^.Locked) then
             P^.State := Group^.State;
@@ -1601,7 +1596,7 @@ end;
 
 procedure FileToggle;
 begin
-    if not assigned(Package) then exit;
+    if not Assigned(Package) then exit;
     if (RunMode = rmList) or (RunMode = rmConfig) then begin
         case Package^.State of
             psNone : Package^.State := psBase;
@@ -1620,7 +1615,7 @@ begin
         if Package^.State = psNone then
             Package^.State := psFull
         else if (Package^.State = psFull) and
-        assigned(Package^.IVersion) and assigned(Package^.MVersion) and
+        Assigned(Package^.IVersion) and Assigned(Package^.MVersion) and
         (Ucase(PtrStr(Package^.IVersion)) <> UCase(PtrStr(Package^.MVersion))) and
         (RunMode = rmStandAlone) then begin
             if (UCase(PtrStr(Package^.IVersion)) < UCase(PtrStr(Package^.MVersion))) then
@@ -1730,7 +1725,7 @@ end;
 procedure TextUp(T:integer);
 begin
     if not Assigned(LineTop) then exit;
-    While (T > 0) and assigned(LineTop^.Prev) do begin
+    While (T > 0) and Assigned(LineTop^.Prev) do begin
         Dec(T);
         LineTop := LineTop^.Prev;
     end;
@@ -1740,7 +1735,7 @@ end;
 procedure TextDown(T:integer);
 begin
     if not Assigned(LineBottom) then exit;
-    While (T > 0) and assigned(LineBottom^.Next) do begin
+    While (T > 0) and Assigned(LineBottom^.Next) do begin
         Dec(T);
         LineTop := LineTop^.Next;
         LineBottom := LineBottom^.Next;
@@ -1773,9 +1768,9 @@ begin
         WriteLn(F);
     end;
     P := GroupFirst;
-    while assigned(P) do begin
+    while Assigned(P) do begin
         J := P^.Items;
-        while assigned(J) do begin
+        while Assigned(J) do begin
             if J^.State = State then begin
                 if Comments and (PtrStr(J^.Title) <> '') then begin
                     WriteLn(F, '; ', RSpace(J^.NAME, 12), #32,
@@ -1815,9 +1810,9 @@ begin
         WriteLn(F, '; Package Additions');
     WriteLn(F);
     P := GroupFirst;
-    while assigned(P) do begin
+    while Assigned(P) do begin
         J := P^.Items;
-        while assigned(J) do begin
+        while Assigned(J) do begin
             StandBy;
             if (J^.State <> J^.Original) and
             (((J^.State = psNone) and Removals) or
@@ -1866,15 +1861,15 @@ begin
                 Delete(S, 1, LastPos('\', S));
             S := Trim(S);
             Group := GroupFirst;
-            while assigned(Group) do begin
+            while Assigned(Group) do begin
                 Package := Group^.Items;
-                while assigned(Package) do begin
+                while Assigned(Package) do begin
                     StandBy;
                     if (Ucase(Package^.Name) = S) and (not Package^.Locked) then begin
                         if Package^.Tested = False then SearchForData(false);
                         Package^.Tested := True;
                         if X then begin
-                            if assigned(Package^.IVersion) and assigned(Package^.MVersion) and
+                            if Assigned(Package^.IVersion) and Assigned(Package^.MVersion) and
                             (Ucase(PtrStr(Package^.IVersion)) <> UCase(PtrStr(Package^.MVersion))) and
                             (RunMode = rmStandAlone) then begin
                                 if (UCase(PtrStr(Package^.IVersion)) < UCase(PtrStr(Package^.MVersion))) then
@@ -1939,9 +1934,9 @@ begin
         Close(T);
     {$ENDIF}
     P := GroupFirst;
-    while assigned(P) do begin
+    while Assigned(P) do begin
         J := P^.Items;
-        while assigned(J) do begin
+        while Assigned(J) do begin
             C := { FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or }
                 FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
             if (J^.State = psNone) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
@@ -1954,7 +1949,7 @@ begin
                     SwapIntVecs;
                     {$IFDEF USEBAT}
 
-                        Exec(GetEnv('COMSPEC'),'/C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT remove ' + J^.Name);
+                        Exec(GetEnv('COMSPEC'), SwitchChar + 'C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT remove ' + J^.Name);
                     {$ELSE}
                         Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'remove ' + J^.Name);
                     {$ENDIF}
@@ -1976,7 +1971,7 @@ begin
                     WriteLn('');
                     SwapIntVecs;
                     {$IFDEF USEBAT}
-                        Exec(GetEnv('COMSPEC'), '/C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT install ' +
+                        Exec(GetEnv('COMSPEC'), SwitchChar + 'C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT install ' +
                         TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
                     {$ELSE}
                         Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'install ' +
@@ -2071,12 +2066,12 @@ begin
     if FDIMode then exit;
     HelpWriteLn('usage: '+ GetExeBase + ' [options]');
     HelpWriteLn('');
-    HelpOption ('/HELP,/?',  'Show this help screen.');
-    HelpOption ('/[NO]FILES',  '[DO NOT] Show file list in package description.');
-    HelpOption ('/[NO]UPDATE', '[DO NOT] Automatically select updatable packages.');
+    HelpOption (SwitchChar + 'HELP,' + SwitchChar + '?',  'Show this help screen.');
+    HelpOption (SwitchChar + '[NO]FILES',  '[DO NOT] Show file list in package description.');
+    HelpOption (SwitchChar + '[NO]UPDATE', '[DO NOT] Automatically select updatable packages.');
     HelpWriteLn('');
-    HelpOption ('/LISTS',    'Create package list files for use with FDI build utility.');
-    HelpOption ('/CONFIG',   'Reconfigure FDI installer BASE and ALL package lists.');
+    HelpOption (SwitchChar + 'LISTS',    'Create package list files for use with FDI build utility.');
+    HelpOption ('SwitchChar + CONFIG',   'Reconfigure FDI installer BASE and ALL package lists.');
     HelpWriteLn('');
 end;
 
@@ -2199,9 +2194,9 @@ begin
         HelpWriteLn('Pending package changes: ');
         HelpWriteLn('');
         M := 0;
-        while assigned(P) and (not HelpMore) do begin
+        while Assigned(P) and (not HelpMore) do begin
             J := P^.Items;
-            while assigned(J) do begin
+            while Assigned(J) do begin
                 if J^.State <> J^.Original then begin
                     C := { FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or }
                         FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
@@ -2474,6 +2469,14 @@ var
     I : integer;
     Attempt : boolean;
 begin
+    {$IFDEF DEBUG}
+    Assign(LOGFILE, 'FDIMPLES.LOG');
+    Rewrite(LOGFILE);
+    Close(LOGFILE);
+    Log('Begin');
+    {$ENDIF}
+
+
     GetDir(0, CustomFile);
     CustomFile := TailDelim(CustomFile) + 'PACKAGES.LST';
     CustomRemovals := False;
@@ -2495,13 +2498,13 @@ begin
     I := 1;
     while I <= ParamCount do begin
         S := Ucase(ParamStr(I));
-        if (S = '/HELP') or (S = '/?') then
+        if (S = SwitchChar + 'HELP') or (S = SwitchChar + '?') then
             CommandLineHelp
-        else if (S = '/LISTS') then begin
+        else if (S = SwitchChar + 'LISTS') then begin
             RunMode := rmList;
             FileList := True;
             CheckMark := ListCheckMarks;
-        end else if (S = '/CONFIG') then begin
+        end else if (S = SwitchChar + 'CONFIG') then begin
             RunMode := rmConfig;
             FileList := True;
             CheckMark := ListCheckMarks;
@@ -2509,19 +2512,19 @@ begin
                 ListDir := '\FDSETUP\SETUP\'
             else
                 ListDir := '';
-        end else if S = '/FDI' then begin
+        end else if S = SwitchChar + 'FDI' then begin
             RunMode := rmFDI;
             Comments := False;
             FileList := True;
             AutoUpdate := False;
             CheckMark := NormalCheckMarks;
-        end else if S = '/NOFILES' then
+        end else if S = SwitchChar + 'NOFILES' then
             FileList := False
-        else if S = '/FILES' then
+        else if S = SwitchChar + 'FILES' then
             FileList := True
-        else if S = '/NOUPDATE' then
+        else if S = SwitchChar + 'NOUPDATE' then
             AutoUpdate := False
-        else if S = '/UPDATE' then
+        else if S = SwitchChar + 'UPDATE' then
             AutoUpdate := True
         else begin
             WriteLn('invalid parameter "' + ParamStr(I) + '"');
@@ -2656,17 +2659,11 @@ begin
 }
             end;
     until Quit;
+    {$IFDEF DEBUG}
+    Log('End');
+    {$ENDIF}
 end;
 
 begin
-    {$IFDEF LOG}
-    Assign(LOGFILE, 'FDIMPLES.LOG');
-    Rewrite(LOGFILE);
-    Close(LOGFILE);
-    Log('Begin');
-    {$ENDIF}
     Main;
-    {$IFDEF LOG}
-    Log('End');
-    {$ENDIF}
 end.
