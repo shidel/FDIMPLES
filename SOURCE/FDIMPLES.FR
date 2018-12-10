@@ -1,0 +1,45 @@
+; Provided by Google Translate
+
+0:FR
+1:paramŠtre invalide
+2:S'il vous plaŒt veille ...
+3:veille
+4:Appuyez sur une touche ...
+5:install‚!
+6:Paquet m‚dia non trouv‚!
+7:Seuls les packages install‚s sont affich‚s.
+8:impossible de localiser le gestionnaire de paquets FDINST.
+9:La variable d'environnement TEMP n'est pas d‚finie.
+10:inconnu
+11:install‚
+12:pas d'information
+13:verrouill‚
+14:forfait
+15:non trouv‚ sous
+16:Modifications de paquet en attente:
+17:retirer
+18:installer
+19:Pas de changement.
+
+{ Plural String Values }
+20:changements
+21:changement
+22:octets
+23:octet
+24:kilooctets
+25:kilooctet
+26:m‚gaoctets
+27:m‚gaoctet
+28:fichiers
+29:fichier
+30:fichiers source
+31:fichier source
+
+{ Basic Load and save stuff }
+32:Inclure les retraits de paquets.
+33:Charger les personnalisations de la liste de paquets:
+34:Enregistrer les personnalisations de la liste de paquets:
+
+{ Buttons }
+35:accepter
+36:annuler

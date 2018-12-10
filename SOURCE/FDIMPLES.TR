@@ -1,0 +1,45 @@
+; Provided by Google Translate
+
+0:TR
+1:ge‡ersiz parametre
+2:Ltfen bekleyiniz ...
+3:Bekleme
+4:Bir tuŸa basn ...
+5:Yklendi!
+6:Paket medya bulunamad!
+7:Sadece ykl paketler g”sterilmektedir.
+8:FDINST paket y”neticisini bulamad.
+9:TEMP ortam de§iŸkeni ayarlanmamŸ.
+10:bilinmiyor
+11:ykl
+12:Bilgi yok
+13:K˜L˜TL˜
+14:Paket
+15:altnda bulunamad
+16:Bekleyen paket de§iŸiklikleri:
+17:kaldrmak
+18:yklemek
+19:De§iŸiklik Yok.
+
+{ Plural String Values }
+20:de§iŸiklikler
+21:de§iŸim
+22:bayt
+23:bayt
+24:kilobayt
+25:kilobayt
+26:megabayt
+27:megabayt
+28:dosyalar
+29:Dosya
+30:kaynak dosyalar
+31:kaynak dosya
+
+{ Basic Load and save stuff }
+32:Paket kaldrmalarn dahil et.
+33:Paket listesi ”zelleŸtirmelerini ykle:
+34:Paket listesi ”zelleŸtirmelerini kaydet:
+
+{ Buttons }
+35:Tamam
+36:iptal
