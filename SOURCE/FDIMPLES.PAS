@@ -740,9 +740,9 @@ procedure TryLSM(LSM : string; All : boolean);
 var
     F : File;
     S : String;
-    C, Pass : integer;
+    C, Pass, LPass, LastLine : integer;
     V : longint;
-    Flag, TMode, Appending, HasSummary : boolean;
+    Flag, TMode, Appending, HasSummary, HasLang : boolean;
     Title, Version,
     Author, License, X : String;
     M : BooleanStrings;
@@ -816,17 +816,20 @@ var
         end;
     end;
 
+    procedure AddText(var P : PItem; S : String; NewLine : Boolean);
+    begin
+        if (S = '') and NewLine then
+            Inc(LastLine)
+        else
+            LastLine := 0;
+        if (LastLine > 2) then exit;
+        AddLine(P, S, NewLine);
+    end;
 
 begin
-    {$IFDEF DEBUG}
-    Log('TryLSM: ' + LSM);
-    {$ENDIF}
-    if not FileExists(LSM) then exit;
-    ClearPackage(Package);
-    Assign(F, LSM);
-    FileMode := 0;
-    Reset(F, 1);
-    Pass := 0;
+
+    LPass := 0;
+    LastLine := 0;
     Title := NLS.InfoUnknown;
     Version := Title;
     Author := '';
@@ -835,102 +838,121 @@ begin
     IFiles := '';
     SSize := '';
     SFiles := '';
-    Appending := False;
-    HasSummary := False;
-    While Pass < 2 do begin
-        {$IFDEF DEBUG}
-        Log('PASS: ' + IntStr(Pass));
-        {$ENDIF}
-        Flag := False;
-        TMode := False;
-        Seek(F, 0);
-        repeat
-            C := UnixRead(F, S);
-            if Trim(Ucase(S)) = 'END' then
-                C := -1
-            else
-            if Trim(Ucase(S)) = 'BEGIN3' then
-                Flag := True
-            else
-            if Match('TITLE', Title) then Ignore else
-            if Match('Version', Version) then IgnoreVersion else
-            if Match('Author', Author) then IgnoreEmail(Author) else
-            if Match('copying-policy', License) then Ignore else
-            if Match('Total-size', ISize) then Ignore else
-            if Match('Total-files', IFiles) then Ignore else
-            if Match('Source-size', SSize) then Ignore else
-            if Match('Source-files', SFiles) then Ignore else
-
-            if Match('Maintained-by', X) then Ignore else
-            if Match('entered-date', X) then Ignore else
-            if Match('Platforms', X) then Ignore else
-            if Match('keywords', X) then Ignore else
-            if Match('Primary-site', X) then Ignore else
-            if Match('Alternate-site', X) then Ignore else
-            if Match('Changes', X) then Ignore else
-            if Match('Summary', X) then IgnoreSummary else
-
-            if Flag and (C > -1) and (S <> '') and (Pass = 1) then begin
-                if Match('description', X) then begin
-                    if PtrStr(Package^.Title) = '' then
-                        Package^.Title := StrPtr(Copy(X, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
-                    S := X;
-                    TMode := not HasSummary;
-                    Appending := true;
-                end else if (Copy(S, 1, 2) = '  ') then
-                    S := LTrim(S)
-                else begin
-                    if Appending then AddLine(Package, '', True);
-                end;
-            end;
-            repeat
-                if TMode then AddLine(Package, S, Not Appending);
-                if (C = 0) then
-                    C := UnixRead(F, S)
-                else
-                    S := '';
-            until (C <> 0) and (S = '');
-        until C = -1;
-        if Appending then AddLine(Package, '', True);
-        if Pass = 0 then begin
-           if (Not FDIMode) and Assigned(Package^.IVersion) and Assigned(Package^.MVersion) and
-            (Ucase(PtrStr(Package^.IVersion)) <> Ucase(PtrStr(Package^.MVersion))) then
-                AddLine(Package, Title + ' (' + PtrStr(Package^.MVersion)  + ', ' +
-                PtrStr(Package^.IVersion) + ' ' + NLS.InfoInstalled + ')', True)
-            else
-                AddLine(Package, Title + ' (' + Version + ')', True);
-            if Author <> '' then
-                AddLine(Package, Author, True);
-            if License <> '' then
-                AddLine(Package, License, True);
-            AddLine(Package, '', True);
+    HasLang := True;
+    While LPass < 2 do begin
+        Inc(LPass);
+        X := Copy(LSM, 1, LastPos('.', LSM)) + GetLanguage;
+        HasLang := FileExists(X);
+        if LPass = 1 then begin
+            X := LSM;
+            if HasLang then
+                FreeStr(Package^.Title);
         end;
-        if (Pass = 1) and (PtrStr(Package^.Title) = '') then
-            Package^.Title := StrPtr(Copy(Title, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
-        if (Pass = 1) and (ISize <> '') then begin
-            AddLine(Package, '', True);
-            X := '';
-            { if not FDIMODE then begin }
-                if IFiles <> '' then begin
-                    V := StrInt(IFiles) - StrInt(SFiles);
-                    X := Comma(IntStr(V)) + ' ' + PluralNLS(V, NLS.InfoFile) + ' (';
-                end;
-                V := StrInt(trim(ISize)) - StrInt(trim(SSize));
-                M := NLS.InfoByte;
-                if V > 10239 then begin
-                    M := NLS.InfoKByte;
-                    V := V div 1024;
-                    if V > 5119 then begin
-                        M := NLS.InfoMByte;
-                        V := V div 1024;
+        {$IFDEF DEBUG}
+            Log('TryLSM: ' + X);
+        {$ENDIF}
+        if not FileExists(X) then Continue;
+        if LPass = 1 then
+            ClearPackage(Package);
+        Assign(F, X);
+        FileMode := 0;
+        Reset(F, 1);
+        Pass := 0;
+        Appending := False;
+        HasSummary := False;
+        While Pass < 2 do begin
+            {$IFDEF DEBUG}
+            Log('PASS: ' + IntStr(Pass));
+            {$ENDIF}
+            Flag := False;
+            TMode := False;
+            Seek(F, 0);
+            repeat
+                C := UnixRead(F, S);
+                if Trim(Ucase(S)) = 'END' then begin
+                    C := -1;
+                    TMode := False;
+                end else
+                if Trim(Ucase(S)) = 'BEGIN3' then begin
+                    Flag := True;
+                    TMode := False;
+                end else
+                if Match('TITLE', Title) then Ignore else
+                if Match('Version', Version) then IgnoreVersion else
+                if Match('Author', Author) then IgnoreEmail(Author) else
+                if Match('copying-policy', License) then Ignore else
+                if Match('copying_policy', License) then Ignore else
+                if Match('Total-size', ISize) then Ignore else
+                if Match('Total-files', IFiles) then Ignore else
+                if Match('Source-size', SSize) then Ignore else
+                if Match('Source-files', SFiles) then Ignore else
+
+                if Match('Maintained-by', X) then Ignore else
+                if Match('entered-date', X) then Ignore else
+                if Match('Platforms', X) then Ignore else
+                if Match('keywords', X) then Ignore else
+                if Match('Primary-site', X) then Ignore else
+                if Match('Alternate-site', X) then Ignore else
+                if Match('Changes', X) then Ignore else
+
+                if HasLang and (LPass = 1) then begin
+                    TMode := False;
+                    {FreeStr(Package^.Title);}
+                end else
+
+                if Match('Summary', X) then IgnoreSummary else
+
+                if Flag and (C > -1) and (S <> '') and (Pass = 1) then begin
+                    if Match('description', X) then begin
+                        { AddText(Package, IntStr(LPass) + ':' +IntStr(Pass) + '- ' + PtrStr(Package^.Title), True); }
+                        if (PtrStr(Package^.Title) = '') then
+                            Package^.Title := StrPtr(Copy(X, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
+                        S := X;
+                        TMode := not HasSummary;
+                        Appending := true;
+                    end else if (Copy(S, 1, 2) = '  ') then
+                        S := LTrim(S)
+                    else begin
+                        if Appending then AddText(Package, '', True);
                     end;
                 end;
-                X := X + Comma(IntStr(V)) + ' ' + PluralNLS(V, M) + ')';
-                if (SFIles <> '') and ((not FDIMode) or (ucase(GetEnv('OSRC')) <> 'N')) then begin
-                    X := X  + '; ';
-                    V := StrInt(SFiles);
-                    X := X + Comma(IntStr(V)) + ' ' + PluralNLS(V, NLS.InfoSourceFile) + ' (';
-                    V := StrInt(trim(SSize));
+                repeat
+                    if TMode then AddText(Package, S, Not Appending);
+                    if (C = 0) then
+                        C := UnixRead(F, S)
+                    else
+                        S := '';
+                until (C <> 0) and (S = '');
+            until C = -1;
+            if HasLang and (LPass = 1) then begin
+               Inc(Pass);
+               Continue;
+            end;
+            if Appending then AddText(Package, '', True);
+            if Pass = 0 then begin
+               if (Not FDIMode) and Assigned(Package^.IVersion) and Assigned(Package^.MVersion) and
+                (Ucase(PtrStr(Package^.IVersion)) <> Ucase(PtrStr(Package^.MVersion))) then
+                    AddText(Package, Title + ' (' + PtrStr(Package^.MVersion)  + ', ' +
+                    PtrStr(Package^.IVersion) + ' ' + NLS.InfoInstalled + ')', True)
+                else
+                    AddText(Package, Title + ' (' + Version + ')', True);
+                if Author <> '' then
+                    AddText(Package, Author, True);
+                if License <> '' then
+                    AddText(Package, License, True);
+                AddText(Package, '', True);
+            end;
+            if (Pass = 1) and (PtrStr(Package^.Title) = '') then
+                Package^.Title := StrPtr(Copy(Title, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
+            if (Pass = 1) and (ISize <> '') then begin
+                AddText(Package, '', True);
+                X := '';
+                { if not FDIMODE then begin }
+                    if IFiles <> '' then begin
+                        V := StrInt(IFiles) - StrInt(SFiles);
+                        X := Comma(IntStr(V)) + ' ' + PluralNLS(V, NLS.InfoFile) + ' (';
+                    end;
+                    V := StrInt(trim(ISize)) - StrInt(trim(SSize));
                     M := NLS.InfoByte;
                     if V > 10239 then begin
                         M := NLS.InfoKByte;
@@ -941,18 +963,35 @@ begin
                         end;
                     end;
                     X := X + Comma(IntStr(V)) + ' ' + PluralNLS(V, M) + ')';
+                    if (SFIles <> '') and ((not FDIMode) or (ucase(GetEnv('OSRC')) <> 'N')) then begin
+                        X := X  + '; ';
+                        V := StrInt(SFiles);
+                        X := X + Comma(IntStr(V)) + ' ' + PluralNLS(V, NLS.InfoSourceFile) + ' (';
+                        V := StrInt(trim(SSize));
+                        M := NLS.InfoByte;
+                        if V > 10239 then begin
+                            M := NLS.InfoKByte;
+                            V := V div 1024;
+                            if V > 5119 then begin
+                                M := NLS.InfoMByte;
+                                V := V div 1024;
+                            end;
+                        end;
+                        X := X + Comma(IntStr(V)) + ' ' + PluralNLS(V, M) + ')';
+                    end;
+                AddText(Package, '', True);
+                if Package^.Locked then begin
+                    if X <> '' then X := X + ', ';
+                    X := X + NLS.InfoLocked;
                 end;
-            AddLine(Package, '', True);
-            if Package^.Locked then begin
-                if X <> '' then X := X + ', ';
-                X := X + NLS.InfoLocked;
+                AddText(Package, X { + ':' + IFiles + '/' + ISize + ',' + SFiles + '/' + SSize }, True);
             end;
-            AddLine(Package, X { + ':' + IFiles + '/' + ISize + ',' + SFiles + '/' + SSize }, True);
-        end;
 
-        Inc(Pass);
+            Inc(Pass);
+        end;
+        Close(F)
     end;
-    Close(F)
+
 end;
 
 function TryLST(LST : string; All : boolean) : integer;
