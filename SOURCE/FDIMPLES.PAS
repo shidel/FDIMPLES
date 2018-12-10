@@ -216,7 +216,7 @@ begin
             WriteRawPStr(' ' + NLS.Standby);
             ClrEol;
         end;
-        GotoXY(10, Hi(WindMax));
+        GotoXY(Length(NLS.Standby) + 3, Hi(WindMax));
         WriteRawPStr(Ticks[((TickCount - MinTicks) div Speed) mod Length(Ticks) + 1]);
         WindMin := WMin;
         WindMax := WMax;

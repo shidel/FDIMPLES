@@ -16,7 +16,7 @@ interface
         NLSType = record
             Code                    : String[12];
             InvalidParam            : String[20];
-            PleaseStandby           : String[20];
+            PleaseStandby           : String[40];
             Standby                 : String[20];
             PressAKey               : String[40];
             InstalledOnly           : String[12];
@@ -66,7 +66,7 @@ const
         InstalledOnly           : 'Installed!';
         PackageMediaNotFound    : 'Package media not found!';
         OnlyInstalledShown      : 'Only installed packages are shown.';
-        NoFDINST                : 'unable to located package manager FDINST.';
+        NoFDINST                : 'unable to locate package manager FDINST.';
         NoTemp                  : 'TEMP environment variable is not set.';
         InfoUnknown             : 'unknown';
         InfoInstalled           : 'installed';
@@ -91,6 +91,42 @@ const
         ButtonCancel            : 'Cancel'
     );
 
+    German : NLSType = (
+        { Google Translate }
+        Code                    : 'DE';
+        InvalidParam            : 'ungÅltiger parameter';
+        PleaseStandby           : 'Bitte stehen Sie bereit...';
+        Standby                 : 'Bereithalten';
+        PressAKey               : 'drÅcke eine taste...';
+        InstalledOnly           : 'Eingerichtet!';
+        PackageMediaNotFound    : 'Paketmedium wurde nicht gefunden!';
+        OnlyInstalledShown      : 'Es werden nur installierte Pakete angezeigt.';
+        NoFDINST                : 'Paket-Manager FDINST kann nicht gefunden werden.';
+        NoTemp                  : 'TEMP-Umgebungsvariable ist nicht festgelegt.';
+        InfoUnknown             : 'unbekannte';
+        InfoInstalled           : 'eingerichtet';
+        InfoByte                : (TrueStr:'bDatenbytes'; FalseStr:'Datenbyte');
+        InfoKByte               : (TrueStr:'Kbytes Daten'; FalseStr:'Kbyte Daten');
+        InfoMByte               : (TrueStr:'Mbytes Daten'; FalseStr:'Mbyte Daten');
+        InfoFile                : (TrueStr:'Programmdateien'; FalseStr:'Programmdatei');
+        InfoSourceFile          : (TrueStr:'Quelldaten'; FalseStr:'Quelldatei');
+        InfoNoInfo              : 'Keine Information';
+        InfoLocked              : 'gesperrt';
+        BarPackage              : 'Paket';
+        BarNotFound             : 'wurde nicht unter';
+        PendingChanges          : 'Ausstehende PaketÑnderungen:';
+        RemoveChange            : 'lîschen';
+        InstallChange           : 'Installieren';
+        NoChanges               : 'Keine énderungen.';
+        TotalChanges            : (TrueStr:'énderungen'; FalseStr:'Ñndern');
+        IncludeRemovals         : 'Paketentnahmen einschlie·en.';
+        LoadCustom              : 'Paketlisten-Anpassungen laden:';
+        SaveCustom              : 'Speichern von Paketlistenanpassungen:';
+        ButtonOK                : 'ausfÅhren';
+        ButtonCancel            : 'stornieren'
+    );
+
+
 function PluralNLS (I : LongInt; Strs : BooleanStrings) : String;
 begin
     PluralNLS := WhichStr(I = 1, Strs.TrueStr, Strs.FalseStr);
@@ -100,7 +136,10 @@ procedure Init;
 begin
     FillChar(NLS, Sizeof(NLS), #0);
     NLS.Code := GetLanguage;
-    NLS := English;
+    if NLS.Code = 'DE' then
+        NLS := German
+    else
+        NLS := English;
 end;
 
 begin
