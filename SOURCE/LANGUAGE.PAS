@@ -57,7 +57,7 @@ implementation
 var
     NLSData : array[nlsCode..nlsEnd] of PString;
 
-{$I FDIMPLES.EN}
+{$I FDIMPLES.INC}
 
 function NLS(Index:integer): String;
 begin
