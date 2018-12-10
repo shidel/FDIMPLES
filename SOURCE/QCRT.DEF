@@ -11,8 +11,6 @@
 {$T-}       (* No type-checked pointers *)
 {$X+}       (* Enable extended syntax *)
 
-{$DEFINE STRINGPTRS}
-
 {$DEFINE USEBAT}    (* Use Batch file intermediary for package handling *)
 
 { DEFINE DEBUG}     (* Turn on Debuging and logging *)
