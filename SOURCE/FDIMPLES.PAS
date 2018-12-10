@@ -2085,7 +2085,7 @@ begin
     HelpOption (SwitchChar + '[NO]UPDATE', '[DO NOT] Automatically select updatable packages.');
     HelpWriteLn('');
     HelpOption (SwitchChar + 'LISTS',    'Create package list files for use with FDI build utility.');
-    HelpOption ('SwitchChar + CONFIG',   'Reconfigure FDI installer BASE and ALL package lists.');
+    HelpOption (SwitchChar + 'CONFIG',   'Reconfigure FDI installer BASE and ALL package lists.');
     HelpWriteLn('');
 end;
 
