@@ -57,6 +57,8 @@ implementation
 var
     NLSData : array[nlsCode..nlsEnd] of PString;
 
+{$I FDIMPLES.EN}
+
 function NLS(Index:integer): String;
 begin
     NLS := PtrStr(NLSData[Index]);
@@ -85,6 +87,7 @@ var
     F : File;
     S : String;
     C : integer;
+    X : ^Char;
 begin
     {WriteLn('Source: ' + AFileName);}
     if AFileName <> '' then begin
@@ -93,10 +96,25 @@ begin
         Reset(F, 1);
         repeat
             C := UnixRead(F, S);
-            if (C <> -1) then
-                ProcessNLS(S);
+            if (C <> -1) then begin
+                if (Pos('db ' + #$27, S) = 1) then
+                    ProcessNLS(Copy(S, 5, LastPos(#$27, S ) - 5))
+                else
+                    ProcessNLS(S);
+            end;
         until C = -1;
         Close(F);
+    end else begin
+        X := @NLSInternal;
+        while X^ <> #0 do begin
+            S := '';
+            while X^ <> #0 do begin
+                S := S + X^;
+                X := Ptr(Seg(X^), Ofs(X^)+1);
+            end;
+            ProcessNLS(S);
+            X := Ptr(Seg(X^), Ofs(X^)+1);
+        end;
     end
 end;
 
@@ -124,5 +142,4 @@ end;
 
 begin
     Init;
-
 end.
