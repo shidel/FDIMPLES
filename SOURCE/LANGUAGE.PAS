@@ -10,9 +10,11 @@ interface
     uses QDos, QStrings, FileIO;
 
     type
-        BooleanStrings = record
-            TrueStr : PString;
-            FalseStr : PString;
+        PGroupID = ^TGroupID;
+        TGroupID = record
+            ID : Str12;
+            Title : PString;
+            Next : PGroupID;
         end;
 
     const
@@ -47,7 +49,9 @@ interface
         nlsSaveCustom              = 34;
         nlsButtonOK                = 35;
         nlsButtonCancel            = 36;
-        nlsEnd                     = nlsButtonCancel;
+        nlsEnd                     = 36;
+
+        nlsPackageGroup            = 100;
 
     function PluralNLS (I : LongInt; Index : Integer) : String;
     function NLS(Index:integer): String;
@@ -55,7 +59,9 @@ interface
 implementation
 
 var
+    OldExitProc : pointer;
     NLSData : array[nlsCode..nlsEnd] of PString;
+    Groups : PGroupID;
 
 {$I FDIMPLES.INC}
 
@@ -69,6 +75,26 @@ begin
     PluralNLS := WhichStr(I = 1, NLS(Index), NLS(Index+1));
 end;
 
+procedure SetGroup(ID, Title : String);
+var
+    P : PGroupID;
+begin
+    P := Groups;
+    while Assigned(P) do begin
+        if P^.ID = ID then begin
+            FreeStr(P^.Title);
+            P^.Title := StrPtr(Title);
+            Exit;
+        end else
+            P := P^.Next;
+    end;
+    P := New(PGroupID);
+    P^.ID := ID;
+    P^.Title := StrPtr(Title);
+    P^.Next := Groups;
+    Groups := P;
+end;
+
 procedure ProcessNLS(S : String);
 var
     I : integer;
@@ -77,6 +103,9 @@ begin
     if (S = '') or (Pos(S[1], '0123456789') < 1) then exit;
     I := StrInt(Copy(S, 1, Pos(':', S)- 1));
     V := Copy(S, Pos(':', S) + 1, Length(S));
+    if I = 100 then
+        SetGroup(UCase(Copy(V, 1, Pos('=', V) - 1)), Copy(V, Pos('=', V) + 1, Length(V)))
+    else
     if (I < nlsCode) or (I > nlsEnd) then Exit; {Probably should die with error}
     FreeStr(NLSData[I]);
     NLSData[I] := StrPtr(V);
@@ -118,11 +147,27 @@ begin
     end
 end;
 
+procedure Final; far;
+var
+    P : PGroupID;
+begin
+    ExitProc := OldExitProc;
+    while Assigned(Groups) do begin
+        P := Groups^.Next;
+        FreeStr(Groups^.Title);
+        Dispose(Groups);
+        Groups := P;
+    end;
+end;
+
 procedure Init;
 var
     I : integer;
     S : String;
 begin
+    Groups := nil;
+    OldExitProc := ExitProc;
+    ExitProc := @Final;
     for I := nlsCode to nlsEnd do
         NLSData[I] := nil;
     ReadNLS('');

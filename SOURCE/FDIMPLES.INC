@@ -51,6 +51,23 @@ db '34:Save package list customizations:',0
 { Buttons }
 db '35:OK',0
 db '36:Cancel',0
+
+{ Package ID's Are all 100 }
+db '100:BASE=FreeDOS Base',0
+db '100:ARCHIVER=Arichivers',0
+db '100:BOOT=Boot Tools',0
+db '100:DEVEL=Development',0
+db '100:EDIT=Editors',0
+db '100:EMULATOR=Emulators',0
+db '100:GAMES=Games',0
+db '100:GUI=Graphical Desktops',0
+db '100:NET=Networking',0
+db '100:SOUND=Sound Tools',0
+db '100:UNIXLIKE=Unix Like Tools',0
+db '100:UTIL=Utilities',0
+db '100:UNIX=Unix Like Tools',0
+db '100:OBSOLETE=Obsolete Packages',0
+
 db 0
 
 end;
