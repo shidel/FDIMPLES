@@ -43,3 +43,19 @@
 { Buttons }
 35:OK
 36:Cancel
+
+{ Package ID's Are all 100 }
+100:BASE=FreeDOS Base
+100:ARCHIVER=Arichivers
+100:BOOT=Boot Tools
+100:DEVEL=Development
+100:EDIT=Editors
+100:EMULATOR=Emulators
+100:GAMES=Games
+100:GUI=Graphical Desktops
+100:NET=Networking
+100:SOUND=Sound Tools
+100:UNIXLIKE=Unix Like Tools
+100:UTIL=Utilities
+100:UNIX=Unix Like Tools
+100:OBSOLETE=Obsolete Packages
