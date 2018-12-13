@@ -43,3 +43,19 @@
 { Toetsen }
 35:Accepteren
 36 Afbreken
+
+{Pakket-ID's zijn allemaal 100}
+100:BASE=FreeDOS Base
+100:ARCHIVER=Archivers
+100:BOOT=Boot-utility's
+100:DEVEL=Ontwikkeling
+100:EDIT=Bewerkers
+100:EMULATOR=Emulators
+100:GAMES=Games
+100:GUI=Grafische desktops
+100:NET=Netwerken
+100:SOUND=Geluidsfuncties
+100:UNIXLIKE=Unix-achtige hulpprogramma's
+100:UTIL=Hulpprogramma's
+100:UNIX=Unix-achtige hulpprogramma's
+100:OBSOLETE=Verouderde pakketten

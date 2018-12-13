@@ -46,7 +46,7 @@
 
 { Package ID's Are all 100 }
 100:BASE=FreeDOS Base
-100:ARCHIVER=Arichivers
+100:ARCHIVER=Archivers
 100:BOOT=Boot Tools
 100:DEVEL=Development
 100:EDIT=Editors

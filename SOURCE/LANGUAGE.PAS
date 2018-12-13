@@ -56,6 +56,8 @@ interface
     function PluralNLS (I : LongInt; Index : Integer) : String;
     function NLS(Index:integer): String;
 
+    function GetGroup(ID : String) : String;
+
 implementation
 
 var
@@ -85,8 +87,8 @@ begin
             FreeStr(P^.Title);
             P^.Title := StrPtr(Title);
             Exit;
-        end else
-            P := P^.Next;
+        end;
+        P := P^.Next;
     end;
     P := New(PGroupID);
     P^.ID := ID;
@@ -94,6 +96,22 @@ begin
     P^.Next := Groups;
     Groups := P;
 end;
+
+function GetGroup(ID : String) : String;
+var
+    P : PGroupID;
+begin
+    P := Groups;
+    while Assigned(P) do begin
+        if P^.ID = ID then begin
+            GetGroup := PtrStr(P^.Title);
+            Exit;
+        end;
+        P := P^.Next;
+    end;
+    GetGroup := '';
+end;
+
 
 procedure ProcessNLS(S : String);
 var

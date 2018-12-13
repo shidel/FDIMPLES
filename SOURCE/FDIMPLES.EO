@@ -43,3 +43,19 @@
 {Butonoj}
 35:Akceptu
 36:Nuligi
+
+{Pakaj IDoj Estas ciuj 100}
+100:BASE=FreeDOS Base
+100:ARCHIVER=Arikistoj
+100:BOOT=Salti utilecojn
+100:DEVEL=Disvolvigo
+100:EDIT=Redaktantoj
+100:EMULATOR=Emuzoj
+100:GAMES=Ludoj
+100:GUI=Grafikaj labortabloj
+100:NET=Retoj
+100:SOUND=Sonaj utilecoj
+100:UNIXLIKE=Unikso kiel utilecoj
+100:UTIL=Utilajoj
+100:UNIX=Unikso kiel utilecoj
+100:OBSOLETE=Malaktualaj Pakoj

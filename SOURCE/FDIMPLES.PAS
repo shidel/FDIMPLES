@@ -1265,6 +1265,22 @@ begin
     Package^.First := False;
 end;
 
+procedure ChangeGroupTitles;
+var
+    P : PItem;
+    S : String;
+begin
+    P := Group;
+    while Assigned(P) do begin
+        S := GetGroup(P^.Name);
+        if S <> '' then begin
+            FreeStr(P^.Title);
+            P^.Title := StrPtr(S);
+        end;
+        P := P^.Next;
+    end
+end;
+
 procedure DrawPackage;
 var
     Y : integer;
@@ -2567,6 +2583,9 @@ begin
     StartUp := False;
     CheckScroll := False;
     (* CheckCursor := False; *)
+
+    ChangeGroupTitles;
+
     DrawTitle;
     DrawSelector;
     LTab := -1;

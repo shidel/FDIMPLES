@@ -43,3 +43,19 @@
 { Buttons }
 35:accepter
 36:annuler
+
+{Les ID de paquet sont tous 100}
+100:BASE=Base FreeDOS
+100:ARCHIVER=Archiveurs
+100:BOOT=Utilitaires de d‚marrage
+100:DEVEL=D‚veloppement
+100:EDIT=Editeurs
+100:EMULATOR=Emulateurs
+100:GAMES=Jeux
+100:GUI=bureaux graphiques
+100:NET=r‚seau
+100:SOUND=Utilitaires de son
+100:UNIXLIKE=Unix comme utilitaires
+100:UTIL=Utilitaires
+100:UNIX=Unix comme utilitaires
+100:OBSOLETE=Paquets obsolŠtes

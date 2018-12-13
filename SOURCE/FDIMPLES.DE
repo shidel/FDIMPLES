@@ -40,3 +40,19 @@
 
 35:ausfÅhren
 36:stornieren
+
+{Paket-IDs sind alle 100}
+100:BASE=FreeDOS Base
+100:ARCHIVER=Archivers
+100:BOOT=Boot-Dienstprogramme
+100:DEVEL=Entwicklung
+100:EDIT=Herausgeber
+100:EMULATOR=Emulatoren
+100:GAMES=Spiele
+100:GUI=Grafische Desktops
+100:NET=Vernetzung
+100:SOUND=Sound-Dienstprogramme
+100:UNIXLIKE=Unix-Ñhnliche Dienstprogramme
+100:UTIL=Dienstprogramme
+100:UNIX=Unix-Ñhnliche Dienstprogramme
+100:OBSOLETE=Veraltete Pakete

@@ -43,3 +43,19 @@
 { Buttons }
 35:Tamam
 36:iptal
+
+{Paket kimlikleri hepsi 100'dÅr}
+100:BASE=FreeDOS Temel
+100:ARCHIVER=Zenginleütiriciler
+100:BOOT=ônyÅkleme yardçmcç programlarç
+100:DEVEL=Geliütirme
+100:EDIT=Editîrler
+100:EMULATOR=EmÅlatîrler
+100:GAMES=Oyunlar
+100:GUI=Grafiksel masaÅstÅ bilgisayarlar
+100:NET=Aß
+100:SOUND=Ses araálarç
+100:UNIXLIKE=yardçmcç programlar gibi Unix
+100:UTIL=Yardçmcç Programlar
+100:UNIX=yardçmcç programlar gibi Unix
+100:OBSOLETE=Eski Paketler
