@@ -5,7 +5,7 @@
 2:alsjeblieft standby ...
 3:Stand-by
 4:Druk op een toets ...
-5:Installed!
+
 6:Pakketmedia niet gevonden!
 7:Alleen ge‹nstalleerde pakketten worden getoond.
 8:kan pakketbeheer FDINST niet vinden.
@@ -45,6 +45,7 @@
 36 Afbreken
 
 {Pakket-ID's zijn allemaal 100}
+100:=Installed!
 100:BASE=FreeDOS Base
 100:ARCHIVER=Archivers
 100:BOOT=Boot-utility's

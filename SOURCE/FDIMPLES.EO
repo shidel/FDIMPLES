@@ -5,7 +5,7 @@
 2:Bonvolu stari ...
 3:Rezulto
 4:Premu slosilon ...
-5:Instalita!
+
 6:Pako-amaskomunikiloj ne troveblas!
 7:Nur instalitaj pakoj estas montritaj.
 8:nekapabla trovi pakajministrajon FDINST.
@@ -45,6 +45,7 @@
 36:Nuligi
 
 {Pakaj IDoj Estas ciuj 100}
+100:=Instalita!
 100:BASE=FreeDOS Base
 100:ARCHIVER=Arikistoj
 100:BOOT=Salti utilecojn

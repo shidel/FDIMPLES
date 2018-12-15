@@ -13,7 +13,7 @@ db '1:invalid parameter',0
 db '2:Please standby...',0
 db '3:Standby',0
 db '4:Press a key...',0
-db '5:Installed!',0
+{ 5:Reserved for future use }
 db '6:Package media not found!',0
 db '7:Only installed packages are shown.',0
 db '8:unable to locate package manager FDINST.',0
@@ -53,6 +53,8 @@ db '35:OK',0
 db '36:Cancel',0
 
 { Package ID's Are all 100 }
+
+db '100:=Installed!',0
 db '100:BASE=FreeDOS Base',0
 db '100:ARCHIVER=Arichivers',0
 db '100:BOOT=Boot Tools',0

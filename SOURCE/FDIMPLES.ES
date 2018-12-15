@@ -5,7 +5,7 @@
 2:Por favor, espera ...
 3:en espera
 4:Pulse una tecla ...
-5:­Instalado!
+
 6:paquete multimedia no encontrado!
 7:Solo se muestran los paquetes instalados.
 8:no se puede encontrar el administrador de paquetes FDINST.
@@ -45,6 +45,7 @@
 36:Cancelar
 
 {Los ID de paquete son los 100}
+100:=­Instalado!
 100:BASE=FreeDOS Base
 100:ARCHIVER=Archivadores
 100:BOOT=Utilidades de arranque

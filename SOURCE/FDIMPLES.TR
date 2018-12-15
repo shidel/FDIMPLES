@@ -5,7 +5,7 @@
 2:LÅtfen bekleyiniz ...
 3:Bekleme
 4:Bir tuüa basçn ...
-5:YÅklendi!
+
 6:Paket medya bulunamadç!
 7:Sadece yÅklÅ paketler gîsterilmektedir.
 8:FDINST paket yîneticisini bulamadç.
@@ -45,6 +45,7 @@
 36:iptal
 
 {Paket kimlikleri hepsi 100'dÅr}
+100:=YÅklendi!
 100:BASE=FreeDOS Temel
 100:ARCHIVER=Zenginleütiriciler
 100:BOOT=ônyÅkleme yardçmcç programlarç

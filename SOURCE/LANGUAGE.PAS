@@ -23,7 +23,7 @@ interface
         nlsPleaseStandby           = 2;
         nlsStandby                 = 3;
         nlsPressAKey               = 4;
-        nlsInstalledOnly           = 5;
+        { 5 Reserved for future use }
         nlsPackageMediaNotFound    = 6;
         nlsOnlyInstalledShown      = 7;
         nlsNoFDINST                = 8;

@@ -1147,9 +1147,14 @@ begin
     Others := NewPItem('', psFull);
     GroupFirst := Others;
     GroupLast := GroupFirst;
-    with GroupFirst^ do begin
+
+{ No Longer needed Startup sets all group names for language. }
+
+{    with GroupFirst^ do begin
         Title := StrPtr(NLS(nlsInstalledOnly));
     end;
+}
+
     FindFirst(FMedia + '*.*', faAnyFile, S);
     while DosError = 0 do begin
         if (S.Attr and faDirectory = faDirectory) and (S.Name <> '.') and

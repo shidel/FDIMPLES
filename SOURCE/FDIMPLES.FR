@@ -5,7 +5,7 @@
 2:S'il vous plaŒt veille ...
 3:veille
 4:Appuyez sur une touche ...
-5:install‚!
+
 6:Paquet m‚dia non trouv‚!
 7:Seuls les packages install‚s sont affich‚s.
 8:impossible de localiser le gestionnaire de paquets FDINST.
@@ -45,6 +45,7 @@
 36:annuler
 
 {Les ID de paquet sont tous 100}
+100:=install‚!
 100:BASE=Base FreeDOS
 100:ARCHIVER=Archiveurs
 100:BOOT=Utilitaires de d‚marrage

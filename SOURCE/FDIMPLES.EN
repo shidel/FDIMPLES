@@ -5,7 +5,7 @@
 2:Please standby...
 3:Standby
 4:Press a key...
-5:Installed!
+
 6:Package media not found!
 7:Only installed packages are shown.
 8:unable to locate package manager FDINST.
@@ -45,6 +45,7 @@
 36:Cancel
 
 { Package ID's Are all 100 }
+100:=Installed!
 100:BASE=FreeDOS Base
 100:ARCHIVER=Archivers
 100:BOOT=Boot Tools

@@ -5,7 +5,7 @@
 2:Bitte stehen Sie bereit...
 3:Bereithalten
 4:drÅcke eine taste...
-5:Eingerichtet!
+
 6:Paketmedium wurde nicht gefunden!
 7:Es werden nur installierte Pakete angezeigt.
 8:Paket-Manager FDINST kann nicht gefunden werden.
@@ -42,6 +42,7 @@
 36:stornieren
 
 {Paket-IDs sind alle 100}
+100:=Eingerichtet!
 100:BASE=FreeDOS Base
 100:ARCHIVER=Archivers
 100:BOOT=Boot-Dienstprogramme
