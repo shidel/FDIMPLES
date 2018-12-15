@@ -55,7 +55,10 @@ const
     NoScroll = 1;
     MinTicks = 7;
 
-    StatSpeed := 18 * 2;
+    StatSpeed = 18 * 3;
+    TickerMod = 3;
+    TickGrpLag = 2;
+    TickPkgLag = 4;
 
 type
     TStates = (psNone, psPartial, psFull, psUpgrade, psReplace);
@@ -107,16 +110,16 @@ var
     FileList : boolean;
     AutoUpdate : boolean;
     UpdateOn : boolean;
-    TickCount : Longint;
-    LastTick : LongInt;
+    TickCount, StatCount : Longint;
+    LastTick, StatTick : LongInt;
     Startup : boolean;
     Comments : boolean;
     ListDir : string;
     PackageInfo : string;
     TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
+    TickerA, TickerB : integer;
 
     StatPhase : integer;
-    StatGroup, StatPackage : PString;
 
     {$IFDEF DEBUG}
     LOGFILE : Text;
@@ -869,7 +872,8 @@ begin
                     if Match('description', X) then begin
                         { AddText(Package, IntStr(LPass) + ':' +IntStr(Pass) + '- ' + PtrStr(Package^.Title), True); }
                         if (PtrStr(Package^.Title) = '') then
-                            Package^.Title := StrPtr(Copy(X, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16));
+{                            Package^.Title := StrPtr(Copy(X, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16)); }
+                             Package^.Title := StrPtr(X);
                         S := X;
                         TMode := not HasSummary;
                         Appending := true;
@@ -1091,9 +1095,7 @@ var
    PlsWait:String;
 
 begin
-    StatPhase := 0;
-    StatGroup := nil;
-    StatPackage := nil;
+    StatPhase := -1;
 
     PackageInfo := '';
     PlsWait := NLS(nlsPleaseStandby);
@@ -1572,14 +1574,8 @@ begin
     WriteRawPStr(' (' + AppName + ')');
 end;
 
-procedure DrawStatus;
+procedure StatusPhaseZero;
 begin
-    if FDIMode then Exit;
-    LastTick := TimerTick;
-    TickCount := 0;
-    Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
-    gotoXY(1,Hi(WindMax));
-    TextAttr := Theme.Status;
     if Lo(ScreenMax) >= 79 then begin
         if MaxAvail < LoMem then TextAttr := Theme.StatusHot;
         WriteRawPStr(' ' + IntStr(MaxAvail));
@@ -1615,6 +1611,92 @@ begin
             end;
         end;
     end;
+end;
+
+procedure StatusPhaseOne;
+begin
+    WriteRawPStr(' ' + NLS(nlsGroup) + ' ');
+    TextAttr:=Theme.StatusHot;
+    WriteRawPStr(Copy(PtrStr(Group^.Title), TickerA, Lo(ScreenMax) + 1 - WhereX));
+
+end;
+
+procedure StatusPhaseTwo;
+var
+    X : integer;
+begin
+    WriteRawPStr(' ' + NLS(nlsPackage) + ' ');
+    TextAttr:=Theme.StatusHot;
+    X := Lo(ScreenMax) + 1 - WhereX;
+    WriteRawPStr(Copy(PtrStr(Package^.Title), TickerB, X));
+    if (X < Length(PtrStr(Package^.Title))) or (TickerB <> 1) then begin
+        if TickerB > Length(PtrStr(Package^.Title)) then
+            X := TickerB - Length(PtrStr(Package^.Title))
+        else
+            X := 1;
+        WriteRawPStr(Copy(' | ' + PtrStr(Package^.Title), X, Lo(ScreenMax) + 1 - WhereX));
+        Inc(TickerB);
+        if TickerB > Length(PtrStr(Package^.Title)) + 3 then
+            TickerB := 1;
+    end;
+end;
+
+procedure DrawStatus(ATab : integer);
+var
+    Max : Integer;
+begin
+    if FDIMode then Exit;
+
+    { Standby Tick Reset }
+    LastTick := TimerTick;
+    TickCount := 0;
+    if (ATab <> -1)  then begin
+        StatPhase := ATab;
+        StatCount := 0;
+        TickerA := 1;
+        TickerB := 1;
+        StatTick := TimerTick;
+    end else if StatTick = TimerTick then
+        exit
+    else begin
+        StatTick := TimerTick;
+        Inc(StatCount);
+        Max := StatSpeed;
+        case StatPhase of
+                0: if TickerA <> 1 then Max := Max * TickGrpLag;
+                1: if TickerB <> 1 then Max := Max * TickPkgLag;
+        end;
+        if StatCount < Max then begin
+            if StatCount mod TickerMod <> 0 then exit;
+            case StatPhase of
+                0: if TickerA = 1 then Exit;
+                1: if TickerB = 1 then Exit;
+            else
+                Exit
+            end;
+        end else begin
+            StatCount:=0;
+            Inc(StatPhase);
+            if StatPhase > 2 then StatPhase := 0;
+        end;
+    end;
+
+    if (StatPhase = 0) and (not Assigned(Group)) then StatPhase:=2;
+    if (StatPhase = 1) and (not Assigned(Package)) then StatPhase:=2;
+
+    Window(1,2,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
+    gotoXY(1,Hi(WindMax));
+    TextAttr := Theme.Status;
+
+    case StatPhase of
+        0:StatusPhaseOne;
+        1:StatusPhaseTwo;
+    else
+        StatusPhaseZero;
+    end;
+
+    if StatPhase > 2 then StatPhase := 0;
+
     ClrEol;
 end;
 
@@ -2623,7 +2705,7 @@ begin
             DrawButtons;
             LTab := Tab;
         end;
-        DrawStatus;
+        DrawStatus(Tab);
         ClearEvent(E);
         Attempt := True;
         While (E.What = evNothing) do begin
@@ -2634,10 +2716,12 @@ begin
                 if not Package^.Skipped then begin
                     DrawGroups;
                     DrawButtons;
-                    DrawStatus;
+                    DrawStatus(Tab);
                 end;
                 Attempt := False;
             end;
+            if (E.What = evNothing) then
+                DrawStatus(-1);
         end;
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
