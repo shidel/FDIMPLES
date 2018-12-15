@@ -50,7 +50,7 @@
 39:Titel
 
 {Pakket-ID's zijn allemaal 100}
-100:=Installed!
+100:=Ge‹nstalleerd!
 100:BASE=FreeDOS Base
 100:ARCHIVER=Archivers
 100:BOOT=Boot-utility's
