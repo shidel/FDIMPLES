@@ -2,9 +2,9 @@
 
 0:EO
 1:nevalida parametro
-2:Bonvolu stari ...
+2:Bonvolu stari...
 3:Rezulto
-4:Premu slosilon ...
+4:Premu slosilon...
 
 6:Pako-amaskomunikiloj ne troveblas!
 7:Nur instalitaj pakoj estas montritaj.
@@ -43,6 +43,11 @@
 {Butonoj}
 35:Akceptu
 36:Nuligi
+
+{Stata Trinkejo Mesagoj}
+37:Grupo
+38:Pako
+39:Titolo
 
 {Pakaj IDoj Estas ciuj 100}
 100:=Instalita!

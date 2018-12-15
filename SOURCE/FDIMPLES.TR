@@ -2,9 +2,9 @@
 
 0:TR
 1:ge‡ersiz parametre
-2:Ltfen bekleyiniz ...
+2:Ltfen bekleyiniz...
 3:Bekleme
-4:Bir tuŸa basn ...
+4:Bir tuŸa basn...
 
 6:Paket medya bulunamad!
 7:Sadece ykl paketler g”sterilmektedir.
@@ -43,6 +43,11 @@
 { Buttons }
 35:Tamam
 36:iptal
+
+{Durum €ubu§u Mesajlar}
+37:Grup
+38:Paket
+39:BaŸlk
 
 {Paket kimlikleri hepsi 100'dr}
 100:=Yklendi!

@@ -44,6 +44,11 @@
 35:OK
 36:Cancel
 
+{ Status Bar Messages }
+37:Group
+38:Package
+39:Title
+
 { Package ID's Are all 100 }
 100:=Installed!
 100:BASE=FreeDOS Base

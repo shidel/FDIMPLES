@@ -49,7 +49,12 @@ interface
         nlsSaveCustom              = 34;
         nlsButtonOK                = 35;
         nlsButtonCancel            = 36;
-        nlsEnd                     = 36;
+        nlsGroup                   = 37;
+        nlsPackage                 = 38;
+        nlsTitle                   = 39;
+
+        nlsEnd                     = 39;
+
 
         nlsPackageGroup            = 100;
 

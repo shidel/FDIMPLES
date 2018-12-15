@@ -41,6 +41,11 @@
 35:ausfhren
 36:stornieren
 
+{Statusleistenmeldungen}
+37:gruppe
+38:paket
+39:titel
+
 {Paket-IDs sind alle 100}
 100:=Eingerichtet!
 100:BASE=FreeDOS Base

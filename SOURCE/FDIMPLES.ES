@@ -2,9 +2,9 @@
 
 0:ES
 1:par metro inv lido
-2:Por favor, espera ...
+2:Por favor, espera...
 3:en espera
-4:Pulse una tecla ...
+4:Pulse una tecla...
 
 6:paquete multimedia no encontrado!
 7:Solo se muestran los paquetes instalados.
@@ -44,16 +44,21 @@
 35:aceptar
 36:Cancelar
 
+{Mensajes de la barra de estado}
+37:grupo
+38:Paquete
+39:t¡tulo
+
 {Los ID de paquete son los 100}
 100:=­Instalado!
 100:BASE=FreeDOS Base
 100:ARCHIVER=Archivadores
-100:BOOT=Utilidades de arranque
+100:BOOT=Sistema de barco
 100:DEVEL=Desarrollo
-100:EDIT=editores
+100:EDIT=Editores
 100:EMULATOR=Emuladores
 100:GAMES=Juegos
-100:GUI=escritorios gr ficos
+100:GUI=Escritorios gr ficos
 100:NET=Redes
 100:SOUND=Utilidades de sonido
 100:UNIXLIKE=Unix como utilidades

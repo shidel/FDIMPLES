@@ -2,9 +2,9 @@
 
 0:NL
 1:ongeldige parameter
-2:alsjeblieft standby ...
+2:alsjeblieft standby...
 3:Stand-by
-4:Druk op een toets ...
+4:Druk op een toets...
 
 6:Pakketmedia niet gevonden!
 7:Alleen ge‹nstalleerde pakketten worden getoond.
@@ -42,7 +42,12 @@
 
 { Toetsen }
 35:Accepteren
-36 Afbreken
+36:Afbreken
+
+{Statusbalkberichten}
+37:Group
+38:Pakket
+39:Titel
 
 {Pakket-ID's zijn allemaal 100}
 100:=Installed!

@@ -55,6 +55,8 @@ const
     NoScroll = 1;
     MinTicks = 7;
 
+    StatSpeed := 18 * 2;
+
 type
     TStates = (psNone, psPartial, psFull, psUpgrade, psReplace);
     TModes = (rmFDI, rmStandAlone, rmList, rmConfig);
@@ -112,6 +114,9 @@ var
     ListDir : string;
     PackageInfo : string;
     TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
+
+    StatPhase : integer;
+    StatGroup, StatPackage : PString;
 
     {$IFDEF DEBUG}
     LOGFILE : Text;
@@ -1086,6 +1091,10 @@ var
    PlsWait:String;
 
 begin
+    StatPhase := 0;
+    StatGroup := nil;
+    StatPackage := nil;
+
     PackageInfo := '';
     PlsWait := NLS(nlsPleaseStandby);
     if Trim(GetEnv('FMEDIA')) <> '' then begin
@@ -1270,20 +1279,25 @@ begin
     Package^.First := False;
 end;
 
-procedure ChangeGroupTitles;
+function ChangeGroupTitles : integer;
 var
     P : PItem;
     S : String;
+    X : integer;
 begin
     P := Group;
+    X := 8;
     while Assigned(P) do begin
         S := GetGroup(P^.Name);
+        if Length(S) > X then
+            X := Length(S);
         if S <> '' then begin
             FreeStr(P^.Title);
             P^.Title := StrPtr(S);
         end;
         P := P^.Next;
-    end
+    end;
+    ChangeGroupTitles := X;
 end;
 
 procedure DrawPackage;
@@ -2589,7 +2603,12 @@ begin
     CheckScroll := False;
     (* CheckCursor := False; *)
 
-    ChangeGroupTitles;
+    { Make group column a little wider if possible up to 1/3 main window }
+    I := ChangeGroupTitles + 6;
+    if I > (Lo(ScreenMax) - Theme.Frame.X * 2 + 1) div 3 then
+        I := (Lo(ScreenMax) - Theme.Frame.X * 2 + 1) div 3;
+    if I > Theme.Grps.X then
+        Theme.Grps.X := I;
 
     DrawTitle;
     DrawSelector;

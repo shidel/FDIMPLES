@@ -2,9 +2,9 @@
 
 0:FR
 1:paramŠtre invalide
-2:S'il vous plaŒt veille ...
+2:S'il vous plaŒt veille...
 3:veille
-4:Appuyez sur une touche ...
+4:Appuyez sur une touche...
 
 6:Paquet m‚dia non trouv‚!
 7:Seuls les packages install‚s sont affich‚s.
@@ -43,6 +43,11 @@
 { Buttons }
 35:accepter
 36:annuler
+
+{Messages de la barre d'‚tat}
+37:groupe
+38:forfait
+39:titre
 
 {Les ID de paquet sont tous 100}
 100:=install‚!

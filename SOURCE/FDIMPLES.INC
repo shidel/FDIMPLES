@@ -52,6 +52,11 @@ db '34:Save package list customizations:',0
 db '35:OK',0
 db '36:Cancel',0
 
+{ Status Bar Messages }
+db '37:Group',0
+db '38:Package',0
+db '39:Title',0
+
 { Package ID's Are all 100 }
 
 db '100:=Installed!',0

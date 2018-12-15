@@ -1,2 +1,2 @@
 const
-    AppVersion = '0.9.13';
+    AppVersion = '0.9.14';
