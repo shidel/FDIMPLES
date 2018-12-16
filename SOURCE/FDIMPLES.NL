@@ -5,7 +5,7 @@
 2:alsjeblieft standby...
 3:Stand-by
 4:Druk op een toets...
-
+5:Group
 6:Pakketmedia niet gevonden!
 7:Alleen ge‹nstalleerde pakketten worden getoond.
 8:kan pakketbeheer FDINST niet vinden.
@@ -44,10 +44,35 @@
 35:Accepteren
 36:Afbreken
 
-{Statusbalkberichten}
-37:Group
-38:Pakket
+{Meer statusbalktekst}
 39:Titel
+38:versie
+39:gebruik:
+40:[opties]
+
+{Help-berichten en dergelijke}
+50:uitgebracht onder de GNU General Public License, versie 2.0
+51:Copyright 2018 Jerome Shidel
+52:FDIMPLES biedt een eenvoudig te gebruiken tekstgebruikersinterface voor het FDINST-pakketbeheerhulpprogramma.
+
+53:Toon dit helpscherm.
+54:Bestandslijst weergeven in pakketbeschrijving.
+55:[NIET] Automatisch updatepakketten selecteren.
+56:Pakketlijstbestanden maken voor gebruik met FDI-buildhulpprogramma.
+57:Herconfigureer FDI om BASE en ALL pakketlijsten te installeren.
+
+58:toetsenbordopdrachten voor de gebruikersinterface:
+59:selectie wisselen.
+60:Wijzig welk deel of welke knop focus heeft.
+61:een item omhoog of omlaag gaan, ook Page Up / Down.
+62:Sluit af zonder wijzigingen aan te brengen of op te slaan.
+63:helpscherm weergeven.
+64:schakel de status van alle pakketten die kunnen worden bijgewerkt in groep.
+65:schakel de status van alle pakketten die kunnen worden bijgewerkt.
+66:bekijk de in behandeling zijnde wijzigingen.
+67:alle openstaande wijzigingen wissen.
+68:schrijf een aanpassingsbestand van de pakketlijst dat wijzigingen bevat.
+69:lees een aanpassingsbestand van de pakketlijst en pas wijzigingen toe.
 
 {Pakket-ID's zijn allemaal 100}
 100:=Ge‹nstalleerd!

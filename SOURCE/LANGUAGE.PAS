@@ -23,7 +23,7 @@ interface
         nlsPleaseStandby           = 2;
         nlsStandby                 = 3;
         nlsPressAKey               = 4;
-        { 5 Reserved for future use }
+        nlsGroup                   = 5;
         nlsPackageMediaNotFound    = 6;
         nlsOnlyInstalledShown      = 7;
         nlsNoFDINST                = 8;
@@ -32,7 +32,8 @@ interface
         nlsInfoInstalled           = 11;
         nlsInfoNoInfo              = 12;
         nlsInfoLocked              = 13;
-        nlsBarPackage              = 14;
+        nlsPackage                 = 14;
+        nlsBarPackage              = nlsPackage;
         nlsBarNotFound             = 15;
         nlsPendingChanges          = 16;
         nlsRemoveChange            = 17;
@@ -49,11 +50,14 @@ interface
         nlsSaveCustom              = 34;
         nlsButtonOK                = 35;
         nlsButtonCancel            = 36;
-        nlsGroup                   = 37;
-        nlsPackage                 = 38;
-        nlsTitle                   = 39;
+        nlsTitle                   = 37;
+        nlsVersion                 = 38;
+        nlsUsage                   = 39;
+        nlsOptions                 = 40;
 
-        nlsEnd                     = 39;
+        nlsHelp                    = 50;
+
+        nlsEnd                     = 90;
 
 
         nlsPackageGroup            = 100;
@@ -126,7 +130,7 @@ begin
     if (S = '') or (Pos(S[1], '0123456789') < 1) then exit;
     I := StrInt(Copy(S, 1, Pos(':', S)- 1));
     V := Copy(S, Pos(':', S) + 1, Length(S));
-    if I = 100 then
+    if I = nlsPackageGroup then
         SetGroup(UCase(Copy(V, 1, Pos('=', V) - 1)), Copy(V, Pos('=', V) + 1, Length(V)))
     else
     if (I < nlsCode) or (I > nlsEnd) then Exit; {Probably should die with error}

@@ -13,7 +13,7 @@ db '1:invalid parameter',0
 db '2:Please standby...',0
 db '3:Standby',0
 db '4:Press a key...',0
-{ 5:Reserved for future use }
+db '5:Group',0
 db '6:Package media not found!',0
 db '7:Only installed packages are shown.',0
 db '8:unable to locate package manager FDINST.',0
@@ -52,10 +52,36 @@ db '34:Save package list customizations:',0
 db '35:OK',0
 db '36:Cancel',0
 
-{ Status Bar Messages }
-db '37:Group',0
-db '38:Package',0
+{ More Status Bar Text }
 db '39:Title',0
+db '38:version',0
+db '39:usage:',0
+db '40:[options]',0
+
+{ Help Messages and such }
+db '50:Released under the GNU General Public License, Version 2.0',0
+db '51:Copyright 2018 Jerome Shidel',0
+db '52:FDIMPLES provides an easy-to-use text user interface to the FDINST package manager command-line utility.',0
+
+db '53:Show this help screen.',0
+db '54:Show file list in package description.',0
+db '55:[DO NOT] Automatically select updatable packages.',0
+db '56:Create package list files for use with FDI build utility.',0
+db '57:Reconfigure FDI installer BASE and ALL package lists.',0
+
+db '58:User interface keyboard commands:',0
+db '59:Toggle selection.',0
+db '60:Change what section or button has focus.',0
+db '61:Move focus up or down an item, also Page Up/Down.',0
+db '62:Quit without making or saving changes.',0
+db '63:Display help screen.',0
+db '64:Toggle the status of all updatable packages in group.',0
+db '65:Toggle the status of all updatable packages.',0
+db '66:View pending changes.',0
+db '67:Clear all pending changes.',0
+db '68:Write a package list customization file that contains changes.',0
+db '69:Read a package list customization file and apply changes.',0
+
 
 { Package ID's Are all 100 }
 

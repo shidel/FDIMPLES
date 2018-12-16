@@ -5,7 +5,7 @@
 2:Por favor, espera...
 3:en espera
 4:Pulse una tecla...
-
+5:grupo
 6:paquete multimedia no encontrado!
 7:Solo se muestran los paquetes instalados.
 8:no se puede encontrar el administrador de paquetes FDINST.
@@ -44,10 +44,35 @@
 35:aceptar
 36:Cancelar
 
-{Mensajes de la barra de estado}
-37:grupo
-38:Paquete
+{M s texto de la barra de estado}
 39:t¡tulo
+38:versi¢n
+39:uso:
+40:[opciones]
+
+{Mensajes de ayuda y similares}
+50:Lanzado bajo la Licencia P£blica General de GNU, Versi¢n 2.0
+51:Copyright 2018 Jerome Shidel
+52:FDIMPLES proporciona una interfaz de usuario de texto f cil de usar para la utilidad de l¡nea de comandos del administrador de paquetes FDINST.
+
+53:Muestra esta pantalla de ayuda.
+54:Mostrar lista de archivos en la descripci¢n del paquete.
+55:[NO] selecciona autom ticamente los paquetes actualizables.
+56:Cree los archivos de la lista de paquetes para usar con la utilidad de compilaci¢n FDI.
+57:Reconfigure FDI para instalar las listas de paquetes BASE y ALL.
+
+58:Comandos de teclado de la interfaz de usuario:
+59:Alternar selecci¢n.
+60:Cambia qu‚ secci¢n o bot¢n tiene el foco.
+61:Mueve hacia arriba o hacia abajo un elemento, tambi‚n Page Up / Down.
+62:Salir sin hacer o guardar cambios.
+63:Mostrar pantalla de ayuda.
+64:Alterna el estado de todos los paquetes actualizables en el grupo.
+65:Alterna el estado de todos los paquetes actualizables.
+66:Ver cambios pendientes.
+67:Borrar todos los cambios pendientes.
+68:Escriba un archivo de personalizaci¢n de la lista de paquetes que contenga cambios.
+69:Lee un archivo de personalizaci¢n de la lista de paquetes y aplica los cambios.
 
 {Los ID de paquete son los 100}
 100:=­Instalado!

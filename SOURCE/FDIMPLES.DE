@@ -5,7 +5,7 @@
 2:Bitte stehen Sie bereit...
 3:Bereithalten
 4:drcke eine taste...
-
+5:gruppe
 6:Paketmedium wurde nicht gefunden!
 7:Es werden nur installierte Pakete angezeigt.
 8:Paket-Manager FDINST kann nicht gefunden werden.
@@ -41,11 +41,35 @@
 35:ausfhren
 36:stornieren
 
-{Statusleistenmeldungen}
-37:gruppe
-38:paket
+{Mehr Statusleistentext}
 39:titel
+38:Version
+39:verwenden:
+40:[Optionen]
 
+{Hilfemeldungen und dergleichen}
+50:Ver”ffentlicht unter der GNU General Public License, Version 2.0
+51:Copyright 2018 Jerome Shidel
+52:FDIMPLES bietet eine benutzerfreundliche Textbenutzeroberfl„che fr das Befehlszeilenprogramm des FDINST-Paketmanagers.
+
+53:Zeigt diesen Hilfebildschirm an.
+54:Dateiliste in Paketbeschreibung anzeigen.
+55:[NICHT ausw„hlen] Aktualisierbare Pakete automatisch ausw„hlen.
+56:Erstellen Sie Paketlistendateien zur Verwendung mit dem FDI-Build-Dienstprogramm.
+57:Rekonfigurieren Sie FDI, um die Paketlisten von BASE und ALL zu installieren.
+
+58:Tastaturbefehle der Benutzeroberfl„che:
+59:Auswahl umschalten.
+60:ndern Sie den Bereich oder die Schaltfl„che, die den Fokus hat.
+61:Ein Element nach oben oder unten bewegen, auch Bild auf / ab.
+62:Beenden, ohne nderungen vorzunehmen oder zu speichern.
+63:Hilfebildschirm anzeigen.
+64:Status aller aktualisierbaren Pakete in der Gruppe umschalten.
+65:Status aller aktualisierbaren Pakete umschalten.
+66:Zeigen Sie ausstehende nderungen an.
+67:Alle anstehenden nderungen l”schen.
+68:Schreiben Sie eine Anpassungsdatei fr die Paketliste, die nderungen enth„lt.
+69:Lesen Sie eine Anpassungsdatei fr die Paketliste und bernehmen Sie die nderungen.
 {Paket-IDs sind alle 100}
 100:=Eingerichtet!
 100:BASE=FreeDOS Base

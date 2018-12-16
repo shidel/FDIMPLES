@@ -5,7 +5,7 @@
 2:Bonvolu stari...
 3:Rezulto
 4:Premu slosilon...
-
+5:Grupo
 6:Pako-amaskomunikiloj ne troveblas!
 7:Nur instalitaj pakoj estas montritaj.
 8:nekapabla trovi pakajministrajon FDINST.
@@ -44,10 +44,35 @@
 35:Akceptu
 36:Nuligi
 
-{Stata Trinkejo Mesagoj}
-37:Grupo
-38:Pako
+{Pli Stata Trinkejo Teksto}
 39:Titolo
+38:versio
+39:uzu:
+40:[ebloj]
+
+{Helpo Mesagoj kaj tiaj}
+50:Liberigita sub la Generala Publika Permesilo GNU, Versio 2.0
+51:Kopirajto 2018 Jerome Shidel
+52:FDIMPLES provizas facilan uzan tekstan interfacon al la FDINST-paka administraja komerca linio.
+
+53:Montru ci tiun helpan ekranon.
+54:Montru dosierliston en paka priskribo.
+55:[NE] Automate elektu gisdatigitajn pakajojn.
+56:Krei pakajn listajn dosierojn por uzi kun FDI-konstruajo-utileco.
+57:Restarigu FDI por instali BASE kaj ALL pakajn listojn.
+
+58:Uzaj interfacaj komputilaj komputiloj:
+59:Baskuligi elekton.
+60:Sangi, kion sekcio au butono havas fokuson.
+61:Movu au malsupren eron, ankau Pagon Supre / Suben.
+62:Forigu sen sangi au konservi sangojn.
+63:Montri helpan ekranon.
+64:Baskuligu la statuson de ciuj gisdatigeblaj pakoj en grupo.
+65:Baskuligu la statuson de ciuj gisdatigeblaj pakoj.
+66:Rigardu pritraktatajn sangojn.
+67:Klara ciuj pritraktataj sangoj.
+68:Skribu pakon listo de personigo-dosiero kiu enhavas sangojn.
+69:Legu pakon-listigo de personigo kaj apliki sangojn.
 
 {Pakaj IDoj Estas ciuj 100}
 100:=Instalita!

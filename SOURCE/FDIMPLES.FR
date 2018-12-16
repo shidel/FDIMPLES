@@ -5,7 +5,7 @@
 2:S'il vous plaŒt veille...
 3:veille
 4:Appuyez sur une touche...
-
+5:groupe
 6:Paquet m‚dia non trouv‚!
 7:Seuls les packages install‚s sont affich‚s.
 8:impossible de localiser le gestionnaire de paquets FDINST.
@@ -44,10 +44,35 @@
 35:accepter
 36:annuler
 
-{Messages de la barre d'‚tat}
-37:groupe
-38:forfait
+{Plus de texte dans la barre d'‚tat}
 39:titre
+38:version
+39:utilisation:
+40:[options]
+
+{Messages d'aide et autres}
+50:publi‚ sous la licence publique g‚n‚rale GNU, version 2.0
+51:Copyright 2018 J‚r“me Shidel
+52:FDIMPLES fournit une interface texte utilisateur facile … utiliser pour l'utilitaire de ligne de commande du gestionnaire de packages FDINST.
+
+53:Afficher cet ‚cran d'aide.
+54:Afficher la liste des fichiers dans la description du paquet.
+55:[NE PAS FAIRE] S‚lectionner automatiquement les paquets pouvant ˆtre mis … jour.
+56:Cr‚er des fichiers de liste de paquets … utiliser avec l'utilitaire de construction FDI.
+57:Reconfigurer les listes de paquets BASE et ALL du programme d'installation FDI.
+
+58:Commandes du clavier de l'interface utilisateur:
+59:Basculer la s‚lection.
+60:Modifiez la section ou le bouton s‚lectionn‚.
+61:D‚place le focus vers le haut ou le bas d'un ‚l‚ment, ainsi que vers le haut / le bas.
+62:Quittez sans apporter ni enregistrer de modifications.
+63:Afficher l'‚cran d'aide.
+64:Basculer le statut de tous les packages pouvant ˆtre mis … jour dans le groupe.
+65:Basculer le statut de tous les packages pouvant ˆtre mis … jour.
+66:Afficher les modifications en attente.
+67:Effacer toutes les modifications en attente.
+68:Ecrire dans le fichier de personnalisation de la liste de packages contenant les modifications.
+69:Lire un fichier de personnalisation de liste de paquets et appliquer les modifications.
 
 {Les ID de paquet sont tous 100}
 100:=install‚!

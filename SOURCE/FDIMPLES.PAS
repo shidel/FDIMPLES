@@ -47,6 +47,8 @@ uses QDos, QCrtNM, QCrt, QStrings, Language, FileIO;
 {$I VERSION.INC}
 
 const
+    { App Name and Title are not in translation system.
+      Nor, should they be translated into any other language. }
     AppName = 'FDIMPLES';
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     ALLPackages = 'FDPLFULL.LST';
@@ -2194,51 +2196,50 @@ end;
 
 procedure HelpNotice;
 begin
-    HelpWriteLn('Released under the GNU General Public License, Version 2.0');
-    HelpWriteLn('Copyright 2016 Jerome Shidel');
+    HelpWriteLn(NLS(nlsHelp));
+    HelpWriteLn(NLS(nlsHelp + 1));
     HelpWriteLn('');
-    HelpWriteLn(AppName + ' provides an easy-to-use text user interface to ' +
-        'the FDINST package manager command-line utility.');
+    HelpWriteLn(NLS(nlsHelp + 2));
     HelpWriteLn('');
 end;
 
 procedure HelpSwitches;
 begin
     if FDIMode then exit;
-    HelpWriteLn('usage: '+ GetExeBase + ' [options]');
+    HelpWriteLn(NLS(nlsUsage) + ' '+ GetExeBase + ' ' + NLS(nlsOptions));
     HelpWriteLn('');
-    HelpOption (SwitchChar + 'HELP,' + SwitchChar + '?',  'Show this help screen.');
-    HelpOption (SwitchChar + '[NO]FILES',  '[DO NOT] Show file list in package description.');
-    HelpOption (SwitchChar + '[NO]UPDATE', '[DO NOT] Automatically select updatable packages.');
+    HelpOption (SwitchChar + 'HELP,' + SwitchChar + '?',  NLS(nlsHelp + 3));
+    HelpOption (SwitchChar + '[NO]FILES',  NLS(nlsHelp + 4));
+    HelpOption (SwitchChar + '[NO]UPDATE', NLS(nlsHelp + 5));
     HelpWriteLn('');
-    HelpOption (SwitchChar + 'LISTS',    'Create package list files for use with FDI build utility.');
-    HelpOption (SwitchChar + 'CONFIG',   'Reconfigure FDI installer BASE and ALL package lists.');
+    HelpOption (SwitchChar + 'LISTS',    NLS(nlsHelp + 6));
+    HelpOption (SwitchChar + 'CONFIG',   NLS(nlsHelp + 7));
     HelpWriteLn('');
 end;
 
 procedure HelpKeyboard;
 begin
-    HelpWriteLn('User interface keyboard commands:');
+    HelpWriteLn(NLS(nlsHelp + 8));
     HelpWriteLn('');
-    HelpOption ('SPACE,ENTER', 'Toggle selection.');
-    HelpOption ('TAB,LEFT,RIGHT', 'Change what section or button has focus.');
-    HelpOption ('UP,DOWN',  'Move focus up or down an item, also Page Up/Down.');
-    HelpOption ('ESC',  'Quit without making or saving changes.');
+    HelpOption ('SPACE,ENTER', NLS(nlsHelp + 9));
+    HelpOption ('TAB,LEFT,RIGHT', NLS(nlsHelp + 10));
+    HelpOption ('UP,DOWN',  NLS(nlsHelp + 11));
+    HelpOption ('ESC',  NLS(nlsHelp + 12));
     if not HelpCmd then HelpWriteLn('');
-    HelpOption ('h,H,F1', 'Display help screen.');
+    HelpOption ('h,H,F1', NLS(nlsHelp + 13));
     HelpWriteLn('');
     if RunMode = rmStandAlone then begin
-        HelpOption ('u', 'Toggle the status of all updatable packages in group.');
-        HelpOption ('U', 'Toggle the status of all updatable packages.');
+        HelpOption ('u', NLS(nlsHelp + 14));
+        HelpOption ('U', NLS(nlsHelp + 15));
         HelpWriteLn('');
     end;
     if (RunMode = rmStandAlone) or FDIMode then
-        HelpOption ('v,V', 'View pending changes.');
-    HelpOption ('c,C', 'Clear all pending changes.');
+        HelpOption ('v,V', NLS(nlsHelp + 16));
+    HelpOption ('c,C', NLS(nlsHelp + 17));
     HelpWriteLn('');
     if (RunMode = rmStandAlone) or FDIMode then begin
-        HelpOption ('w,W', 'Write a package list customization file that contains changes.');
-        HelpOption ('r,R', 'Read a package list customization file and apply changes.');
+        HelpOption ('w,W', NLS(nlsHelp + 18));
+        HelpOption ('r,R', NLS(nlsHelp + 19));
         HelpWriteLn('');
     end;
 end;
