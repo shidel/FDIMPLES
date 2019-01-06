@@ -15,6 +15,7 @@ if not exist FDIMPLES.EXE goto TPFailed
 
 if not exist ..\BIN\NUL mkdir ..\BIN>NUL
 copy FDIMPLES.* ..\BIN\ >NUL
+copy ..\CONTRIB\LANGUAGE\FDIMPLES.* ..\BIN\ >NUL
 del ..\BIN\*.INC
 del ..\BIN\*.PAS
 
