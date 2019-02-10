@@ -676,7 +676,7 @@ begin
             Ver := Trim(PullStr(#$09, B));
             Desc := Trim(PullStr(#$09, B));
             MD5 := Trim(PullStr(#$09, B));
-            if Ucase(Name) = 'FD-REPOV1' then begin
+            if (Ucase(Name) = 'FD-REPOV1') and (AGroup^.Title = nil) then begin
                 AGroup^.Title := StrPtr(WCase(Desc));
             end;
             X := AGroup^.Items;
@@ -1088,6 +1088,20 @@ begin
         Group^.State := psPartial;
 end;
 
+procedure CacheGroupInitial;
+begin
+    if Assigned(Group) and (Group^.First) then begin
+        CacheGroup(Group);
+        Package := Group^.Items;
+        while Assigned(Package) do begin
+            if Not Assigned(Package^.Items) then
+                SearchForData(False);
+            Package := Package^.Next;
+        end;
+{        VerifyGroupState; }
+    end;
+end;
+
 procedure Init;
 var
    S : TSearchRec;
@@ -1248,19 +1262,16 @@ begin
     end;
 
     Group := GroupFirst;
+
     While Assigned(Group) do begin
-        CacheGroup(Group);
-        Package := Group^.Items;
-        while Assigned(Package) do begin
-            if Not Assigned(Package^.Items) then
-                SearchForData(False);
-            Package := Package^.Next;
-        end;
         VerifyGroupState;
         Group := Group^.Next;
     end;
 
     Group := GroupFirst;
+
+    CacheGroupInitial;
+
     GroupTop := GroupFirst;
     GroupBottom := nil;
     Package := nil;
@@ -1827,6 +1838,7 @@ end;
 
 procedure GroupDown(T:integer);
 begin
+
     While (T > 0) and (Group <> GroupLast) do begin
         Dec(T);
         if GroupBottom = Group then begin
@@ -1835,6 +1847,7 @@ begin
         end;
         Group := Group^.Next;
     end;
+    CacheGroupInitial;
     PackageFirst := nil;
     DrawGroups;
 end;
