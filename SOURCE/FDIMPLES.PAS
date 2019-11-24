@@ -1,9 +1,14 @@
 {
-    Copyright 2018 Jerome Shidel
+    Copyright 2019 Jerome Shidel
     Released Under GPL v2.0 License.
 }
 
 {
+
+    Program information and behaviour when running within FDI during the
+    installation of FreeDOS is different then running in stand alone mode.
+    Some notes on behaviour during this time.
+
     On Startup, useful environment variables:
 
         OS_NAME     = Operating system platform name for installation.
@@ -35,9 +40,11 @@
 
 { Original Prior to 0.9.8 Memory Settings }
 { M 50000,51200,204800} (* Memory: Largest Stack, 100K Minimum / Maximum *)
-
 { Post 0.9.7 Memory settings }
-{$M 32768,51200,102400}
+{ M 32768,51200,102400}
+
+{ Post 0.9.16 Memory settings }
+{$M 16384,51200,128000}
 
 {$I QCRT.DEF}
 program Test;
@@ -53,7 +60,7 @@ const
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     ALLPackages = 'FDPLFULL.LST';
     BASEPackages = 'FDPLBASE.LST';
-    LoMem = 10240;
+    LoMem = 5120;
     NoScroll = 1;
     MinTicks = 7;
 
@@ -61,6 +68,7 @@ const
     TickerMod = 3;
     TickGrpLag = 2;
     TickPkgLag = 4;
+    IdleWait = 18 * 4;
 
 type
     TStates = (psNone, psPartial, psFull, psUpgrade, psReplace);
@@ -120,6 +128,7 @@ var
     PackageInfo : string;
     TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
     TickerA, TickerB : integer;
+    IdleTick, IdleCount : LongInt;
 
     StatPhase : integer;
 
@@ -196,6 +205,23 @@ const
         Remv:$4E
     );
 
+procedure ResetIdler;
+begin
+    IdleTick := TimerTick;
+    IdleCount:= 0;
+end;
+
+procedure Idler;
+begin
+    if IdleCount > IdleWait then
+        asm Hlt end
+    else if IdleTick <> TimerTick then begin
+        IdleTick := TimerTick;
+        Inc(IdleCount);
+    end;
+
+end;
+
 procedure StandBy;
 const
     Ticks : string[4] = '/-\|';
@@ -203,6 +229,7 @@ const
 var
     WMin, WMax, X, Y, A : integer;
 begin
+    ResetIdler;
     if RunMode = rmFDI then exit;
     if LastTick = TimerTick then exit;
     LastTick := TimerTick;
@@ -1003,6 +1030,7 @@ begin
     Close(F);
     if Keypressed then begin
         Package^.Skipped := true;
+        ResetIdler;
     end;
     TryLST := X;
 end;
@@ -2182,8 +2210,9 @@ begin
                 TextAttr := $0A;
                 WriteRawPStr(NLS(nlsPressAKey));
                 TextAttr := A;
-                while not Keypressed do asm Hlt; end;
+                Idler;
                 While KeyPressed do ReadKey;
+                ResetIdler;
                 GotoXY(1, WhereY);
             end;
             WriteRawPStr(S3);
@@ -2310,10 +2339,12 @@ begin
         HelpSwitches;
         HelpKeyboard;
         ClearEvent(E);
+        ResetIdler;
         While E.What = evNothing do begin
-            asm HLT end;
+            Idler;
             GetEvent(E);
         end;
+        ResetIdler;
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
                 $001b : Quit := True;
@@ -2389,10 +2420,12 @@ begin
         end;
         HelpWriteLn('');
         ClearEvent(E);
+        ResetIdler;
         While E.What = evNothing do begin
-            asm HLT end;
+            Idler;
             GetEvent(E);
         end;
+        ResetIdler;
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
                 $001b : Quit := True;
@@ -2518,10 +2551,12 @@ begin
             EF := 0;
         if EF = 0 then begin
             ClearEvent(E);
+            ResetIdler;
             While E.What = evNothing do begin
-                asm HLT end;
+                Idler;
                 GetEvent(E);
             end;
+            ResetIdler;
         end else begin
             E.What := evKeyDown;
             E.KeyCode := EF;
@@ -2727,8 +2762,9 @@ begin
         DrawStatus(Tab);
         ClearEvent(E);
         Attempt := True;
+        ResetIdler;
         While (E.What = evNothing) do begin
-            asm HLT end;
+            Idler;
             GetEvent(E);
             if (E.What = evNothing) and Assigned(Package) and Package^.Skipped and Attempt then begin
                 SearchForData(True);
@@ -2742,6 +2778,7 @@ begin
             if (E.What = evNothing) then
                 DrawStatus(-1);
         end;
+        ResetIdler;
         if E.What and evKeyDown = evKeyDown then
             case E.KeyCode of
                 $0003 : begin
