@@ -1,23 +1,27 @@
-; Copyright 2017 Jerome Shidel
+; Copyright 2019 Jerome Shidel
 ; Released Under GPL v2.0 License.
 
-; QCrt 9.0.
+; QCrt 9.1
 
 ; For DOS, Nasm and Pascal 16-bit edition.
 
 ; This assembly language library uses the pascal calling convention. All calls
 ; are far calls. Data parameters passed to procedure and functions are pushed
 ; onto the stack in reverse order and are popped automatically by the function
-; or procedure on their return. Simple return values are usually set in AL, AX
-; or in the DX:AX pair. DS, SS, SP, BP are preserved. However, the state of all
-; other registers are not guaranteed. So, if calling this library from a
-; language other than Pascal, such as from more assembly code, you must take
-; care of preserving any registers and values you wish to retain yourself!
+; or procedure on their return. Simple function return values are usually set
+; in AL, AX or in the DX:AX pair. DS, SS, SP, BP are preserved. However, the
+; state of all other registers are not guaranteed. So, if calling this library
+; from a language other than Pascal, such as from more assembly code, you must
+; take care of preserving any registers and values you wish to retain yourself!
 
-%idefine QCrt 9.0
+%idefine QCrt 9.1
 
-%ifidni TargetOS, DOS
-	use16
+%ifndef TargetOS
+    %idefine TargetOS DOS
+%endif
+
+%ifndef TargetCPU
+    %idefine TargetCPU 8086
 %endif
 
 %ifndef QDefines
@@ -54,6 +58,24 @@ FirstAttr:
 DelayData:
 	DW 0
 
+%ifdef EnableMouse
+    MouseMask:
+        DW 0
+    MouseHandler:
+        DW 0, 0
+    MouseLastState:
+        DW 0, 0, 0 ; Button State, X, Y
+    MouseFrozen:
+        DB 0
+    MouseCheckState:
+        DW 0, 0, 0
+    MouseShowLevel:
+        DW 0
+    MouseHiddenFlag:
+        DW 0
+
+%endif
+
 %ifidn __OUTPUT_FORMAT__, obj
 
 section Section_SHARED
@@ -73,6 +95,16 @@ section Section_SHARED
 	extern TabWidth			; : byte;		{ Spaces per tab }
 	extern ScreenMax		; : word;		{ Screen lower right coordinates }
 
+    %ifdef EnableMouse
+        extern MouseButtons     ; : integer;    { Number of buttons, 0 if no mouse }
+        extern MouseVisible     ; : boolean;    { Visible state of mouse }
+        extern MouseCellX       ; : word;       { Value to slow down movement }
+        extern MouseCellY       ; : word;       { Value to slow down movement }
+        extern MouseClickSpeed  ; : word;       { Mouse double click speed }
+        extern MouseHomeX       ; : integer;    { X Home position of mouse }
+        extern MouseHomeY       ; : integer;    { Y Home position of mouse }
+    %endif
+
 %else
 	CheckBreak: 	DB FALSE
 	CheckEOF: 		DB FALSE
@@ -88,12 +120,91 @@ section Section_SHARED
 	UserFontHeight:	DB 0
 	UserFontPtr:	DD 0
 	TabWidth:		DB 0
+    %ifdef EnableMouse
+        MouseButtons    DB 0
+        MouseVisible    DB FALSE
+        MouseCellX      DW 0
+        MouseCellY      DW 0
+        MouseClickSpeed DW 0
+        MouseHomeX      DB 0
+        MouseHomeY      DB 0
+    %endif
 
 %endif
 
 section Section_CODE
 
 ; ------------------- Internal Functions; Don't call them directly !!!!
+
+%ifdef EnableMouse
+    ; Mouse Interrupt Handler Needs to be able to find program data segment
+    MouseDS:
+        dw 0
+%endif
+
+%imacro PreWriteXY 0
+    %ifdef EnableMouse
+        pushf
+        cli
+        push    ax
+        push    bx
+        mov     ax, [CurrentXY]
+        mov     bl, [MouseLastState + 2]
+        mov     bh, [MouseLastState + 4]
+        cmp     ax, bx
+        jne     %%Safe
+        mov     [MouseHiddenFlag], byte TRUE
+        call    MouseHidePointer
+    %%Safe:
+        pop     bx
+        pop     ax
+        popf
+    %endif
+%endmacro
+
+%imacro PreWrite 0
+    %ifdef EnableMouse
+        pushf
+        cli
+        push    ax
+        mov     [MouseHiddenFlag], byte TRUE
+        call    MouseHidePointer
+        pop     ax
+        popf
+    %endif
+%endmacro
+
+%imacro PostWriteXY 0
+    %ifdef EnableMouse
+        pushf
+        cli
+        push    ax
+        mov     al, [MouseHiddenFlag]
+        mov     [MouseHiddenFlag], byte FALSE
+        cmp     al, TRUE
+        jne     %%Safe
+        call    MouseShowPointer
+    %%Safe:
+        pop     ax
+        popf
+     %endif
+%endmacro
+
+%imacro PostWrite 0
+    %ifdef EnableMouse
+        pushf
+        cli
+        push    ax
+        mov     al, [MouseHiddenFlag]
+        mov     [MouseHiddenFlag], byte FALSE
+        cmp     al, TRUE
+        call    MouseShowPointer
+    %%Safe:
+        pop     ax
+        popf
+    %endif
+%endmacro
+
 ; Internal Crt Variable Data Initialization, called at any video mode change
 
 InitCrtData:
@@ -222,7 +333,7 @@ MoveCursorNext:
 	je		.InsideWindow
 	sub		dh, bh
 	mov		[CurrentY], dh
-	xcall LineFeed
+	xcall   LineFeed
 .InsideWindow:
 	call	MoveCursorMaybe
 ret
@@ -230,6 +341,8 @@ ret
 ; internal Write Character to Screen
 WriteRawCrtChar:
 	pushy   ax, bx, cx, dx
+    PreWriteXY
+
 	%ifdef DVSupport
 		mov		ah, [DirectVideo]
 		cmp		ah, TRUE
@@ -251,9 +364,11 @@ WriteRawCrtChar:
 		mov		cx, 0x0001
 		int		0x10
 	%endif
-	.Done:
-		call	MoveCursorNext
-		poppy	dx, cx, bx, ax
+
+.Done:
+    PostWriteXY
+    call	MoveCursorNext
+	poppy	dx, cx, bx, ax
 ret
 
 ; internal Font setting routine
@@ -310,6 +425,265 @@ SetFontMode:
 .Done:
 ret
 
+%ifdef EnableMouse
+
+SwapMouseHandler:
+    mov     ax, [MouseButtons]
+    cmp     ax, 0x0000
+    je      .NoMouse
+    push    es
+
+    mov     dx, [MouseHandler+2]
+    push    dx
+    pop     es
+    mov     dx, [MouseHandler]
+    mov     cx, [MouseMask]
+
+    mov     ax, 0x0014
+    int     0x33
+
+    mov     [MouseMask], cx
+    mov     [MouseHandler], dx
+    push    es
+    pop     dx
+    mov     [MouseHandler+2], dx
+
+    pop     es
+.NoMouse:
+ret
+
+MouseEventHandler:
+    ;    AX = Event Flag
+    ;    BX = Button State
+    ;    CX = X coor
+    ;    DX = Y Coor
+    ;    SI = X Movement
+    ;    DI = Y Movement
+    ;    DS = Mouse Driver Data Segment
+
+    pushf
+    cli
+    push    ds
+    push    es
+
+    %ifidn  TargetCPU, 8086
+        push    ax
+        push    bx
+        push    cx
+        push    dx
+        push    si
+        push    di
+        push    bp
+    %else
+        pusha
+    %endif
+    mov     bp, sp
+
+    mov     ax, [CS:MouseDS]
+    push    ax
+    pop     ds
+
+    push bx
+
+    ; Mouse Y
+    mov     ax, dx
+    xor     dx, dx
+    mov     bx, [MouseCellY]
+    div     bx
+    push    ax
+
+    ; Mouse X
+    mov     ax, cx
+    xor     dx, dx
+    mov     bx, [MouseCellX]
+    div     bx
+    mov     cx, ax
+    pop     dx
+    pop     bx
+
+    mov     ax, [MouseLastState + 2]
+    cmp     ax, cx
+    jne     .Changes
+    mov     ax, [MouseLastState + 4]
+    cmp     ax, dx
+    jne     .Changes
+    mov     ax, [MouseLastState]
+    cmp     ax, bx
+    je      .NoChange
+.Changes:
+
+    ; Update Software Mouse Position
+    mov     [MouseLastState], bx
+    mov     [MouseLastState + 2], cx
+    mov     [MouseLastState + 4], dx
+
+    mov     al, [MouseFrozen]
+    cmp     al, TRUE
+    je      .Frozen
+
+    mov     ax, [MouseCheckState]
+    cmp     ax, bx
+    je      .NoFreeze
+    mov     [MouseFrozen], byte TRUE
+    mov     [MouseCheckState + 2], cx
+    mov     [MouseCheckState + 4], dx
+.NoFreeze:
+    mov     [MouseCheckState], bx
+
+.Frozen:
+
+.NoChange:
+    mov     sp, bp
+    %ifidn  TargetCPU, 8086
+        pop     bp
+        pop     di
+        pop     si
+        pop     dx
+        pop     cx
+        pop     bx
+        pop     ax
+    %else
+        popa
+    %endif
+
+    pop     es
+    pop     ds
+    popf
+retf
+
+MouseHidePointer:
+    pushf
+    cli
+    mov     ax, [MouseButtons]
+    cmp     ax, 0x0000
+    je      MouseSetVisible
+    mov     ax, [MouseShowLevel]
+    dec     ax
+    mov     [MouseShowLevel], ax
+    cmp     ax, 0
+    jne     MouseSetVisible
+    mov     ax, 0x0002
+    int     0x33
+    jmp     MouseSetVisible
+
+MouseShowPointer:
+    pushf
+    cli
+    mov     ax, [MouseButtons]
+    cmp     ax, 0x0000
+    je      MouseSetVisible
+    mov     ax, [MouseShowLevel]
+    inc     ax
+    mov     [MouseShowLevel], ax
+    cmp     ax, 1
+    jne     MouseSetVisible
+    mov     ax, 0x0001
+    int     0x33
+    jmp     MouseSetVisible
+
+MouseSetVisible:
+    mov     ax, [MouseShowLevel]
+    cmp     ax, 0
+    jg      .SetVisible
+    mov     [MouseVisible], byte FALSE
+    popf
+    ret
+.SetVisible:
+    mov     [MouseVisible], byte TRUE
+    popf
+    ret
+
+MouseSetPosition:
+    pushf
+    cli
+    mov     ax, [MouseLastState + 2]
+    mov     cx, [MouseCellX]
+    mul     cx
+    mov     cx, ax
+    mov     ax, [MouseLastState + 4]
+    mov     dx, [MouseCellY]
+    mul     dx
+    mov     dx, ax
+    mov     ax, 0x0004
+    int     0x33
+    popf
+    ret
+
+MouseHome:
+    pushf
+    cli
+    mov     ax, [MouseHomeX]
+    mov     [MouseLastState + 2], ax
+    mov     ax, [MouseHomeY]
+    mov     [MouseLastState + 4], ax
+    call    MouseSetPosition
+    xor     ax, ax
+    mov     [MouseLastState], ax
+    popf
+    ret
+
+MouseInit:
+    pushf
+    cli
+    push    cs
+    pop     ax
+    mov     [MouseHandler + 2], ax
+    mov     ax, MouseEventHandler
+    mov     [MouseHandler], ax
+    mov     ax, 01111111b
+    mov     [MouseMask], ax
+    jmp     MouseActivate
+MouseReset:
+    mov     ax, [MouseButtons]
+    cmp     ax, 0x0000
+    jne      .MousePresent
+    popf
+    ret
+.MousePresent:
+    call    SwapMouseHandler
+MouseActivate:
+    mov     ax, [MouseButtons]
+    cmp     ax, 0x0000
+    je      .NoMouse
+    mov     ax, 0x0000
+    int     0x33
+    mov     [MouseFrozen], byte FALSE
+    mov     [MouseVisible], byte FALSE
+    mov     [MouseShowLevel], word 0
+    mov     [MouseCellX], word 0x0008
+    ; Check for 40 Column Display
+    mov     ax, [LastMode]
+    cmp     al, 0x01
+    ja      .NormalWidth
+    ;mov     ax, 0x0010
+    ;mov     [MouseCellX], ax
+    mov     ax, 0x08
+    mov     dx, 40 ; Decimal Column max
+    mul     dx
+    mov     dx, ax
+    dec     dx
+    xor     cx, cx ; Minimum Column
+    mov     ax, 0x0007
+    int     0x33
+.NormalWidth:
+    mov     [MouseCellY], word 0x0008
+    xor     ax, ax
+    mov     al, [ScreenMax]
+    shr     ax, 1
+    mov     [MouseHomeX], ax
+    mov     al, [ScreenMax+1]
+    shr     ax, 1
+    mov     [MouseHomeY], ax
+
+    call    SwapMouseHandler
+    call    MouseHome
+    call    MouseShowPointer
+.NoMouse:
+    popf
+    ret
+
+%endif
+
 ; ------------------------------- QCrt Interface Functions and Procedures
 
 ; function InitCrt : boolean; external;
@@ -322,6 +696,61 @@ xfunction InitCrt, boolean
 	mov		[CheckEOF], byte FALSE
 	mov		[Check101Key], byte FALSE
 	mov		[TabWidth], byte 0x08
+
+	%ifdef EnableMouse
+        push    ds
+        pop     ax
+        mov     [cs:MouseDS], ax
+
+        mov     [MouseButtons], word 0x0000
+        mov     [MouseVisible], byte FALSE
+        mov     [MouseShowLevel], word 0
+        mov     [MouseClickSpeed], word 0x0002
+
+        ; first test valid Mouse Interrupt Vector
+        push    es
+        push    di
+        mov     ax, 0x0033
+        mov     cx, 0x0004
+        mul     cx
+        mov     di, cx
+        xor     cx, cx
+        mov     ax, [es:di + 2]
+        mov     bx, [es:di]
+        cmp     ax, cx
+        jne     .MouseIRQTest
+        cmp     bx, cx
+        je      .MouseFailed
+    .MouseIRQTest:
+        push    ax
+        pop     es
+        mov     al, [es:bx]
+        cmp     al, 0xcf
+        jne     .MouseCheck
+    .MouseFailed:
+        pop     di
+        pop     es
+        jmp     .NoMousePresent
+    .MouseCheck:
+        pop     di
+        pop     es
+        xor     ax, ax
+        int     0x33
+        cmp     ax, 0xffff
+        jne     .NoMousePresent
+        mov     ax, 0x0002
+        cmp     bx, 0xffff
+        je      .MousePresent
+        mov     ax, bx
+        cmp     bx, 0x0000
+        jne     .MousePresent
+        mov     ax, 0x0001
+    .MousePresent:
+        mov     [MouseButtons], ax
+    .NoMousePresent:
+
+    %endif
+
 	; Read ega 814 font and set as default user font
 	%ifdef DirectVideoOnly
 		%warning "Default UserFontPtr set to Nil"
@@ -359,12 +788,29 @@ xfunction InitCrt, boolean
 	mov		al, [TextAttr]
 	mov		[FirstAttr], al
 
+    %ifdef EnableMouse
+        call    MouseInit
+    %endif
+
 	mov		ax, TRUE
 	cmp		ax, TRUE
 xret
 
 ; procedure DoneCrt;
 xprocedure DoneCrt
+    %ifdef EnableMouse
+        mov     ax, [MouseButtons]
+        cmp     ax, 0x0000
+        je      .NoMouse
+        call    MouseHidePointer
+        call    SwapMouseHandler
+        xor     ax, ax
+        mov     [MouseButtons], ax
+        ; mov     ax, 0x0000
+        int     0x33
+    .NoMouse:
+    %endif
+
 	mov		al, [FirstAttr]
 	mov		[TextAttr], al
 	mov		ax, [FirstMode]
@@ -381,6 +827,7 @@ xprocedure DoneCrt
 .ValidCursor:
 	mov		[DirectVideo], byte FALSE
 	call  	MoveCursorNow
+	pushcall NoSound
 xret
 
 ; function KeyPressed : boolean; external;
@@ -438,6 +885,9 @@ xprocedure TextMode, 2
 	pop		ax
 	call	SetFontMode
 	call 	InitCrtData
+	%ifdef EnableMouse
+	    call MouseReset
+	%endif
 xret
 
 ; procedure Window(X1, Y1, X2, Y2 : byte); external;
@@ -890,26 +1340,31 @@ xret
 ; -------- These functions require Direct and BIOS level versions ---------
 ; procedure ScrollUp(Rows :byte); external;
 xprocedure ScrollUp, 2
+    PreWrite
 	mov		ah, 6
 	mov		al, [STACKBP + 0]
 	mov		bh, [TextAttr]
 	mov		cx, [WindMin]
 	mov		dx, [WindMax]
 	int		0x10
+	PostWrite
 xret
 
 ; procedure ScrollDown(Rows :byte); external;
 xprocedure ScrollDown, 2
+    PreWrite
 	mov		ah, 7
 	mov		al, [STACKBP + 0]
 	mov		bh, [TextAttr]
 	mov		cx, [WindMin]
 	mov		dx, [WindMax]
 	int		0x10
+	PostWrite
 xret
 
 ; procedure ClrScr; external;
 xprocedure ClrScr
+    PreWrite
 	mov		ax, 0x0600
 	mov		bh, [TextAttr]
 	mov		cx, [WindMin]
@@ -919,10 +1374,12 @@ xprocedure ClrScr
 	push 	ax
 	push	ax
 	xcall 	GotoXY
+	PostWrite
 xret
 
 ; procedure ClrEol; external;
 xprocedure ClrEol
+    PreWrite
 	mov		ax, 0x0600
 	mov		bh, [TextAttr]
 	mov		cx, [WindMin]
@@ -933,10 +1390,12 @@ xprocedure ClrEol
 	mov		dx, [WindMax]
 	mov		dh, ch
 	int		0x10
+	PostWrite
 xret
 
 ; procedure InsLine; external;
 xprocedure InsLine
+    PreWrite
 	mov		ax, 0x0701
 	mov		bh, [TextAttr]
 	mov		cx, [WindMin]
@@ -944,10 +1403,12 @@ xprocedure InsLine
 	mov		bl, [CurrentY]
 	add		ch, bl
 	int		0x10
+	PostWrite
 xret
 
 ; procedure DelLine; external;
 xprocedure DelLine
+    PreWrite
 	mov		ax, 0x0601
 	mov		bh, [TextAttr]
 	mov		cx, [WindMin]
@@ -955,10 +1416,12 @@ xprocedure DelLine
 	mov		bl, [CurrentY]
 	add		ch, bl
 	int		0x10
+	PostWrite
 xret
 
 ; procedure InsChar; external;
 xprocedure InsChar
+    PreWrite
 	mov		dl, [CurrentX]
 	push	dx
 	mov		ax, [WindMin]
@@ -995,10 +1458,12 @@ xprocedure InsChar
 	mov		bl, [TextAttr]
 	mov		cx, 0x0001
 	int		0x10
+	PostWrite
 xret
 
 ; procedure DelChar; external;
 xprocedure DelChar
+    PreWrite
 	mov		al, [CurrentX]
 	push 	ax
 	mov		dx, [WindMin]
@@ -1037,10 +1502,12 @@ xprocedure DelChar
 	pop		ax
 	mov		[CurrentX], al
 	call	MoveCursorMaybe
+	PostWrite
 xret
 
 ; procedure InsColumn; external;
 xprocedure InsColumn
+    PreWrite
 	mov		dh, [CurrentY]
 	push 	dx
 	mov		cx, [WindMax]
@@ -1060,10 +1527,12 @@ xprocedure InsColumn
 	pop		dx
 	mov		[CurrentY], dh
 	call	MoveCursorMaybe
+	PostWrite
 xret
 
 ; procedure DelColumn; external;
 xprocedure DelColumn
+    PreWrite
 	mov		dh, [CurrentY]
 	push 	dx
 	mov		cx, [WindMax]
@@ -1083,6 +1552,7 @@ xprocedure DelColumn
 	pop		dx
 	mov		[CurrentY], dh
 	call	MoveCursorMaybe
+	PostWrite
 xret
 
 ; procedure ScrollLeft(Columns :byte); external;
@@ -1116,6 +1586,155 @@ xprocedure ScrollRight, 2
 	pop		dx
 	mov		[CurrentX], dl
 xret
+
+; ----- Mouse procedures and functions
+
+%ifdef EnableMouse
+
+; procedure MouseHide; external;
+xprocedure MouseHide
+    call MouseHidePointer
+xret
+
+; procedure MouseHide; external;
+xprocedure MouseShow
+    call MouseShowPointer
+xret
+
+; procedure GotoXY(X, Y : byte); external;
+xprocedure MouseGotoXY, 4
+    pushf
+    cli
+	mov		al, [STACKBP + 2]
+	mov		ah, [STACKBP + 0]
+	dec		al
+	dec		ah
+	; bounds checking
+	mov		bx, [WindMax]
+	mov		cx, [WindMin]
+	sub		bh, ch
+	sub		bl, cl
+	inc		bl
+	inc		bh
+.BadX:
+	cmp		al, bl
+	jl	 	.BadY
+	sub		al, bl
+	jmp		.BadX
+.BadY:
+	cmp		ah, bh
+	jl	 	.AllGood
+	sub		ah, bh
+	jmp		.BadY
+.AllGood:
+    mov     bl, ah
+    xor     ah, ah
+    xor     bh, bh
+	mov		[MouseLastState + 2], ax
+	mov		[MouseLastState + 4], bx
+
+.Done:
+	call 	MouseSetPosition
+	popf
+xret
+
+; function WhereX: byte; external;
+xfunction MouseWhereX, byte
+    pushf
+    cli
+    mov     ax, [MouseCheckState + 2]
+    mov     bl, [MouseFrozen]
+    cmp     bl, TRUE
+    je      .Done
+    mov     cx, [MouseLastState + 2]
+    cmp     ax, cx
+    je      .Done
+    mov     ax, cx
+    mov     [MouseCheckState + 2], ax
+.Done:
+    popf
+xret
+
+; function WhereY: byte; external;
+xfunction MouseWhereY, byte
+    pushf
+    cli
+    mov     ax, [MouseCheckState + 4]
+    mov     bl, [MouseFrozen]
+    cmp     bl, TRUE
+    je      .Done
+    mov     cx, [MouseLastState + 4]
+    cmp     ax, cx
+    je      .Done
+    mov     ax, cx
+    mov     [MouseCheckState + 4], ax
+.Done:
+    popf
+xret
+
+;function MouseMove: boolean; external;
+xfunction MouseMove, byte
+    pushf
+    cli
+    mov     al, [MouseFrozen]
+    cmp     al, TRUE
+    je      .NoChange
+    mov     ax, [MouseCheckState + 2]
+    mov     cx, [MouseLastState + 2]
+    cmp     ax, cx
+    jne     .Changed
+    mov     bx, [MouseCheckState + 4]
+    mov     dx, [MouseLastState + 4]
+    cmp     bx, dx
+    je      .NoChange
+.Changed:
+    mov     [MouseCheckState + 2], ax
+    mov     [MouseCheckState + 4], bx
+    mov     al, TRUE
+    jmp     .Done
+.NoChange:
+    mov     al, FALSE
+.Done:
+    popf
+xret
+
+;function MouseClick : boolean; external;
+xfunction MouseClick, byte
+    mov  al, False
+    mov  ah, [MouseFrozen]
+    cmp  ah, FALSE
+    je   .Done
+    mov  al, True
+.Done:
+xret
+
+;function MouseDoubleClick : boolean; external;
+xfunction MouseDoubleClick, byte
+    mov al, FALSE
+xret
+
+;function ReadMouse : integer; external;
+xfunction ReadMouse, word
+    pushf
+    cli
+    mov  ax, [MouseCheckState]
+    mov  bx, [MouseLastState]
+    cmp  ax, bx
+    jne  .StayFrozen
+    mov  [MouseFrozen], byte FALSE
+    jmp  .Done
+ .StayFrozen:
+    mov  [MouseFrozen], byte 0x01
+    mov  cx, [MouseLastState + 2]
+    mov  dx, [MouseLastState + 4]
+    mov  [MouseCheckState], bx
+    mov  [MouseCheckState + 2], cx
+    mov  [MouseCheckState + 4], dx
+.Done:
+    popf
+xret
+
+%endif
 
 SkipOverQCrt:
 %ifidni __OUTPUT_FORMAT__, bin

@@ -1,5 +1,5 @@
 {
-    Copyright 2017 Jerome Shidel
+    Copyright 2019 Jerome Shidel
     Released Under GPL v2.0 License.
 }
 
@@ -92,6 +92,17 @@ var
     TabWidth       : byte;  { Spaces per Tab Character }
     ScreenMax      : word;  { Screen Lower right coordinates }
 
+    {$IFDEF EnableMouse}
+    MouseButtons     : integer;    { Number of buttons, 0 if no mouse }
+    MouseVisible     : boolean;    { Visible state of mouse }
+    MouseCellX       : word;       { Value to slow down movement }
+    MouseCellY       : word;       { Value to slow down movement }
+    MouseClickSpeed  : word;       { Mouse double click speed }
+    MouseHomeX       : integer;    { X Home position of mouse }
+    MouseHomeY       : integer;    { Y Home position of mouse }
+    {$ENDIF}
+
+
 { Standard procedures and functions }
 procedure AssignCrt(var F : text);
 function KeyPressed : boolean;
@@ -157,6 +168,22 @@ procedure HalfCursor;
 procedure FullCursor;
 
 procedure SetCursor(Shape : Word);
+
+{$IFDEF EnableMouse}
+procedure MouseShow;
+procedure MouseHide;
+
+procedure MouseGotoXY(X, Y : byte);
+
+function MouseWhereX : byte;
+function MouseWhereY : byte;
+
+function MouseMove: boolean;
+function MouseClick : boolean;
+function MouseDoubleClick : boolean;
+function ReadMouse : integer;
+
+{$ENDIF}
 
 implementation
 
@@ -321,6 +348,19 @@ procedure ScrollRight(Columns : byte); external;
 procedure SetCursor(Shape : Word); external;
 procedure InsColumn; external;
 procedure DelColumn; external;
+
+{$IFDEF EnableMouse}
+procedure MouseShow; external;
+procedure MouseHide; external;
+procedure MouseGotoXY(X, Y : byte); external;
+function MouseWhereX : byte; external;
+function MouseWhereY : byte; external;
+function MouseMove: boolean; external;
+function MouseClick : boolean; external;
+function MouseDoubleClick : boolean; external;
+function ReadMouse : integer; external;
+
+{$ENDIF}
 
 { initialization & finalization routines }
 procedure UnitFinal;

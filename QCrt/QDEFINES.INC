@@ -15,7 +15,8 @@
 
 ; %idefine DoubleFonts          ; Not yet implemented
 
-
+; %idefine EnableMouse          ; Enable Mouse Support
+; %idefine DisableMouse         ; Disable Mouse Support (default)
 
 ; Now for all the self configuring stuff.
 
@@ -29,6 +30,18 @@
     %idefine TargetCPU 286
 %endif
 
+%ifidni TargetCPU, 8086
+	use16
+%endif
+
+%ifidni TargetCPU, 186
+	use16
+%endif
+
+%ifidni TargetCPU, 286
+	use16
+%endif
+
 %ifdef TP55
     %idefine TurboPascal55
 %endif
@@ -39,6 +52,14 @@
 
 %ifdef TurboPascal70
     %undef TurboPascal55
+%endif
+
+%ifndef EnableMouse
+    %idefine DisableMouse
+%endif
+
+%ifdef EnableMouse
+    %warning "Mouse support is enabled."
 %endif
 
 ; Configuring One's Self A Little Bit
