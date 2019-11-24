@@ -29,6 +29,8 @@ copy ..\CONTRIB\LANGUAGE\FDIMPLES.* ..\BIN\ >NUL
 del ..\BIN\*.INC
 del ..\BIN\*.PAS
 
+upx ..\BIN\*.EXE
+
 dir ..\BIN\*.*
 
 goto DONE
