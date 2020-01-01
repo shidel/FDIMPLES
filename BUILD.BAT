@@ -18,6 +18,7 @@ zip -u -9 -k -r ..\..\%APP%.ZIP NLS APPINFO
 cd ..\..
 
 zip -u -9 -k -r %APP%.ZIP SOURCE\%APP%\CONTRIB
+zip -u -9 -k -r %APP%.ZIP SOURCE\%APP%\NLS
 
 zip -u -9 -k %APP%.ZIP SOURCE\%APP%\*.*
 zip -u -9 -k %APP%.ZIP SOURCE\%APP%\QCRT\*.BAT
