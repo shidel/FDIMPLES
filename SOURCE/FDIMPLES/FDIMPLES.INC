@@ -60,7 +60,7 @@ db '40:[options]',0
 
 { Help Messages and such }
 db '50:Released under the GNU General Public License, Version 2.0',0
-db '51:Copyright 2018 Jerome Shidel',0
+db '51:Copyright 2020 Jerome Shidel',0
 db '52:FDIMPLES provides an easy-to-use text user interface to the FDINST package manager command-line utility.',0
 
 db '53:Show this help screen.',0
@@ -81,6 +81,7 @@ db '66:View pending changes.',0
 db '67:Clear all pending changes.',0
 db '68:Write a package list customization file that contains changes.',0
 db '69:Read a package list customization file and apply changes.',0
+db '70:Sleep CPU when idle.',0
 
 
 { Package ID's Are all 100 }

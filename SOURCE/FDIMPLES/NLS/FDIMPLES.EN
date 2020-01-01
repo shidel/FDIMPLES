@@ -60,7 +60,7 @@ their built-in values.
 
 { Help Messages and such }
 50:Released under the GNU General Public License, Version 2.0
-51:Copyright 2018 Jerome Shidel
+51:Copyright 2020 Jerome Shidel
 52:FDIMPLES provides an easy-to-use text user interface to the FDINST package manager command-line utility.
 
 53:Show this help screen.

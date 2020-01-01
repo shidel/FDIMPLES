@@ -215,12 +215,11 @@ end;
 procedure Idler;
 begin
     if IdleCount > IdleWait then
-        asm Hlt end
+        Idle
     else if IdleTick <> TimerTick then begin
         IdleTick := TimerTick;
         Inc(IdleCount);
     end;
-
 end;
 
 procedure StandBy;
@@ -2273,6 +2272,8 @@ begin
     HelpOption (SwitchChar + 'LISTS',    NLS(nlsHelp + 6));
     HelpOption (SwitchChar + 'CONFIG',   NLS(nlsHelp + 7));
     HelpWriteLn('');
+    HelpOption (SwitchChar + 'IDLE',   NLS(nlsHelp + 20));
+    HelpWriteLn('');
 end;
 
 procedure HelpKeyboard;
@@ -2702,6 +2703,8 @@ begin
         S := Ucase(ParamStr(I));
         if (S = SwitchChar + 'HELP') or (S = SwitchChar + '?') then
             CommandLineHelp
+        else if (S = SwitchChar + 'IDLE') then
+            IdleCPU := True
         else if (S = SwitchChar + 'LISTS') then begin
             RunMode := rmList;
             FileList := True;

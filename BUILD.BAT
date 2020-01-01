@@ -1,20 +1,30 @@
 @echo off
 
 SET APP=FDIMPLES
+
+deltree /Y bin nls doc %APP%.ZIP >NUL
+
 cd SOURCE\%APP%
 call build.bat
 cd ..\..
 
-deltree /Y bin %APP%.ZIP >NUL
 mkdir bin >NUL
 move SOURCE\%APP%\%APP%.EXE BIN\ >NUL
 upx -9 BIN\%APP%.EXE
 rem del SOURCE\%APP%\*.TPU
 rem del SOURCE\%APP%\*.OBJ
 
-zip -9 -k -r %APP%.ZIP BIN DOC
+mkdir nls
+xcopy /y SOURCE\%APP%\NLS\*.* NLS
+xcopy /y SOURCE\%APP%\CONTRIB\NLS\*.* NLS
+
+mkdir doc
+xcopy /y LICENSE doc
+xcopy /y README.MD doc
+
+zip -9 -k -r %APP%.ZIP BIN DOC NLS
 cd SOURCE\%APP%
-zip -u -9 -k -r ..\..\%APP%.ZIP NLS APPINFO
+zip -u -9 -k -r ..\..\%APP%.ZIP APPINFO
 cd ..\..
 
 zip -u -9 -k -r %APP%.ZIP SOURCE\%APP%\CONTRIB

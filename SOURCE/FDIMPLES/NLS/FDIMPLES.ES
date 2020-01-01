@@ -52,7 +52,7 @@
 
 {Mensajes de ayuda y similares}
 50:Lanzado bajo la Licencia P£blica General de GNU, Versi¢n 2.0
-51:Copyright 2018 Jerome Shidel
+51:Copyright 2020 Jerome Shidel
 52:FDIMPLES proporciona una interfaz de usuario de texto f cil de usar para la utilidad de l¡nea de comandos del administrador de paquetes FDINST.
 
 53:Muestra esta pantalla de ayuda.
