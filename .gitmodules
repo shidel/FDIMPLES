@@ -1,3 +1,3 @@
 [submodule "SOURCE/QCrt"]
-	path = SOURCE/QCrt
+	path = SOURCE/FDIMPLES/QCrt
 	url = https://github.com/LoopZ/QCrt.git

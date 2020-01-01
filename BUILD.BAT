@@ -1,7 +1,6 @@
 @echo off
 
-SET APP=SLICER
-
+SET APP=FDIMPLES
 cd SOURCE\%APP%
 call build.bat
 cd ..\..
