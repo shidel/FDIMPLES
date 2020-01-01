@@ -12,9 +12,9 @@ upx -9 BIN\%APP%.EXE
 rem del SOURCE\%APP%\*.TPU
 rem del SOURCE\%APP%\*.OBJ
 
-zip -9 -k -r %APP%.ZIP APPINFO BIN DOC
+zip -9 -k -r %APP%.ZIP BIN DOC
 cd SOURCE\%APP%
-zip -u -9 -k -r ..\..\%APP%.ZIP NLS
+zip -u -9 -k -r ..\..\%APP%.ZIP NLS APPINFO
 cd ..\..
 
 zip -u -9 -k -r %APP%.ZIP SOURCE\%APP%\CONTRIB

@@ -87,6 +87,32 @@ vstr /R 79 /c 0x2d
 if errorlevel 1 goto Done
 vstr /R 79 /c 0x2d
 dir *.exe | grep -i exe
+rem goto Done
+
+:Appinfo
+if not exist APPINFO\NUL mkdir APPINFO >NUL
+:Sticky1
+date /d | vstr /n /f ' ' 5 /n | set /p NOW=
+if "%NOW%" == "" goto Sticky1
+:Sticky2
+echo %NOW% | vstr /f '-' -2 /n | set /P MMDD=
+if "%MMDD%" == "" goto Sticky2
+:Sticky3
+echo %NOW% | vstr /f '-' 3 /n | set /P YEAR=
+if "%YEAR%" == "" goto Sticky3
+set NOW=
+:Sticky4
+echo %YEAR%-%MMDD% | vstr /s ' ' '' /n | set /p NOW=
+if "%NOW%" == "" goto Sticky4
+set YEAR=
+set MMDD=
+:Sticky5
+type version.inc | vstr /f "'" 2 | vstr /i /n | set /P VERSION=
+if "%VERSION%" == "" goto Sticky5
+
+type APPINFO.LSM | vstr /s $DATE$ "%NOW%" | vstr /s $VERSION$ "%VERSION%" /n >APPINFO\%APP%.LSM
+set NOW=
+set VERSION=
 goto Done
 
 :Error
