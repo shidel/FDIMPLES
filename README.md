@@ -6,6 +6,9 @@ Requirements:
 	286+ CPU, EGA+ Video Graphics Adapter
 	FreeDOS, DosBox or other DOS based operating system.
 
-Build Requirements:
+Minimum Build Requirements:
 	TurboPascal 7.0 for DOS
-	V8Power Tools for DOS
+	NASM 2.14.02 for DOS
+	V8Power Tools 19.12.01 for DOS
+	UPX 3.95d for DOS
+	Zip 2.3 for DOS
