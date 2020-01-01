@@ -83,7 +83,7 @@ echo.
 dir *.exe | grep -i exe
 vstr /R 79 /c 0x2d
 :NoPrev
-%TPC% /OQCRT\PASCAL /UQCRT\PASCAL /IQCRT\PASCAL %APP%.PAS
+%TPC% -M /OQCRT\PASCAL /UQCRT\PASCAL;..\%APP% /IQCRT\PASCAL;..\%APP% %APP%.PAS
 if errorlevel 1 goto Done
 vstr /R 79 /c 0x2d
 dir *.exe | grep -i exe

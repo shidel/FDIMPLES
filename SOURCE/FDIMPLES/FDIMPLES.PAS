@@ -49,7 +49,7 @@
 {$I QCRT.DEF}
 program Test;
 
-uses QDos, QCrtNM, QCrt, QStrings, Language, FileIO;
+uses QDos, QCrt, QBoxes, QEvents, QEditLn, QStrings, Language, FileIO;
 
 {$I VERSION.INC}
 
@@ -429,9 +429,9 @@ begin
             if (D.Attr and faDirectory <> faDirectory) then begin
                 P := New(PText);
                 P^.Next := nil;
-                P^.Str := StrPtr(Delimiter + copy(D.Name, 1, length(D.Name) - 4));
+                P^.Str := StrPtr(PathDelim + copy(D.Name, 1, length(D.Name) - 4));
                 {$IFDEF DEBUG}
-                Log('Installed LST File: ' + Delimiter + copy(D.Name, 1, length(D.Name) - 4));
+                Log('Installed LST File: ' + PathDelim + copy(D.Name, 1, length(D.Name) - 4));
                 {$ENDIF}
                 if Assigned(L) then
                     L^.Next := P
@@ -482,7 +482,7 @@ begin
         end;
     end else begin
         while Assigned(P) do begin
-            if PtrStr(P^.Str) = Copy(S, Pos(Delimiter, S), Length(S)) then begin
+            if PtrStr(P^.Str) = Copy(S, Pos(PathDelim, S), Length(S)) then begin
                 CheckDefault := true;
                 exit;
             end;
@@ -684,17 +684,17 @@ var
     B : String;
     C : integer;
     X : PItem;
-
+    L : String;
 begin
     if not MemCheck(LoMem) then exit;
 
     if not AGroup^.First then exit;
 
     AGroup^.First := False;
-    if GetLanguage = 'EN' then
+    if Lang = 'EN' then
         Name := FMedia + TailDelim(AGroup^.Name) + 'INDEX.LST'
     else
-        Name := FMedia + TailDelim(AGroup^.Name) + 'INDEX.' + GetLanguage;
+        Name := FMedia + TailDelim(AGroup^.Name) + 'INDEX.' + Lang;
 
     if not FileExists(Name) then exit;
 
@@ -785,7 +785,7 @@ var
     begin
         TMode := False;
 {        if FileExtension(LSM) = 'TXT' then begin }
-        if FilePath(LSM) = TailDelim(PackageInfo) then begin
+        if PathOf(LSM) = TailDelim(PackageInfo) then begin
             FreeStr(Package^.MVersion);
             Package^.MVersion := StrPtr(Trim(Version));
         end else begin
@@ -842,7 +842,7 @@ begin
     HasLang := True;
     While LPass < 2 do begin
         Inc(LPass);
-        X := Copy(LSM, 1, LastPos('.', LSM)) + GetLanguage;
+        X := Copy(LSM, 1, LastPos('.', LSM)) + Lang;
         HasLang := FileExists(X);
         if LPass = 1 then begin
             X := LSM;
@@ -1977,7 +1977,7 @@ begin
                     RSpace(Copy(PtrStr(J^.MVersion),1,20), 20), #32,
                     PtrStr(J^.Title));
                 end;
-                WriteLn(F, lcase(P^.Name + Delimiter + J^.Name));
+                WriteLn(F, lcase(P^.Name + PathDelim + J^.Name));
                 if Comments and (PtrStr(J^.Title) <> '') then begin
                     WriteLn(F);
                 end;
@@ -2023,7 +2023,7 @@ begin
                     PtrStr(J^.Title));
                 end;
                 if J^.State = psNone then S := '-' else S := '+';
-                WriteLn(F, S + ' ' + lcase(P^.Name + Delimiter + J^.Name));
+                WriteLn(F, S + ' ' + lcase(P^.Name + PathDelim + J^.Name));
                 if Comments then begin
                     WriteLn(F);
                 end;

@@ -9,6 +9,9 @@ interface
 
     uses QDos, QStrings, FileIO;
 
+    var
+        Lang : String;
+
     type
         PGroupID = ^TGroupID;
         TGroupID = record
@@ -58,7 +61,6 @@ interface
         nlsHelp                    = 50;
 
         nlsEnd                     = 90;
-
 
         nlsPackageGroup            = 100;
 
@@ -192,6 +194,8 @@ var
     I : integer;
     S : String;
 begin
+    Lang := UCase(GetEnv('LANG'));
+    if Lang = '' then Lang := 'EN';
     Groups := nil;
     OldExitProc := ExitProc;
     ExitProc := @Final;
@@ -199,11 +203,11 @@ begin
         NLSData[I] := nil;
     ReadNLS('');
     S := Copy(GetExeName, 1, LastPos('.', GetExeName));
-    if FileExists(GetExePath + S + GetLanguage) then
-        ReadNLS(GetExePath + S + GetLanguage)
+    if FileExists(GetExePath + S + Lang) then
+        ReadNLS(GetExePath + S + Lang)
     else
-    if FileExists(TailDelim(GetEnv('NLSPATH')) + S + GetLanguage) then
-        ReadNLS(TailDelim(GetEnv('NLSPATH')) + S + GetLanguage)
+    if FileExists(TailDelim(GetEnv('NLSPATH')) + S + Lang) then
+        ReadNLS(TailDelim(GetEnv('NLSPATH')) + S + Lang)
     else
     if FileExists(GetExePath + S + 'EN') then
         ReadNLS(GetExePath + S + 'EN')
