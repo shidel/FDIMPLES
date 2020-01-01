@@ -129,6 +129,7 @@ var
     TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
     TickerA, TickerB : integer;
     IdleTick, IdleCount : LongInt;
+    PackageManager : string;
 
     StatPhase : integer;
 
@@ -1144,6 +1145,16 @@ var
    PlsWait:String;
 
 begin
+    PackageManager := 'FDINST.EXE';
+    T := GetEnv('PATH') + ';' + TailDelim(GetEnv('DOSDIR')) + 'BIN';
+    while T <> '' do begin
+        M := PullStr(';', T);
+        if FileExists(TailDelim(M) + PackageManager) then begin
+            PackageManager := TailDelim(M) + PackageManager;
+            T := '';
+        end;
+    end;
+
     StatPhase := -1;
 
     PackageInfo := '';
@@ -1154,7 +1165,7 @@ begin
 
     if not FDIMode then begin
         if (FMedia <> '') and (not DirExists(FMedia)) then FMedia := '';
-        if Not FileExists(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE') then begin
+        if Not FileExists(PackageManager) then begin
             WriteLn(NLS(nlsNoFDINST));
             Halt(100);
         end;
@@ -2119,7 +2130,7 @@ begin
         Assign(T, TailDelim(GetEnv('TEMP')) +'FDINST.BAT');
         rewrite(T);
         WriteLn(T, '@ECHO OFF');
-        WriteLn(T, TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE %1 %2 %3 %4 %5 %6 %7 %8 %9');
+        WriteLn(T, PackageManager + ' %1 %2 %3 %4 %5 %6 %7 %8 %9');
         Close(T);
     {$ENDIF}
     P := GroupFirst;
@@ -2140,7 +2151,7 @@ begin
 
                         Exec(GetEnv('COMSPEC'), SwitchChar + 'C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT remove ' + J^.Name);
                     {$ELSE}
-                        Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'remove ' + J^.Name);
+                        Exec(PackageManager, 'remove ' + J^.Name);
                     {$ENDIF}
                     SwapIntVecs;
                     (* InitQCrt; *)
@@ -2163,7 +2174,7 @@ begin
                         Exec(GetEnv('COMSPEC'), SwitchChar + 'C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT install ' +
                         TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
                     {$ELSE}
-                        Exec(TailDelim(GetEnv('DOSDIR')) + 'BIN\FDINST.EXE', 'install ' +
+                        Exec(PackageManager, 'install ' +
                         TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
                     {$ENDIF}
                     SwapIntVecs;
