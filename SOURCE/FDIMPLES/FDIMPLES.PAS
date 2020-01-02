@@ -1881,7 +1881,6 @@ end;
 
 procedure GroupDown(T:integer);
 begin
-
     While (T > 0) and (Group <> GroupLast) do begin
         Dec(T);
         if GroupBottom = Group then begin
