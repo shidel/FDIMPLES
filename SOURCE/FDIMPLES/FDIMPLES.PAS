@@ -2124,6 +2124,7 @@ var
     {$ENDIF}
 begin
     CleanUp;
+    WriteLn(PackageManager);
     {$IFDEF USEBAT}
         Assign(T, TailDelim(GetEnv('TEMP')) +'FDINST.BAT');
         rewrite(T);
