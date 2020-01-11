@@ -47,6 +47,8 @@
 {$M 16384,51200,128000}
 
 {$I QCRT.DEF}
+
+{$DEFINE USEBAT}
 program Test;
 
 uses QDos, QCrt, QBoxes, QEvents, QEditLn, QStrings, Language, FileIO;
@@ -2124,7 +2126,6 @@ var
     {$ENDIF}
 begin
     CleanUp;
-    WriteLn(PackageManager);
     {$IFDEF USEBAT}
         Assign(T, TailDelim(GetEnv('TEMP')) +'FDINST.BAT');
         rewrite(T);
@@ -2147,7 +2148,6 @@ begin
                     WriteLn('');
                     SwapIntVecs;
                     {$IFDEF USEBAT}
-
                         Exec(GetEnv('COMSPEC'), SwitchChar + 'C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT remove ' + J^.Name);
                     {$ELSE}
                         Exec(PackageManager, 'remove ' + J^.Name);
