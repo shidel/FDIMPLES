@@ -19,8 +19,14 @@ xcopy /y SOURCE\%APP%\NLS\*.* NLS
 xcopy /y SOURCE\%APP%\CONTRIB\NLS\*.* NLS
 
 mkdir doc
-xcopy /y LICENSE doc
-xcopy /y README.MD doc
+mkdir doc\fdimples
+xcopy /y LICENSE doc\fdimples
+xcopy /y README.MD doc\fdimples
+
+cd SOURCE\%APP%
+call clean.bat
+cd ..\..
+
 
 zip -9 -k -r %APP%.ZIP BIN DOC NLS
 cd SOURCE\%APP%
