@@ -1,92 +1,96 @@
-; Provided by Google Translate
+{
+
+FDIMPLES Turkish Translation File
+
+}
 
 0:TR
 1:ge‡ersiz parametre
-2:Ltfen bekleyiniz...
-3:Bekleme
-4:Bir tuŸa basn...
+2:Ltfen bekleyin...
+3:Bekleyin
+4:Bir d§meye basn...
 5:Grup
-6:Paket medya bulunamad!
-7:Sadece ykl paketler g”sterilmektedir.
-8:FDINST paket y”neticisini bulamad.
+6:Paket ortam bulunamad!
+7:Yalnzca ykl paketler g”rntleniyor.
+8:FDINST paket y”neticisi konumu bulunamad.
 9:TEMP ortam de§iŸkeni ayarlanmamŸ.
-10:bilinmiyor
+10:bilinmeyen
 11:ykl
 12:Bilgi yok
 13:K˜L˜TL˜
 14:Paket
-15:altnda bulunamad
+15:Ÿurada bulunamad:
 16:Bekleyen paket de§iŸiklikleri:
-17:kaldrmak
-18:yklemek
-19:De§iŸiklik Yok.
+17:kaldr
+18:ykle
+19:De§iŸiklik yok.
 
 { Plural String Values }
-20:de§iŸiklikler
-21:de§iŸim
+20:de§iŸiklik
+21:de§iŸiklik
 22:bayt
 23:bayt
-24:kilobayt
-25:kilobayt
-26:megabayt
-27:megabayt
-28:dosyalar
-29:Dosya
-30:kaynak dosyalar
+24:Kbayt
+25:Kbayt
+26:Mbayt
+27:Mbayt
+28:dosya
+29:dosya
+30:kaynak dosya
 31:kaynak dosya
 
 { Basic Load and save stuff }
-32:Paket kaldrmalarn dahil et.
+32:Paket kaldrmalarn i‡er.
 33:Paket listesi ”zelleŸtirmelerini ykle:
 34:Paket listesi ”zelleŸtirmelerini kaydet:
 
 { Buttons }
 35:Tamam
-36:iptal
+36:˜ptal
 
-{Daha Durum €ubu§u Metni}
+{ More Status Bar Text }
 39:BaŸlk
-38:Srm
+38:srm
 39:kullanm:
 40:[se‡enekler]
 
-{Yardm Mesajlar ve benzeri}
-50:GNU Genel Kamu Lisans, Srm 2.0 kapsamnda yaynland
-51:Telif Hakk 2020 Jerome Shidel
-52:FDIMPLES, FDINST paket y”neticisi komut satr yardmc programna kullanm kolay bir kullanc metin arayz sa§lar.
+{ Help Messages and such }
+50:GNU Genel Kamu Lisans, Srm 2.0 altnda yaymlanmŸtr
+51:Telif hakk 2020 Jerome Shidel
+52:FDIMPLES, FDINST komut satr paket y”neticisine kullanm kolay bir metin kullanc arabirimi sunar.
 
 53:Bu yardm ekrann g”ster.
 54:Paket a‡klamasnda dosya listesini g”ster.
-55:[DO NOT] Gncellenebilir paketleri otomatik olarak se‡.
-56:FDI oluŸturma yardmc programyla kullanm i‡in paket listesi dosyalar oluŸturun.
-57:FDI ykleyici BASE ve ALL paket listelerini yeniden yaplandrn.
+55:Gncellenebilir paketleri kendili§inden se‡[ME].
+56:FDI yapm izlencesi ile kullanmak zere paket liste dosyalarn oluŸtur.
+57:FDI ykleyicisi BASE ve ALL paket listelerini yeniden yaplandr.
 
 58:Kullanc arayz klavye komutlar:
 59:Se‡imi de§iŸtir.
-60:Hangi b”lmn veya d§menin oda§ de§iŸtirildi§ini de§iŸtirin.
-61:Oda§ yukar veya aŸa§ do§ru, ayn zamanda Sayfa Yukar / AŸa§ hareket ettirin.
-62:De§iŸiklik yapmadan veya kaydetmeden ‡kn.
-63:Ekran yardm ekran.
-64:Gruptaki tm gncellenebilir paketlerin durumunu de§iŸtirin.
+60:Hangi b”lm veya d§menin etkin oldu§unu de§iŸtir.
+61:Vurguyu bir ”ge/sayfa yukar veya aŸa§ taŸ.
+62:De§iŸiklikleri yapmadan veya kaydetmeden ‡k.
+63:Yardm ekrann g”rntle.
+64:Tm gncellenebilir paketlerin durumunu grup olarak de§iŸtir.
 65:Tm gncellenebilir paketlerin durumunu de§iŸtir.
-66:Bekleyen de§iŸiklikleri g”rntleyin.
-67:Bekleyen tm de§iŸiklikleri temizle.
-68:De§iŸiklikleri i‡eren paket listesi ”zelleŸtirme dosyasna yazn.
-69:Bir paket listesi ”zelleŸtirme dosyasn okuyun ve de§iŸiklikleri uygulayn.
+66:Bekleyen de§iŸiklikleri g”ster.
+67:Tm bekleyen de§iŸiklikleri temizle.
+68:De§iŸiklikleri i‡eren bir paket listesi ”zelleŸtirme dosyas yaz.
+69:Bir paket listesi ”zelleŸtirme dosyas oku ve de§iŸiklikleri uygula.
 
-{Paket kimlikleri hepsi 100'dr}
+{ Package ID's Are all 100 }
 100:=Yklendi!
 100:BASE=FreeDOS Temel
-100:ARCHIVER=ZenginleŸtiriciler
-100:BOOT=™nykleme yardmc programlar
-100:DEVEL=GeliŸtirme
-100:EDIT=Edit”rler
-100:EMULATOR=Emlat”rler
+100:ARCHIVER=ArŸiv ˜zlenceleri
+100:BOOT=™nykleme Ara‡lar
+100:DEVEL=GeliŸtirme Ara‡lar
+100:EDIT=Dzenleyiciler
+100:EMULATOR=™ykncler
 100:GAMES=Oyunlar
-100:GUI=Grafiksel masast bilgisayarlar
-100:NET=A§
-100:SOUND=Ses ara‡lar
-100:UNIXLIKE=yardmc programlar gibi Unix
-100:UTIL=Yardmc Programlar
-100:UNIX=yardmc programlar gibi Unix
+100:GUI=Grafik Masastleri
+100:NET=A§ ˜zlenceleri
+100:SOUND=Ses Ara‡lar
+100:UNIXLIKE=Unix Benzeri Ara‡lar
+100:UTIL=˜zlenceler
+100:UNIX=Unix Ara‡lar
 100:OBSOLETE=Eski Paketler
