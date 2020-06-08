@@ -1,7 +1,23 @@
 @echo off
 
-SET APP=FDIMPLES
+if not "%1" == "" goto %1
 
+SET APP=FDIMPLES
+set FDNLS=..\FD-NLS
+
+if exist %FDNLS%\%APP%\%APP%.EN goto Build
+
+echo Unable to locate translations. Please checkout the latest FD-NLS and update
+echo the FDNLS=%FDNLS% setting to point to the FD-NLS project files.
+goto End
+
+:CopyNLS
+if not exist %FDNLS%\%APP%\%2\%APP%.%2 goto End
+xcopy /y %FDNLS%\%APP%\%2\%APP%.%2 NLS
+goto End
+
+:Build
+goto skip
 deltree /Y bin nls doc %APP%.ZIP >NUL
 
 cd SOURCE\%APP%
@@ -10,13 +26,14 @@ cd ..\..
 
 mkdir bin >NUL
 move SOURCE\%APP%\%APP%.EXE BIN\ >NUL
-upx -9 BIN\%APP%.EXE
+upx --8086 BIN\%APP%.EXE
 rem del SOURCE\%APP%\*.TPU
 rem del SOURCE\%APP%\*.OBJ
 
 mkdir nls
-xcopy /y SOURCE\%APP%\NLS\*.* NLS
-xcopy /y SOURCE\%APP%\CONTRIB\NLS\*.* NLS
+:Skip
+xcopy /y %FDNLS%\%APP%\%APP%.* NLS
+veach /a+ /d %FDNLS%\%APP%\*.* /x %0 CopyNLS *
 
 mkdir doc
 mkdir doc\fdimples
@@ -33,8 +50,8 @@ cd SOURCE\%APP%
 zip -u -9 -k -r ..\..\%APP%.ZIP APPINFO
 cd ..\..
 
-zip -u -9 -k -r %APP%.ZIP SOURCE\%APP%\CONTRIB
-zip -u -9 -k -r %APP%.ZIP SOURCE\%APP%\NLS
+rem zip -u -9 -k -r %APP%.ZIP SOURCE\%APP%\CONTRIB
+rem zip -u -9 -k -r %APP%.ZIP %FDNLS%\%APP%
 
 zip -u -9 -k %APP%.ZIP SOURCE\%APP%\*.*
 zip -u -9 -k %APP%.ZIP SOURCE\%APP%\QCRT\*.BAT
@@ -48,3 +65,5 @@ zip -u -9 -k %APP%.ZIP SOURCE\%APP%\QCRT\PASCAL\*.PAS
 zip -u -9 -k %APP%.ZIP SOURCE\%APP%\QCRT\PASCAL\*.DEF
 
 dir bin %APP%.zip | grep -i %APP% | grep -iv Directory
+
+:End
