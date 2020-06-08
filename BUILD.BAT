@@ -17,7 +17,6 @@ xcopy /y %FDNLS%\%APP%\%2\%APP%.%2 NLS
 goto End
 
 :Build
-goto skip
 deltree /Y bin nls doc %APP%.ZIP >NUL
 
 cd SOURCE\%APP%
