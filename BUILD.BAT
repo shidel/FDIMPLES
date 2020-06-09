@@ -24,6 +24,7 @@ call build.bat
 cd ..\..
 
 mkdir bin >NUL
+mkdir nls >NUL
 move SOURCE\%APP%\%APP%.EXE BIN\ >NUL
 upx --8086 BIN\%APP%.EXE
 rem del SOURCE\%APP%\*.TPU
