@@ -31,19 +31,18 @@ rem del SOURCE\%APP%\*.TPU
 rem del SOURCE\%APP%\*.OBJ
 
 mkdir nls
-:Skip
+
 xcopy /y %FDNLS%\%APP%\%APP%.* NLS
 veach /a+ /d %FDNLS%\%APP%\*.* /x %0 CopyNLS *
 
 mkdir doc
-mkdir doc\fdimples
-xcopy /y LICENSE doc\fdimples
-xcopy /y README.MD doc\fdimples
+mkdir doc\%APP%
+xcopy /y LICENSE doc\%APP%
+xcopy /y README.MD doc\%APP%
 
 cd SOURCE\%APP%
 call clean.bat
 cd ..\..
-
 
 zip -9 -k -r %APP%.ZIP BIN DOC NLS
 cd SOURCE\%APP%
