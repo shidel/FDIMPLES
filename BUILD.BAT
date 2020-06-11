@@ -25,18 +25,18 @@ cd ..\..
 
 mkdir bin >NUL
 mkdir nls >NUL
+mkdir doc
+mkdir doc\%APP%
+
 move SOURCE\%APP%\%APP%.EXE BIN\ >NUL
 upx --8086 BIN\%APP%.EXE
 rem del SOURCE\%APP%\*.TPU
 rem del SOURCE\%APP%\*.OBJ
 
-mkdir nls
 
 xcopy /y %FDNLS%\%APP%\%APP%.* NLS
 veach /a+ /d %FDNLS%\%APP%\*.* /x %0 CopyNLS *
 
-mkdir doc
-mkdir doc\%APP%
 xcopy /y LICENSE doc\%APP%
 xcopy /y README.MD doc\%APP%
 
