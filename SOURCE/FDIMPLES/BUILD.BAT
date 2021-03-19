@@ -20,13 +20,14 @@ set TPC=TPC
 if exist %DOSDIR%\LINKS\%ASM%.BAT set ASM=call %ASM%
 if exist %DOSDIR%\LINKS\%TPC%.BAT set TPC=call %TPC%
 
-goto HaveEnglish
+if exist ENGLISH.INC goto HaveEnglish
 
 REM Create Embedded English Language Translation
-type NLS\%APP%.EN | grep -iv "^;" | vstr /I/B/N >ENGLISH.TMP
+
+if not exist ..\..\..\FD-NLS\%APP%\NLS\%APP%.EN goto NoEnglish
+type ..\..\..\FD-NLS\%APP%\NLS\%APP%.EN | grep -iv "^;" | vstr /I/B/N >ENGLISH.TMP
 set OUT=ENGLISH.INC
 if exist %OUT% goto HaveEnglish
-if not exist NLS\%APP%.EN goto NoEnglish
 
 echo { Embedded English language translation messages }>%OUT%
 echo procedure BuiltInEnglish; assembler;>>%OUT%

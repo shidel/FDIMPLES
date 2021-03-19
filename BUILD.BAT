@@ -5,7 +5,7 @@ if not "%1" == "" goto %1
 SET APP=FDIMPLES
 set FDNLS=..\FD-NLS
 
-if exist %FDNLS%\%APP%\%APP%.EN goto Build
+if exist %FDNLS%\%APP%\NLS\%APP%.EN goto Build
 
 echo Unable to locate translations. Please checkout the latest FD-NLS and update
 echo the FDNLS=%FDNLS% setting to point to the FD-NLS project files.
@@ -34,7 +34,7 @@ rem del SOURCE\%APP%\*.TPU
 rem del SOURCE\%APP%\*.OBJ
 
 
-xcopy /y %FDNLS%\%APP%\%APP%.* NLS
+xcopy /y %FDNLS%\%APP%\NLS\%APP%.* NLS
 veach /a+ /d %FDNLS%\%APP%\*.* /x %0 CopyNLS *
 
 xcopy /y LICENSE doc\%APP%

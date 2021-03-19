@@ -132,6 +132,7 @@ var
     TickerA, TickerB : integer;
     IdleTick, IdleCount : LongInt;
     PackageManager : string;
+    CGroup, CPackage : PItem;
 
     StatPhase : integer;
 
@@ -207,6 +208,12 @@ const
         Inst:$1A;
         Remv:$4E
     );
+
+procedure SetCritical(AGroup, APackage : PItem);
+begin
+    CGroup := AGroup;
+    CPackage := APackage;
+end;
 
 procedure ResetIdler;
 begin
@@ -703,6 +710,8 @@ begin
     FileMode := 0;
     Reset(F, 1);
     repeat
+        SetCritical(AGroup, nil);
+        if not MemCheck(LoMem) then exit;
         C := UnixRead(F, B);
         if (C >= 0) and (Trim(B) <> '') then begin
             Name := Trim(PullStr(#$09, B));
@@ -2671,6 +2680,7 @@ var
     I : integer;
     Attempt : boolean;
 begin
+    SetCritical(nil,nil);
     {$IFDEF DEBUG}
     Assign(LOGFILE, 'FDIMPLES.LOG');
     Rewrite(LOGFILE);
