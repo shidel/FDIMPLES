@@ -349,10 +349,21 @@ begin
         Theme := ThemeBlue;
 end;
 
+function MemCheck(size : integer) : boolean; forward;
+
+procedure FatalLowMem(ASize:LongInt; AWhere:String);
+begin
+  if not MemCheck(LoMem + ASize) then begin
+        WriteLn('Fatal Error: Out of heap space at "' + AWhere + '"');
+        Halt(1)
+    end;
+end;
+
 function NewPItem(const AName: String; const AState : TStates) : PItem;
 var
     P : PItem;
 begin
+    FatalLowMem(Sizeof(PItem), 'NewPItem');
     P := New(PItem);
     with P^ do begin
         Name := AName;
@@ -395,6 +406,7 @@ begin
         S := Trim(Ucase(S));
         if S[1] = ';' then S := '';
         if S <> '' then begin
+            FatalLowMem(Sizeof(PText) + Sizeof(String), 'ReadListFile');
             P := New(PText);
             P^.Next := Defaults;
             P^.Str := StrPtr(Prefix + S);
@@ -435,6 +447,7 @@ begin
         L := nil;
         while DosError = 0 do begin
             if (D.Attr and faDirectory <> faDirectory) then begin
+                FatalLowMem(Sizeof(PText) +Sizeof(String), 'ReadDefaults');
                 P := New(PText);
                 P^.Next := nil;
                 P^.Str := StrPtr(PathDelim + copy(D.Name, 1, length(D.Name) - 4));
@@ -618,12 +631,14 @@ begin
     G := GroupFirst;
     Flag := False;
     while Assigned(G) and (not Flag) do begin
-        P := G^.Items;
-        while Assigned(P) and (Not Flag) do begin
-            if P <> Package then
-                ClearPackage(P);
-            Flag := (MaxAvail > LoMem * Factor);
-            P := P^.Next;
+        if G <> CGroup then begin
+            P := G^.Items;
+            while Assigned(P) and (Not Flag) do begin
+                if (P <> Package) and (CPackage <> P) then
+                    ClearPackage(P);
+                Flag := (MaxAvail > LoMem * Factor);
+                P := P^.Next;
+            end;
         end;
         G := G^.Next;
     end;
@@ -645,7 +660,7 @@ var
     W, M, X : integer;
     T : String;
 begin
-    if not MemCheck(Sizeof(PItem) + Sizeof(String)) then exit;
+    if not MemCheck(Sizeof(PItem) + Sizeof(String) + LoMem) then exit;
     L := P^.Items;
     if not Assigned(L) then begin
         L := NewPItem('', psNone);
@@ -698,6 +713,8 @@ begin
 
     if not AGroup^.First then exit;
 
+    SetCritical(nil, nil);
+
     AGroup^.First := False;
     if Lang = 'EN' then
         Name := FMedia + TailDelim(AGroup^.Name) + 'INDEX.LST'
@@ -723,6 +740,7 @@ begin
             end;
             X := AGroup^.Items;
             while Assigned(X) do begin
+                SetCritical(AGroup, X);
                 if (UCase(Name) = UCase(X^.Name)) and (not Assigned(X^.Items)) then begin
                     if Not Assigned(X^.Title) then
                         { X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16)); }
@@ -741,8 +759,10 @@ begin
                     X := nil;
                 end else
                     X := X^.Next;
+                SetCritical(AGroup, nil);
             end;
         end;
+        SetCritical(nil, nil);
     until (C = -1);
     Close(F);
 end;
