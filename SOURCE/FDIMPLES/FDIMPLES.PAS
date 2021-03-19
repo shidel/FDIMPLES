@@ -728,7 +728,7 @@ begin
     Reset(F, 1);
     repeat
         SetCritical(AGroup, nil);
-        if not MemCheck(LoMem) then exit;
+        FatalLowMem(Sizeof(String), 'CacheStart');
         C := UnixRead(F, B);
         if (C >= 0) and (Trim(B) <> '') then begin
             Name := Trim(PullStr(#$09, B));
@@ -741,6 +741,7 @@ begin
             X := AGroup^.Items;
             while Assigned(X) do begin
                 SetCritical(AGroup, X);
+                FatalLowMem(Sizeof(String), 'CacheAlloc');
                 if (UCase(Name) = UCase(X^.Name)) and (not Assigned(X^.Items)) then begin
                     if Not Assigned(X^.Title) then
                         { X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16)); }
