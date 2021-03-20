@@ -83,12 +83,18 @@ echo Previous Executable(s):
 echo.
 dir *.exe | grep -i exe
 vstr /R 79 /c 0x2d
+
 :NoPrev
 %TPC% -M /OQCRT\PASCAL /UQCRT\PASCAL;..\%APP% /IQCRT\PASCAL;..\%APP% %APP%.PAS
-if errorlevel 1 goto Done
+if errorlevel 1 goto DeadBeat
+if not exist %APP%.EXE goto DeadBeat
 vstr /R 79 /c 0x2d
 dir *.exe | grep -i exe
-rem goto Done
+goto AppInfo
+
+:DeadBeat
+vecho /fLightRed Failed
+goto Error
 
 :Appinfo
 if not exist APPINFO\NUL mkdir APPINFO >NUL
@@ -117,7 +123,7 @@ set VERSION=
 goto Done
 
 :Error
-echo Error
+vecho /bRed /fWhite ' Error' /e /fGrey /bBlack
 verrlvl 1
 
 :Done

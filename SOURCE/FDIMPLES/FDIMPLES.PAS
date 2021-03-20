@@ -62,7 +62,6 @@ const
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     ALLPackages = 'FDPLFULL.LST';
     BASEPackages = 'FDPLBASE.LST';
-    LoMem = 5120;
     NoScroll = 1;
     MinTicks = 7;
 
@@ -71,6 +70,11 @@ const
     TickGrpLag = 2;
     TickPkgLag = 4;
     IdleWait = 18 * 4;
+
+    LoMem : LongInt = 1024; { Never drop below this small free block size }
+    PreFetchCacheDump : LongInt = Sizeof(String)*100; { Before reading a group }
+    LoMemCacheDump : LongInt = 10240; { When low dump this much + LoMem }
+    MemWarn : LongInt = 20480;
 
 type
     TStates = (psNone, psPartial, psFull, psUpgrade, psReplace);
@@ -349,13 +353,20 @@ begin
         Theme := ThemeBlue;
 end;
 
-function MemCheck(size : integer) : boolean; forward;
+function MemCheck(MinSize : LongInt) : boolean; forward;
 
-procedure FatalLowMem(ASize:LongInt; AWhere:String);
+procedure FatalLowMem(MinSize:LongInt; AWhere:String);
 begin
-  if not MemCheck(LoMem + ASize) then begin
-        WriteLn('Fatal Error: Out of heap space at "' + AWhere + '"');
-        Halt(1)
+  if not MemCheck(MinSize) then begin
+        TextAttr:=$4f;
+        Window(1,1,Lo(WindMax) + 1, Hi(WIndMax)+1);
+        GotoXY(1,Hi(WindMax)+1);
+        Write('Fatal Error: Out of heap space at "' + AWhere + '"');
+        ClrEol;
+        WriteLn;
+        TextAttr:=$07;
+        NormalCursor;
+        Halt(8);
     end;
 end;
 
@@ -363,7 +374,7 @@ function NewPItem(const AName: String; const AState : TStates) : PItem;
 var
     P : PItem;
 begin
-    FatalLowMem(Sizeof(PItem), 'NewPItem');
+    FatalLowMem(Sizeof(TItem), 'NewPItem');
     P := New(PItem);
     with P^ do begin
         Name := AName;
@@ -406,7 +417,7 @@ begin
         S := Trim(Ucase(S));
         if S[1] = ';' then S := '';
         if S <> '' then begin
-            FatalLowMem(Sizeof(PText) + Sizeof(String), 'ReadListFile');
+            FatalLowMem(Sizeof(TText) + Sizeof(String), 'ReadListFile');
             P := New(PText);
             P^.Next := Defaults;
             P^.Str := StrPtr(Prefix + S);
@@ -447,7 +458,7 @@ begin
         L := nil;
         while DosError = 0 do begin
             if (D.Attr and faDirectory <> faDirectory) then begin
-                FatalLowMem(Sizeof(PText) +Sizeof(String), 'ReadDefaults');
+                FatalLowMem(Sizeof(TText) +Sizeof(String), 'ReadDefaults');
                 P := New(PText);
                 P^.Next := nil;
                 P^.Str := StrPtr(PathDelim + copy(D.Name, 1, length(D.Name) - 4));
@@ -622,34 +633,34 @@ begin
     Pkg^.Skipped := False;
 end;
 
-function FreeSomeMem(Factor : Longint) : boolean;
+function FreeSomeMem(MinSize : Longint) : boolean;
 var
     Flag : boolean;
     G, P, PN : PItem;
 
 begin
     G := GroupFirst;
-    Flag := False;
+    Flag := False; {
     while Assigned(G) and (not Flag) do begin
         if G <> CGroup then begin
             P := G^.Items;
             while Assigned(P) and (Not Flag) do begin
                 if (P <> Package) and (CPackage <> P) then
                     ClearPackage(P);
-                Flag := (MaxAvail > LoMem * Factor);
+                Flag := (MaxAvail > LoMem + MinSize);
                 P := P^.Next;
             end;
         end;
         G := G^.Next;
-    end;
-    FreeSomeMem := (MaxAvail > LoMem * 2);
+    end; }
+    FreeSomeMem := (MaxAvail > LoMem + MinSize);
 end;
 
-function MemCheck(size : integer) : boolean;
+function MemCheck(MinSize:LongInt) : boolean;
 begin
-    if (MaxAvail < Size * 2) or (MemAvail < LoMem) then begin
-        FreeSomeMem(10);
-        MemCheck := (MaxAvail > Size * 2);
+    if (MaxAvail < MinSize + LoMem) or (MemAvail < LoMem) then begin
+        FreeSomeMem(LoMemCacheDump);
+        MemCheck := (MaxAvail > MinSize + LoMem);
     end else
         MemCheck := True;
 end;
@@ -660,7 +671,7 @@ var
     W, M, X : integer;
     T : String;
 begin
-    if not MemCheck(Sizeof(PItem) + Sizeof(String) + LoMem) then exit;
+    if not MemCheck(Sizeof(TItem) + Sizeof(String)) then exit;
     L := P^.Items;
     if not Assigned(L) then begin
         L := NewPItem('', psNone);
@@ -708,8 +719,9 @@ var
     C : integer;
     X : PItem;
     L : String;
+    I : LongInt;
 begin
-    if not MemCheck(LoMem) then exit;
+    if not MemCheck(0) then exit;
 
     if not AGroup^.First then exit;
 
@@ -726,9 +738,11 @@ begin
     Assign(F, Name);
     FileMode := 0;
     Reset(F, 1);
+    I := 0;
     repeat
+        Inc(I);
         SetCritical(AGroup, nil);
-        FatalLowMem(Sizeof(String), 'CacheStart');
+        FatalLowMem(Sizeof(String), 'CacheStart+Idx'+IntStr(I));
         C := UnixRead(F, B);
         if (C >= 0) and (Trim(B) <> '') then begin
             Name := Trim(PullStr(#$09, B));
@@ -741,7 +755,7 @@ begin
             X := AGroup^.Items;
             while Assigned(X) do begin
                 SetCritical(AGroup, X);
-                FatalLowMem(Sizeof(String), 'CacheAlloc');
+                FatalLowMem(Sizeof(String), 'CacheAlloc+Idx' +IntStr(I));
                 if (UCase(Name) = UCase(X^.Name)) and (not Assigned(X^.Items)) then begin
                     if Not Assigned(X^.Title) then
                         { X^.Title := StrPtr(Copy(Desc, 1, Lo(ScreenMax) - Theme.Frame.X * 2 - Theme.Grps.X - 16)); }
@@ -1363,7 +1377,7 @@ begin
     SearchForData(true);
     if Not Assigned(Package^.Items) then begin
         Group^.First := True;
-        FreeSomeMem(20);
+        MemCheck(PreFetchCacheDump);
         CacheGroup(Group);
     end;
     Package^.First := False;
@@ -1665,11 +1679,11 @@ end;
 procedure StatusPhaseZero;
 begin
     if Lo(ScreenMax) >= 79 then begin
-        if MaxAvail < LoMem then TextAttr := Theme.StatusHot;
+        if MaxAvail < MemWarn then TextAttr := Theme.StatusHot;
         WriteRawPStr(' ' + IntStr(MaxAvail));
         TextAttr := Theme.Status;
         WriteRawPStr('/');
-        if MemAvail < LoMem then TextAttr := Theme.StatusHot;
+        if MemAvail < MemWarn then TextAttr := Theme.StatusHot;
         WriteRawPStr(IntStr(MemAvail)+ ' ');
         TextAttr := Theme.Status;
     end;
@@ -1776,11 +1790,15 @@ begin
     gotoXY(1,Hi(WindMax));
     TextAttr := Theme.Status;
 
-    case StatPhase of
-        0:StatusPhaseOne;
-        1:StatusPhaseTwo;
-    else
-        StatusPhaseZero;
+    if (MemAvail < MemWarn) then begin
+       StatusPhaseZero;
+    end else begin
+        case StatPhase of
+            0:StatusPhaseOne;
+            1:StatusPhaseTwo;
+        else
+            StatusPhaseZero;
+        end;
     end;
 
     if StatPhase > 2 then StatPhase := 0;

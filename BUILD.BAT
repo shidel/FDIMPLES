@@ -21,8 +21,15 @@ deltree /Y bin nls doc %APP%.ZIP >NUL
 
 cd SOURCE\%APP%
 call build.bat
+if errorlevel 1 goto BuildError
 cd ..\..
+goto MakeArchive
 
+:BuildError
+cd ..\..
+goto Die
+
+:MakeArchive
 mkdir bin >NUL
 mkdir nls >NUL
 mkdir doc
@@ -64,5 +71,8 @@ zip -u -9 -k %APP%.ZIP SOURCE\%APP%\QCRT\PASCAL\*.PAS
 zip -u -9 -k %APP%.ZIP SOURCE\%APP%\QCRT\PASCAL\*.DEF
 
 dir bin %APP%.zip | grep -i %APP% | grep -iv Directory
+goto end
+:Die
+verrlvl 1
 
 :End
