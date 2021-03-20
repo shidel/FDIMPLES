@@ -905,12 +905,23 @@ var
     end;
 
     procedure AddText(var P : PItem; S : String; NewLine : Boolean);
+    var
+        B : integer;
+        X : String;
     begin
         if (S = '') and NewLine then
             Inc(LastLine)
         else
             LastLine := 0;
         if (LastLine > 2) then exit;
+
+        B := Pos('|', S);
+        while B > 0 do begin
+            X := Copy(S, 1, B - 1);
+            Delete(S, 1,Length(X) + 1);
+            AddLine(P, X, True);
+            B := Pos('|', S);
+        end;
         AddLine(P, S, NewLine);
     end;
 
