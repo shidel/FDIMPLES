@@ -88,7 +88,8 @@ db '70:Sleep CPU when idle.',0
 
 db '100:=Installed!',0
 db '100:BASE=FreeDOS Base',0
-db '100:ARCHIVER=Arichivers',0
+db '100:APPS=Applications',0
+db '100:ARCHIVER=Archivers',0
 db '100:BOOT=Boot Tools',0
 db '100:DEVEL=Development',0
 db '100:EDIT=Editors',0
@@ -101,6 +102,7 @@ db '100:UNIXLIKE=Unix Like Tools',0
 db '100:UTIL=Utilities',0
 db '100:UNIX=Unix Like Tools',0
 db '100:OBSOLETE=Obsolete Packages',0
+db '100:DRIVERS=Device Drivers',0
 
 db 0
 

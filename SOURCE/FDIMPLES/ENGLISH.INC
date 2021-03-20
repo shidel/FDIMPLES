@@ -72,10 +72,11 @@ asm
   db '66:View pending changes.',0
   db '67:Clear all pending changes.',0
   db '68:Write a package list customization file that contains changes.',0
-  db '69:Read a package list customization file and apply changes.',0
+  db '69:Read a package list customization file and apply changes dude.',0
   db '{ Package ID's Are all 100 }',0
   db '100:=Installed!',0
   db '100:BASE=FreeDOS Base',0
+  db '100:APPS=Applications',0
   db '100:ARCHIVER=Archivers',0
   db '100:BOOT=Boot Tools',0
   db '100:DEVEL=Development',0
@@ -89,7 +90,6 @@ asm
   db '100:UTIL=Utilities',0
   db '100:UNIX=Unix Like Tools',0
   db '100:OBSOLETE=Obsolete Packages',0
-  db '100:APPS=Applications',0
   db '100:DRIVERS=Device Drivers',0
   db 0
 end;

@@ -824,7 +824,7 @@ begin
     Close(F);
 end;
 
-procedure TryLSM(LSM : string; All : boolean);
+procedure TryLSM(LSM : string);
 var
     F : File;
     S : String;
@@ -1094,7 +1094,7 @@ begin
 
 end;
 
-function TryLST(LST : string; All : boolean) : integer;
+function TryLST(LST : string) : integer;
 var
     F : File;
     S : String;
@@ -1136,23 +1136,22 @@ end;
 
 procedure SearchForData(All:boolean);
 var
-     FN : String;
+  R : integer;
 begin
     if Group^.Name = '' then begin
-        TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', All);
-        if (All and Assigned(Package^.Items)) and FileList then
-            TryLST(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + Package^.Name + '.LST', All);
+        TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM');
     end else begin
         if (not Assigned(Package^.IVersion)) and (not FDIMode) then
-            TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM', false);
+            TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM');
 {        FN := TailDelim(PackageInfo) + Package^.Name + '.TXT'; }
-        FN := TailDelim(PackageInfo) + Package^.Name + '.LSM';
-        TryLSM(FN, All);
-        if (All and Assigned(Package^.Items)) and FileList then begin
-            if TryLST(FN, All) = 0 then
-                TryLST(TailDelim(PackageInfo) + Package^.Name + '.LST', All);
-        end
+        TryLSM(TailDelim(PackageInfo) + Package^.Name + '.LSM');
     end;
+    if (All and Assigned(Package^.Items)) and FileList then begin
+        R := 0;
+        if R = 0 then R := TryLST(TailDelim(PackageInfo) + Package^.Name + '.TXT');
+        if R = 0 then R := TryLST(TailDelim(PackageInfo) + Package^.Name + '.LST');
+        if R = 0 then R := TryLST(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + Package^.Name + '.LST');
+    end
 end;
 
 function IsMediaDrive(S : String) : boolean;
@@ -1302,6 +1301,9 @@ begin
     if not DirExists(PackageInfo) then begin
         PackageInfo := TailDelim(FMEDIA) + TailDelim('..') + NoTailDelim('PKG-INFO');
         while (Copy(PackageInfo, 3, 3) = '\..') do Delete(PackageInfo, 3, 3);
+    end;
+    if not DirExists(PackageInfo) then begin
+        PackageInfo := TailDelim(FMEDIA) +  NoTailDelim('PKG-INFO');
     end;
 
     if (not FDIMode) and (FMedia = '') then begin
