@@ -120,6 +120,8 @@ if "%VERSION%" == "" goto Sticky5
 type APPINFO.LSM | vstr /s $DATE$ "%NOW%" | vstr /s $VERSION$ "%VERSION%" /n >APPINFO\%APP%.LSM
 set NOW=
 set VERSION=
+vecho /bGreen /fWhite ' Good :-)' /e /fGrey /bBlack
+
 goto Done
 
 :Error

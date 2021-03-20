@@ -136,7 +136,6 @@ var
     TickerA, TickerB : integer;
     IdleTick, IdleCount : LongInt;
     PackageManager : string;
-    CGroup, CPackage : PItem;
 
     StatPhase : integer;
 
@@ -212,12 +211,6 @@ const
         Inst:$1A;
         Remv:$4E
     );
-
-procedure SetCritical(AGroup, APackage : PItem);
-begin
-    CGroup := AGroup;
-    CPackage := APackage;
-end;
 
 procedure ResetIdler;
 begin
@@ -633,26 +626,80 @@ begin
     Pkg^.Skipped := False;
 end;
 
+procedure FreePacks(AGroup: PItem; MinSize:LongInt);
+var
+    P, L : PItem;
+    A, B : integer;
+begin
+    A := -1;
+    B := -1;
+    P := AGroup^.Items;
+    while Assigned(P) do begin
+        if A = -1 then begin
+            Inc(B);
+            if P = Package then A := 0;
+        end else
+            Inc(A);
+        L := P;
+        P := P^.Next;
+    end;
+    if (A < B) then begin
+        P := AGroup^.Items;
+        while Assigned(P) do begin
+            if (P <> Package) then
+                ClearPackage(P);
+            if (MaxAvail > LoMem + MinSize) then break;
+            P := P^.Next;
+        end;
+    end else begin
+        P := L;
+        while Assigned(P) do begin
+            if (P <> Package)  then
+                ClearPackage(P);
+            if (MaxAvail > LoMem + MinSize) then break;
+            P := P^.Prev;
+        end;
+    end;
+end;
+
 function FreeSomeMem(MinSize : Longint) : boolean;
 var
-    Flag : boolean;
-    G, P, PN : PItem;
-
+    G, L : PItem;
+    A, B : integer;
 begin
+    A := -1;
+    B := -1;
     G := GroupFirst;
-    Flag := False; {
-    while Assigned(G) and (not Flag) do begin
-        if G <> CGroup then begin
-            P := G^.Items;
-            while Assigned(P) and (Not Flag) do begin
-                if (P <> Package) and (CPackage <> P) then
-                    ClearPackage(P);
-                Flag := (MaxAvail > LoMem + MinSize);
-                P := P^.Next;
-            end;
-        end;
+    while Assigned(G) do begin
+        if A = -1 then begin
+            Inc(B);
+            if G = Group then A := 0;
+        end else
+            Inc(A);
+        L := G;
         G := G^.Next;
-    end; }
+    end;
+    if (A < B) or ((A = B) and (B = 0)) then begin
+        G := GroupFirst;
+        while Assigned(G) do begin
+            if (G <> Group) or ((A = B) and (B = 0)) then begin
+                FreePacks(G, MinSize);
+                if (MaxAvail > LoMem + MinSize) then break;
+            end;
+            G := G^.Next;
+        end;
+    end else begin
+        G := L;
+        while Assigned(G) do begin
+            if G <> Group then begin
+                FreePacks(G, MinSize);
+                if (MaxAvail > LoMem + MinSize) then break;
+            end;
+            G := G^.Prev;
+        end;
+    end;
+    if (MaxAvail <= LoMem + MinSize) and (Assigned(Group)) then
+        FreePacks(Group, MinSize);
     FreeSomeMem := (MaxAvail > LoMem + MinSize);
 end;
 
@@ -725,8 +772,6 @@ begin
 
     if not AGroup^.First then exit;
 
-    SetCritical(nil, nil);
-
     AGroup^.First := False;
     if Lang = 'EN' then
         Name := FMedia + TailDelim(AGroup^.Name) + 'INDEX.LST'
@@ -741,7 +786,6 @@ begin
     I := 0;
     repeat
         Inc(I);
-        SetCritical(AGroup, nil);
         FatalLowMem(Sizeof(String), 'CacheStart+Idx'+IntStr(I));
         C := UnixRead(F, B);
         if (C >= 0) and (Trim(B) <> '') then begin
@@ -754,7 +798,6 @@ begin
             end;
             X := AGroup^.Items;
             while Assigned(X) do begin
-                SetCritical(AGroup, X);
                 FatalLowMem(Sizeof(String), 'CacheAlloc+Idx' +IntStr(I));
                 if (UCase(Name) = UCase(X^.Name)) and (not Assigned(X^.Items)) then begin
                     if Not Assigned(X^.Title) then
@@ -774,10 +817,8 @@ begin
                     X := nil;
                 end else
                     X := X^.Next;
-                SetCritical(AGroup, nil);
             end;
         end;
-        SetCritical(nil, nil);
     until (C = -1);
     Close(F);
 end;
@@ -2719,7 +2760,6 @@ var
     I : integer;
     Attempt : boolean;
 begin
-    SetCritical(nil,nil);
     {$IFDEF DEBUG}
     Assign(LOGFILE, 'FDIMPLES.LOG');
     Rewrite(LOGFILE);
