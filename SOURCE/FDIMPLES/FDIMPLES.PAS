@@ -71,10 +71,10 @@ const
     TickPkgLag = 4;
     IdleWait = 18 * 4;
 
-    LoMem : LongInt = 1024; { Never drop below this small free block size }
+    LoMem : LongInt = 2048; { Never drop below this small free block size }
     PreFetchCacheDump : LongInt = Sizeof(String)*100; { Before reading a group }
     LoMemCacheDump : LongInt = 10240; { When low dump this much + LoMem }
-    MemWarn : LongInt = 20480;
+    MemWarn : LongInt = 4096;
 
 type
     TStates = (psNone, psPartial, psFull, psUpgrade, psReplace);
@@ -354,10 +354,11 @@ begin
         TextAttr:=$4f;
         Window(1,1,Lo(WindMax) + 1, Hi(WIndMax)+1);
         GotoXY(1,Hi(WindMax)+1);
-        Write('Fatal Error: Out of heap space at "' + AWhere + '"');
+        Write('Fatal Error: Out of memory at "' + AWhere + '" have ' +
+            IntStr(MaxAvail) + ', needed ' + IntStr(MinSize));
         ClrEol;
-        WriteLn;
         TextAttr:=$07;
+        WriteLn;
         NormalCursor;
         Halt(8);
     end;
@@ -682,7 +683,7 @@ begin
     if (A < B) or ((A = B) and (B = 0)) then begin
         G := GroupFirst;
         while Assigned(G) do begin
-            if (G <> Group) or ((A = B) and (B = 0)) then begin
+            if (G <> Group) or ((A = B) and (B <= 0)) then begin
                 FreePacks(G, MinSize);
                 if (MaxAvail > LoMem + MinSize) then break;
             end;
@@ -698,14 +699,14 @@ begin
             G := G^.Prev;
         end;
     end;
-    if (MaxAvail <= LoMem + MinSize) and (Assigned(Group)) then
+    if ((MaxAvail <= LoMem + MinSize) and (Assigned(Group))) then
         FreePacks(Group, MinSize);
     FreeSomeMem := (MaxAvail > LoMem + MinSize);
 end;
 
 function MemCheck(MinSize:LongInt) : boolean;
 begin
-    if (MaxAvail < MinSize + LoMem) or (MemAvail < LoMem) then begin
+    if (MaxAvail < MinSize + LoMem) or (MaxAvail < LoMem) then begin
         FreeSomeMem(LoMemCacheDump);
         MemCheck := (MaxAvail > MinSize + LoMem);
     end else
@@ -1831,15 +1832,11 @@ begin
     gotoXY(1,Hi(WindMax));
     TextAttr := Theme.Status;
 
-    if (MemAvail < MemWarn) then begin
-       StatusPhaseZero;
-    end else begin
-        case StatPhase of
-            0:StatusPhaseOne;
-            1:StatusPhaseTwo;
-        else
-            StatusPhaseZero;
-        end;
+    case StatPhase of
+        0:StatusPhaseOne;
+        1:StatusPhaseTwo;
+    else
+        StatusPhaseZero;
     end;
 
     if StatPhase > 2 then StatPhase := 0;
