@@ -44,11 +44,13 @@
 { M 32768,51200,102400}
 
 { Post 0.9.16 Memory settings }
-{$M 16384,51200,128000}
+{$M 32678,256000,655350}
 
 {$I QCRT.DEF}
 
 {$DEFINE USEBAT}
+{ DEFINE USEFAKE}
+
 program Test;
 
 uses QDos, QCrt, QBoxes, QEvents, QEditLn, QStrings, Language, FileIO;
@@ -71,10 +73,11 @@ const
     TickPkgLag = 4;
     IdleWait = 18 * 4;
 
-    LoMem : LongInt = 2048; { Never drop below this small free block size }
-    PreFetchCacheDump : LongInt = Sizeof(String)*100; { Before reading a group }
-    LoMemCacheDump : LongInt = 10240; { When low dump this much + LoMem }
-    MemWarn : LongInt = 4096;
+    LoMem : LongInt = 4096; { Never drop below this small free block size }
+    PreFetchCacheDump : LongInt = Sizeof(String)*200; { Before reading a group }
+    LoMemCacheDump : LongInt = 20480; { When low dump this much + LoMem }
+    MemWarn : LongInt = 8192;
+    MaxOperations = 3000;
 
 type
     TStates = (psNone, psPartial, psFull, psUpgrade, psReplace);
@@ -112,8 +115,17 @@ type
         Checks : TCheckColors;
         Inst, Remv : byte;
     end;
+    TReservedJob = record
+        Remove : boolean;
+        Install : boolean;
+        Group : String[8];
+        Package : String[8];
+    end;
+    PReservedBlock = ^TReservedBlock;
+    TReservedBlock = array[0..MaxOperations-1] of TReservedJob;
 
 var
+    TaskList : PReservedBlock;
     Tab : integer;
     Defaults : PText;
     Group, GroupFirst, GroupTop, GroupBottom, GroupLast,
@@ -1242,7 +1254,11 @@ var
    PlsWait:String;
 
 begin
+    {$IFNDEF USEFAKE}
     PackageManager := 'FDINST.EXE';
+    {$ELSE}
+    PackageManager := 'FDNFAKE.EXE';
+    {$ENDIF}
     T := GetEnv('PATH') + ';' + TailDelim(GetEnv('DOSDIR')) + 'BIN';
     while T <> '' do begin
         M := PullStr(';', T);
@@ -2215,14 +2231,37 @@ begin
     CleanUp;
 end;
 
+procedure ShrinkHeap(P:Pointer);
+var
+    Size:Word;
+    ParentPSP, MemTop : word;
+begin
+    HeapPtr:=P;
+    HeapEnd:=P;
+    Size:=(Ofs(P^) shr 4) + 1;
+    Size:=Size + Seg(P^) - PrefixSeg;
+    asm
+        push ES
+        mov  AH, $4A
+        mov  BX, Size
+        mov  ES, PrefixSeg
+        int  $21
+        pop  ES
+        jnc  @@Done
+        mov  Size, BX
+    @@Done:
+    end;
+end;
+
 procedure RunList;
 var
     P, J : PItem;
     S : String;
-    C : boolean;
+    C, M, Failed : boolean;
     {$IFDEF USEBAT}
     T : Text;
     {$ENDIF}
+    I, Count:integer;
 begin
     CleanUp;
     {$IFDEF USEBAT}
@@ -2232,65 +2271,105 @@ begin
         WriteLn(T, PackageManager + ' %1 %2 %3 %4 %5 %6 %7 %8 %9');
         Close(T);
     {$ENDIF}
+    Count := 0;
+
     P := GroupFirst;
-    while Assigned(P) do begin
+    while Assigned(P) and (Count < MaxOperations) do begin
         J := P^.Items;
-        while Assigned(J) do begin
+
+        while Assigned(J) and (Count < MaxOperations) do begin
+            M := False;
+            TaskList^[Count].Remove:=False;
+            TaskList^[Count].Install:=False;
+            TaskList^[Count].Group:=P^.Name;
+            TaskList^[Count].Package:=J^.Name;
             C := { FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + J^.Name + '.LSM') or }
                 FileExists(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + J^.Name + '.LST');
             if (J^.State = psNone) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
                 if C then begin
-                    TextAttr := $4F;
-                    WriteRawPStr ('remove ' + J^.Name);
-                    ClrEOl;
-                    TextAttr := $07;
-                    WriteLn('');
-                    SwapIntVecs;
-                    {$IFDEF USEBAT}
-                        Exec(GetEnv('COMSPEC'), SwitchChar + 'C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT remove ' + J^.Name);
-                    {$ELSE}
-                        Exec(PackageManager, 'remove ' + J^.Name);
-                    {$ENDIF}
-                    SwapIntVecs;
-                    (* InitQCrt; *)
-                    if DosError <> 0 then begin
-                        WriteLn('Aborted.');
-                        Halt(100);
-                    end;
+                    M := True;
+                    TaskList^[Count].Remove:=True;
                 end;
                 C := False;
             end;
             if (J^.State = psFull) or (J^.State = psUpgrade) or (J^.State = psReplace) then begin
                 if not C then begin
-                    TextAttr := $1F;
-                    WriteRawPStr('install ' + lcase(TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip'));
-                    ClrEOl;
-                    TextAttr := $07;
-                    WriteLn('');
-                    SwapIntVecs;
-                    {$IFDEF USEBAT}
-                        Exec(GetEnv('COMSPEC'), SwitchChar + 'C ' + TailDelim(GetEnv('TEMP')) +'FDINST.BAT install ' +
-                        TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
-                    {$ELSE}
-                        Exec(PackageManager, 'install ' +
-                        TailDelim(FMedia) + TailDelim(P^.Name) + J^.Name + '.zip');
-                    {$ENDIF}
-                    SwapIntVecs;
-                    (* InitQCrt; *)
-                    if DosError <> 0 then begin
-                        WriteLn('Aborted.');
-                        Halt(100);
-                    end;
+                    M := True;
+                    TaskList^[Count].Install:=True;
                 end;
             end;
             J := J^.Next;
+            if M then Inc(Count);
         end;
         P := P^.Next;
     end;
+
+    ShrinkHeap(@TaskList^[Count]);
+
+    Failed := False;
+    for I := 0 to Count -1 do begin
+        if TaskList^[I].Remove then begin
+            TextAttr := $4F;
+            WriteRawPStr ('remove ' + TaskList^[I].Package);
+            ClrEOl;
+            TextAttr := $07;
+            WriteLn('');
+            SwapIntVecs;
+            {$IFDEF USEBAT}
+                Exec(GetEnv('COMSPEC'),
+                    SwitchChar + 'C ' + TailDelim(GetEnv('TEMP')) +
+                    'FDINST.BAT remove ' + TaskList^[I].Package);
+            {$ELSE}
+                Exec(PackageManager, 'remove ' + TaskList^[I].Package);
+            {$ENDIF}
+            SwapIntVecs;
+            { InitQCrt; }
+            if DosError <> 0 then begin
+                Failed := True;
+                break;
+            end;
+        end;
+        if TaskList^[I].Install then begin
+            TextAttr := $1F;
+            WriteRawPStr('install ' + lcase(TailDelim(FMedia) +
+                TailDelim(TaskList^[I].Group) + TaskList^[I].Package +
+                '.zip'));
+            ClrEOl;
+            TextAttr := $07;
+            WriteLn('');
+            SwapIntVecs;
+            {$IFDEF USEBAT}
+                Exec(GetEnv('COMSPEC'), SwitchChar + 'C ' +
+                    TailDelim(GetEnv('TEMP')) + 'FDINST.BAT install ' +
+                    TailDelim(FMedia) +
+                    TailDelim(TaskList^[I].Group) + TaskList^[I].Package +
+                    '.zip');
+            {$ELSE}
+                Exec(PackageManager, 'install ' +
+                    TailDelim(FMedia) +
+                    TailDelim(TaskList^[I].Group) + TaskList^[I].Package +
+                    '.zip');
+            {$ENDIF}
+            SwapIntVecs;
+            { InitQCrt; }
+            if DosError <> 0 then begin
+                Failed := True;
+                break;
+            end;
+        end;
+    end;
+
     {$IFDEF USEBAT}
         Assign(T, TailDelim(GetEnv('TEMP')) +'FDINST.BAT');
         Erase(T);
     {$ENDIF}
+
+   if Failed then begin
+       WriteLn('Aborted.');
+       Halt(100);
+    end;
+    { WriteLn('Finished'); }
+    Halt(0);
 end;
 
 var
@@ -2981,5 +3060,6 @@ begin
 end;
 
 begin
-    Main;
+    TaskList := New(PReservedBlock);
+     Main;
 end.
