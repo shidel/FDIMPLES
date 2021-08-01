@@ -1,5 +1,5 @@
 {
-    Copyright 2019 Jerome Shidel
+    Copyright 2016-2021 Jerome Shidel
     Released Under GPL v2.0 License.
 }
 
@@ -2418,13 +2418,13 @@ begin
         HelpMore := (HelpLine - HelpStart > Hi(WindMax) - Hi(WindMin));
         if HelpCmd or ((HelpLine >= HelpStart) and (not HelpMore)) then begin
             if not HelpCmd then GotoXY(1,HelpLine - HelpStart + 1);
-            if HelpCmd and HelpMore then begin
+            if (HelpCmd and HelpMore) then begin
                 HelpLine := 1;
                 A := TextAttr;
                 TextAttr := $0A;
                 WriteRawPStr(NLS(nlsPressAKey));
                 TextAttr := A;
-                Idler;
+                While not Keypressed do Idler;
                 While KeyPressed do ReadKey;
                 ResetIdler;
                 GotoXY(1, WhereY);

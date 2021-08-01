@@ -850,7 +850,6 @@ xprocedure ReINitQCrt
     %endif
 xret
 
-
 ; function KeyPressed : boolean; external;
 xfunction KeyPressed, boolean
 	mov  	ah, 0x01
