@@ -285,6 +285,30 @@ begin
     FDIMode := RunMode = rmFDI;
 end;
 
+procedure DisplaySupportMe(MoreInfo : boolean);
+const
+    PreText : String = 'Would you like to see ';
+    Shown : boolean = false;
+begin
+    if (UCase(LANG) <> 'EN') or FDIMode or Shown then Exit;
+    Shown := True;
+    if Not MoreInfo then
+        WriteLn
+    else begin
+        case (LastTick and $7) of
+            0   : WriteLn(PreText, 'support for networking?');
+            1,2 : WriteLn(PreText, 'support for multiple online repositories?');
+            3,4 : WriteLn(PreText, 'searching?');
+            5   : WriteLn(PreText, 'better performance?');
+            6,7 : WriteLn(PreText, 'mouse integeration?');
+        end;
+        WriteLn;
+    end;
+    WriteLn('Help support development of FDIMPLES by becoming a Patron.');
+    WriteLn('https://patreon.com/shidel');
+    WriteLn;
+end;
+
 procedure CleanUp;
 begin
     if FDIMode then exit;
@@ -294,6 +318,7 @@ begin
     CheckScroll := True;
     ClrScr;
     NormalCursor;
+    GotoXY(1,1);
 end;
 
 {$IFDEF DEBUG}
@@ -2323,7 +2348,7 @@ begin
                 Exec(PackageManager, 'remove ' + TaskList^[I].Package);
             {$ENDIF}
             SwapIntVecs;
-            { InitQCrt; }
+            ReInitQCrt;
             if DosError <> 0 then begin
                 Failed := True;
                 break;
@@ -2351,7 +2376,7 @@ begin
                     '.zip');
             {$ENDIF}
             SwapIntVecs;
-            { InitQCrt; }
+            ReInitQCrt;
             if DosError <> 0 then begin
                 Failed := True;
                 break;
@@ -2369,6 +2394,7 @@ begin
        Halt(100);
     end;
     { WriteLn('Finished'); }
+    DisplaySupportMe(false);
     Halt(0);
 end;
 
@@ -2979,6 +3005,7 @@ begin
                 end;
                 $001b : begin
                     CleanUp;
+                    DisplaySupportMe(True);
                     Halt(1); { Esacpe }
                 end;
                 $0048, $0068, $3B00 : begin
@@ -3028,6 +3055,7 @@ begin
                     end;
                     4: begin
                         CleanUp;
+                        DisplaySupportMe(True);
                         Halt(1); { Canceled }
                     end;
                 end;
@@ -3054,6 +3082,7 @@ begin
 }
             end;
     until Quit;
+    DisplaySupportMe(True);
     {$IFDEF DEBUG}
     Log('End');
     {$ENDIF}

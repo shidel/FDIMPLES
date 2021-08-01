@@ -842,6 +842,15 @@ xprocedure DoneQCrt
 	pushcall NoSound
 xret
 
+; procedure ReInitQCrt;
+xprocedure ReINitQCrt
+	call	InitCrtData
+    %ifdef EnableMouse
+        call    ReMouseInit
+    %endif
+xret
+
+
 ; function KeyPressed : boolean; external;
 xfunction KeyPressed, boolean
 	mov  	ah, 0x01

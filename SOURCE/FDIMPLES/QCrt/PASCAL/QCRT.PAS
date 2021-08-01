@@ -197,6 +197,8 @@ function GetMaxY : integer;
 
 procedure Idle;
 
+procedure ReInitQCrt;
+
 implementation
 
 var
@@ -413,6 +415,8 @@ begin
 {   AssignCRT(Input);
     Reset(Input); }
 end;
+
+procedure ReInitQCrt; external;
 
 begin
     UnitInit;
