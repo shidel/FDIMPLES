@@ -304,7 +304,7 @@ begin
         end;
         WriteLn;
     end;
-    WriteLn('Help support development of FDIMPLES by becoming a Patron.');
+    WriteLn('Help encourage the development of FDIMPLES by becoming a Patron.');
     WriteLn('https://patreon.com/shidel');
     WriteLn;
 end;
