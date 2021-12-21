@@ -109,14 +109,13 @@ echo %NOW% | vstr /f '-' 3 /n | set /P YEAR=
 if "%YEAR%" == "" goto Sticky3
 set NOW=
 :Sticky4
-echo %YEAR%-%MMDD% | vstr /s ' ' '' /n | set /p NOW=
+echo %YEAR%-%MMDD% | vstr /s ' ' '' /n /b | set /p NOW=
 if "%NOW%" == "" goto Sticky4
 set YEAR=
 set MMDD=
 :Sticky5
-type version.inc | vstr /f "'" 2 | vstr /i /n | set /P VERSION=
+type version.inc | vstr /f "'" 2 | vstr /i /n /b | set /P VERSION=
 if "%VERSION%" == "" goto Sticky5
-
 type APPINFO.LSM | vstr /s $DATE$ "%NOW%" | vstr /s $VERSION$ "%VERSION%" /n >APPINFO\%APP%.LSM
 set NOW=
 set VERSION=
