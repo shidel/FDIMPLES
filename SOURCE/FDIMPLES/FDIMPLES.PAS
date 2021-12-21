@@ -1195,12 +1195,11 @@ function IsMediaDrive(S : String) : boolean;
 begin
     IsMediaDrive := False;
     S := TailDelim(S);
-    if DirExists(S) and
-    FileExists(TailDelim(S + 'BASE') + 'COMMAND.ZIP') or
-    FileExists(TailDelim(S + 'BASE') + 'KERNEL.ZIP') then begin
-        FMedia := S;
-        IsMediaDrive := True;
-    end;
+    if not DirExists(S) then Exit;
+    if not (DirExists(S + 'PKG-INFO') or  DirExists(S + 'PKG_INFO')) then Exit;
+    if not FileExists(TailDelim(S + 'BASE') + 'INDEX.LST') then Exit;
+    FMedia := S;
+    IsMediaDrive := True;
 end;
 
 function ReadCfg : string;
@@ -3090,5 +3089,5 @@ end;
 
 begin
     TaskList := New(PReservedBlock);
-     Main;
+    Main;
 end.
