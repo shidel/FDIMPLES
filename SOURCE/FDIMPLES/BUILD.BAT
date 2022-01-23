@@ -20,6 +20,8 @@ set TPC=TPC
 if exist %DOSDIR%\LINKS\%ASM%.BAT set ASM=call %ASM%
 if exist %DOSDIR%\LINKS\%TPC%.BAT set TPC=call %TPC%
 
+goto HaveEnglish
+REM Obsolete Section
 if exist ENGLISH.INC goto HaveEnglish
 
 REM Create Embedded English Language Translation

@@ -79,6 +79,8 @@ const
     MemWarn : LongInt = 8192;
     MaxOperations = 3000;
 
+    CfgFMedia : String = '';
+
 type
     TStates = (psNone, psPartial, psFull, psUpgrade, psReplace);
     TModes = (rmFDI, rmStandAlone, rmList, rmConfig);
@@ -1207,6 +1209,10 @@ var
   F : text;
   T : String;
 begin
+	if CfgFMedia <> '' then begin
+		ReadCfg := CfgFmedia;
+		Exit;
+	end;
     ReadCfg := '';
     if not FileExists(TailDelim(GetExePath) + GetExeBase + '.DAT') then exit;
     assign(F, TailDelim(GetExePath) + GetExeBase + '.DAT');
@@ -1214,10 +1220,25 @@ begin
     Reset(F);
     while Not eof(F) do begin
         ReadLn(F, T);
-        T := Trim(T);
-        if T <> '' then ReadCfg := T;
+        T := UCase(Trim(T));
+        if T <> '' then begin
+			ReadCfg := T;
+			CfgFMedia := T;
+		end;
     end;
     Close(F);
+end;
+
+function TestMediaDrive(Drive : String) : boolean;
+begin
+	TestMediaDrive := True;
+	if Length(Drive) > 1 then begin
+		if (ReadCfg <> '') and IsMediaDrive(Drive[1] + ':' + ReadCfg) then Exit;
+		if IsMediaDrive(Drive[1] + ':\') then Exit;
+		if IsMediaDrive(Drive[1] + ':\PACKAGES') then Exit;
+		if IsMediaDrive(Drive[1] + ':\FDSETUP\PACKAGES') then Exit;
+	end;
+	TestMediaDrive := False;
 end;
 
 procedure VerifyGroupState;
@@ -1296,8 +1317,10 @@ begin
 
     PackageInfo := '';
     PlsWait := NLS(nlsPleaseStandby);
-    if Trim(GetEnv('FMEDIA')) <> '' then begin
-        FMedia := TailDelim(Dir(Trim(GetEnv('FMEDIA'))));
+    if FMedia = '' then begin
+        M := GetEnv('FMEDIA');
+        IsMediaDrive(TailDelim(Dir(Trim(M))));
+        if FMedia = '' then TestMediaDrive(Trim(M));
     end;
 
     if not FDIMode then begin
@@ -1312,21 +1335,11 @@ begin
         end;
         HideCursor;
         WriteRawPStr(PlsWait);
-        M := ucase(trim(ReadCfg));
         GetDir(0, T);
-        if (FMEDIA = '') and (M <> '') then IsMediaDrive(Copy(T,1,2) + M);
-        if FMEDIA = '' then IsMediaDrive(Copy(T,1,3));
-        if FMEDIA = '' then IsMediaDrive(Copy(T,1,3) + 'PACKAGES');
-        if FMEDIA = '' then IsMediaDrive(Copy(T,1,3) + 'FDSETUP\PACKAGES');
-        if FMEDIA = '' then IsMediaDrive(T);
-
-        if FMedia = '' then
-            for CS := 0 to 24 do begin
-            if (M <> '') and IsMediaDrive(Chr(CS + 67) + ':' + M) then Break;
-            if IsMediaDrive(Chr(CS + 67) + ':\') then Break;
-            if IsMediaDrive(Chr(CS + 67) + ':\PACKAGES') then Break;
-            if IsMediaDrive(Chr(CS + 67) + ':\FDSETUP\PACKAGES') then Break;
-        end;
+        if FMEDIA = '' then TestMediaDrive(Copy(T,1,2) + M);
+        if FMEDIA = '' then TestMediaDrive(T);
+        for CS := 0 to 24 do
+        	if FMEDIA = '' then TestMediaDrive(Chr(CS + 67));
     end else begin
     if FMedia = '' then
         FMedia := Dir('\');
@@ -2477,6 +2490,8 @@ begin
     HelpWriteLn('');
     HelpOption (SwitchChar + 'IDLE',   NLS(nlsHelp + 20));
     HelpWriteLn('');
+    HelpOption (' [pkgsrc]',   NLS(nlsHelp + 21));
+    HelpWriteLn('');
 end;
 
 procedure HelpKeyboard;
@@ -2874,6 +2889,7 @@ var
     I : integer;
     Attempt : boolean;
 begin
+	FMedia := '';
     {$IFDEF DEBUG}
     Assign(LOGFILE, 'FDIMPLES.LOG');
     Rewrite(LOGFILE);
@@ -2935,8 +2951,16 @@ begin
         else if S = SwitchChar + 'UPDATE' then
             AutoUpdate := True
         else begin
-            WriteLn(NLS(nlsInvalidParam) + ' "' + ParamStr(I) + '"');
-            Halt(100);
+        	FMedia := '';
+        	if (Length(ParamStr(I)) > 1) then
+	        	if Length(ParamStr(I)) > 3 then
+		        	IsMediaDrive(ParamStr(I))
+	    	    else
+	        		TestMediaDrive(ParamStr(I));
+	        if FMedia = '' then begin
+				WriteLn(NLS(nlsInvalidParam) + ' "' + ParamStr(I) + '"');
+				Halt(100);
+            end;
         end;
         inc(I);
     end;
