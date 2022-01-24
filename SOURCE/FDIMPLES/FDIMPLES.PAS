@@ -1232,7 +1232,7 @@ end;
 function TestMediaDrive(Drive : String) : boolean;
 begin
 	TestMediaDrive := True;
-	if Length(Drive) > 1 then begin
+	if Length(Drive) > 0 then begin
 		if (ReadCfg <> '') and IsMediaDrive(Drive[1] + ':' + ReadCfg) then Exit;
 		if IsMediaDrive(Drive[1] + ':\') then Exit;
 		if IsMediaDrive(Drive[1] + ':\PACKAGES') then Exit;
@@ -2950,17 +2950,18 @@ begin
             AutoUpdate := False
         else if S = SwitchChar + 'UPDATE' then
             AutoUpdate := True
-        else begin
-        	FMedia := '';
-        	if (Length(ParamStr(I)) > 1) then
-	        	if Length(ParamStr(I)) > 3 then
-		        	IsMediaDrive(ParamStr(I))
-	    	    else
-	        		TestMediaDrive(ParamStr(I));
-	        if FMedia = '' then begin
-				WriteLn(NLS(nlsInvalidParam) + ' "' + ParamStr(I) + '"');
+        else if (Pos(':', ParamStr(I)) + Pos('\', ParamStr(I)) > 0) then begin
+			if Length(ParamStr(I)) > 3 then
+				IsMediaDrive(FileExpand(ParamStr(I)))
+			else
+				TestMediaDrive(FileExpand(ParamStr(I)));
+			if FMedia = '' then begin
+		        WriteLn(NLS(nlsPackageMediaNotFound));
 				Halt(100);
-            end;
+			end;
+        end else begin
+			WriteLn(NLS(nlsInvalidParam) + ' "' + ParamStr(I) + '"');
+			Halt(100);
         end;
         inc(I);
     end;
