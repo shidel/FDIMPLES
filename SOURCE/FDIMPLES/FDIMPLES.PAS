@@ -1785,6 +1785,9 @@ begin
 end;
 
 procedure StatusPhaseZero;
+var
+	OLN : integer;
+	OIS : String;
 begin
     if Lo(ScreenMax) >= 79 then begin
         if MaxAvail < MemWarn then TextAttr := Theme.StatusHot;
@@ -1806,7 +1809,9 @@ begin
             TextAttr := Theme.StatusErr;
             WriteRawPStr(NLS(nlsPackageMediaNotFound));
             TextAttr := Theme.StatusHot;
-            WriteRawPStr(' ' + NLS(nlsOnlyInstalledShown) );
+            OIS := ' ' + NLS(nlsOnlyInstalledShown);
+            OLN := Lo(ScreenMax) + 1 - WhereX;
+            WriteRawPStr(Copy(OIS, 1, OLN));
             TextAttr := Theme.Status;
         end else begin
             if Assigned(Package) then begin
