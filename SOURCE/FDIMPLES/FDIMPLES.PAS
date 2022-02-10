@@ -134,6 +134,7 @@ var
     Package, PackageFirst, PackageTop, PackageBottom, PackageLast : PItem;
     LineTop, LineBottom : PItem;
     FMedia : String;
+    FInfo : String;
     Theme : TTheme;
     CheckMark : TChecks;
     RunMode : TModes;
@@ -145,7 +146,6 @@ var
     Startup : boolean;
     Comments : boolean;
     ListDir : string;
-    PackageInfo : string;
     TimerTick    : LongInt absolute $0040:$006c;  { Timer tick counter }
     TickerA, TickerB : integer;
     IdleTick, IdleCount : LongInt;
@@ -911,7 +911,7 @@ var
     begin
         TMode := False;
 {        if FileExtension(LSM) = 'TXT' then begin }
-        if PathOf(LSM) = TailDelim(PackageInfo) then begin
+        if PathOf(LSM) = FInfo then begin
             FreeStr(Package^.MVersion);
             Package^.MVersion := StrPtr(Trim(Version));
         end else begin
@@ -1024,6 +1024,11 @@ begin
                 if Match('Total-files', IFiles) then Ignore else
                 if Match('Source-size', SSize) then Ignore else
                 if Match('Source-files', SFiles) then Ignore else
+                if Match('Bin-size', SSize) then Ignore else
+                if Match('Bin-files', SFiles) then Ignore else
+                if Match('CRC', SSize) then Ignore else
+                if Match('MD5', SFiles) then Ignore else
+                if Match('SHA', SFiles) then Ignore else
 
                 if Match('Maintained-by', X) then Ignore else
                 if Match('entered-date', X) then Ignore else
@@ -1183,12 +1188,12 @@ begin
         if (not Assigned(Package^.IVersion)) and (not FDIMode) then
             TryLSM(TailDelim(GetEnv('DOSDIR')) + TailDelim('APPINFO') + Package^.Name + '.LSM');
 {        FN := TailDelim(PackageInfo) + Package^.Name + '.TXT'; }
-        TryLSM(TailDelim(PackageInfo) + Package^.Name + '.LSM');
+        TryLSM(FInfo + Package^.Name + '.LSM');
     end;
     if (All and Assigned(Package^.Items)) and FileList then begin
         R := 0;
-        if R = 0 then R := TryLST(TailDelim(PackageInfo) + Package^.Name + '.TXT');
-        if R = 0 then R := TryLST(TailDelim(PackageInfo) + Package^.Name + '.LST');
+        if R = 0 then R := TryLST(FInfo + Package^.Name + '.TXT');
+        if R = 0 then R := TryLST(FInfo + Package^.Name + '.LST');
         if R = 0 then R := TryLST(TailDelim(GetEnv('DOSDIR')) + TailDelim('PACKAGES') + Package^.Name + '.LST');
     end
 end;
@@ -1200,6 +1205,10 @@ begin
     if not DirExists(S) then Exit;
     if not (DirExists(S + 'PKG-INFO') or  DirExists(S + 'PKG_INFO')) then Exit;
     if not FileExists(TailDelim(S + 'BASE') + 'INDEX.LST') then Exit;
+    FInfo := '';
+	if DirExists(S + 'PKG-INFO') then FInfo := TailDelim(S + 'PKG-INFO');
+	if DirExists(S + 'PKG_INFO') then FInfo := TailDelim(S + 'PKG_INFO');
+	if FInfo = '' then Exit;
     FMedia := S;
     IsMediaDrive := True;
 end;
@@ -1315,7 +1324,6 @@ begin
 
     StatPhase := -1;
 
-    PackageInfo := '';
     PlsWait := NLS(nlsPleaseStandby);
     if FMedia = '' then begin
         M := GetEnv('FMEDIA');
@@ -1345,25 +1353,16 @@ begin
         FMedia := Dir('\');
     end;
 
-    PackageInfo := TailDelim(FMEDIA) + TailDelim('..') + NoTailDelim('PKGINFO');
-    while (Copy(PackageInfo, 3, 3) = '\..') do Delete(PackageInfo, 3, 3);
-    if not DirExists(PackageInfo) then begin
-        PackageInfo := TailDelim(FMEDIA) + TailDelim('..') + NoTailDelim('PKG_INFO');
-        while (Copy(PackageInfo, 3, 3) = '\..') do Delete(PackageInfo, 3, 3);
-    end;
-    if not DirExists(PackageInfo) then begin
-        PackageInfo := TailDelim(FMEDIA) + TailDelim('..') + NoTailDelim('PKG-INFO');
-        while (Copy(PackageInfo, 3, 3) = '\..') do Delete(PackageInfo, 3, 3);
-    end;
-    if not DirExists(PackageInfo) then begin
-        PackageInfo := TailDelim(FMEDIA) +  NoTailDelim('PKG-INFO');
-    end;
-
     if (not FDIMode) and (FMedia = '') then begin
         GotoXY (1, WhereY);
         WriteLn(NLS(nlsPackageMediaNotFound));
         WriteRawPStr(PlsWait);
     end;
+
+{
+	WriteLn (FMedia, ',', FInfo);
+	Halt(1);
+}
 
     ReadDefaults;
     Tab := 0;
@@ -2895,6 +2894,7 @@ var
     Attempt : boolean;
 begin
 	FMedia := '';
+	FInfo := '';
     {$IFDEF DEBUG}
     Assign(LOGFILE, 'FDIMPLES.LOG');
     Rewrite(LOGFILE);
