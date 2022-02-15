@@ -57,6 +57,7 @@ db '39:Title',0
 db '38:version',0
 db '39:usage:',0
 db '40:[options]',0
+db '41:too many files',0
 
 { Help Messages and such }
 db '50:Released under the GNU General Public License, Version 2.0',0

@@ -57,6 +57,7 @@ interface
         nlsVersion                 = 38;
         nlsUsage                   = 39;
         nlsOptions                 = 40;
+        nlsTooManyFiles			   = 41;
 
         nlsHelp                    = 50;
 

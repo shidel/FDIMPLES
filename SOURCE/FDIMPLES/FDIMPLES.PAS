@@ -64,6 +64,7 @@ const
     AppTitle = 'FreeDOS Installer - My Package List Editor Software';
     ALLPackages = 'FDPLFULL.LST';
     BASEPackages = 'FDPLBASE.LST';
+    TooManyFiles = 'too many files';
     NoScroll = 1;
     MinTicks = 7;
 
@@ -74,10 +75,11 @@ const
     IdleWait = 18 * 4;
 
     LoMem : LongInt = 4096; { Never drop below this small free block size }
-    PreFetchCacheDump : LongInt = Sizeof(String)*200; { Before reading a group }
-    LoMemCacheDump : LongInt = 20480; { When low dump this much + LoMem }
+    PreFetchCacheDump : LongInt = Sizeof(String)*300; { Before reading a group }
+    LoMemCacheDump : LongInt = 32768; { When low dump this much + LoMem }
     MemWarn : LongInt = 8192;
     MaxOperations = 3000;
+    FIleListMax = 1000;
 
     CfgFMedia : String = '';
 
@@ -1168,7 +1170,14 @@ begin
                 AddLine(Package, ' ' + ChrStr(#$c4, Lo(ScreenMax) - Theme.Frame.X * 2 - 5), true);
             AddLine(Package, lcase(S), C <> 0);
             Inc(X);
-        end
+        end;
+        if X > FileListMax then begin
+        	S := NLS(nlsTooManyFiles);
+        	if S = '' then S := TooManyFiles;
+        	S := '[' + S + ']';
+        	AddLine(Package, S, true);
+        	C := -1;
+        end;
     until (C = -1) or Keypressed;
     Close(F);
     if Keypressed then begin
