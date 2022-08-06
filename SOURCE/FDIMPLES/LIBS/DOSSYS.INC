@@ -45,28 +45,28 @@
 	TERMINATE_PROC:
 		push		ax
 		test		si, si
-		jz			%%ProgramExit
-		mov			ah, 0x02
+		jz		%%ProgramExit
+		mov		ah, 0x02
 		cld
 	%%DisplayMessage:
-		mov			dl, [si]
+		mov		dl, [si]
 		test		dl, dl
-		jz 			%%ProgramExit
-		inc			si
-		int			0x21
-		jmp			%%DisplayMessage
+		jz 		%%ProgramExit
+		inc		si
+		int		0x21
+		jmp		%%DisplayMessage
 	%%ProgramExit:
-		pop			ax
-		mov			ah, 0x4c
-		int			0x21
+		pop		ax
+		mov		ah, 0x4c
+		int		0x21
 %endif
 
 [section .data]
 
 %if %0 != 1
 	%%str:
-		db 			%2
-		db 			0
+		db 		%2
+		db 		0
 	%%endstr:
 %endif
 
