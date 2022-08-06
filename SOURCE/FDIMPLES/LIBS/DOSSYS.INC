@@ -111,16 +111,22 @@ __?SECT?__
 ; Send CRLF to standard output device
 ; INPUT:  %1 = Number of CRLF to output
 ; OUTPUT: none
-	push	cx
 	%ifnidni %1, 1
+		push		cx
 		movndef		cx, %1
 		%%Loopy:
 			StdOutChar 	13, 10
 			loop		%%Loopy
+		pop		cx
 	%else
-		StdOutChar	13,10
+		pushm		dx, ax
+		mov		ah, 0x02
+		mov		dl, 13
+		int		0x21
+		mov		dl, 10
+		int		0x21
+		popm		dx, ax
 	%endif
-	pop	cx
 %endmacro
 ; -----------------------------------------------------------------------------
 %imacro StdOutHexByte 1-*
@@ -131,41 +137,42 @@ __?SECT?__
 	%idefine StdOutHexByte_PROC_DEFINED
 
 	StdOutHexByte_PROC:
-		push	cx
-		mov		cx, 2
+		pushm		dx, cx, ax
+
+		mov		cx, 0x0204
+		mov		ah, ch
 	%%Loopy:
-		push	cx
-		push	ax
-		dec		cx
-		mov		ax, 4
-		mul		cx
-		mov		cx, ax
+		ror		al, cl
+		mov		dl, al
+		and		dl, 0x0f
+		add		dl, 0x30
+		cmp		dl, 0x39
+		jbe		%%Display
+		add		dl, 0x27
+
+	%%Display:
+		push		ax
+		int		0x21
 		pop		ax
-		push	ax
-		shr		ax, cl
-		and		ax, 0x0f
-		cmp		al, 9
-		jle		%%Digit
-		add		al, 0x57
-		jmp		%%Show
-	%%Digit:
-		add		al, 0x30
-	%%Show:
-		StdOutChar	al
-		pop		ax
-		pop		cx
-		loop		%%Loopy
-		pop		cx
+		dec		ch
+		jnz		%%Loopy
+
+		popm		dx, cx, ax
+
 		ret
 %endif
 
 __?SECT?__
 
 	%rep  %0
-		push		ax
-		movndef		al, %1
+		%ifnidni	%1, al
+			push		ax
+			mov		al, %1
+		%endif
 		call		StdOutHexByte_PROC
-		pop		ax
+		%ifnidni	%1, al
+			pop		ax
+		%endif
 	%rotate 1
 	%endrep
 
@@ -173,11 +180,15 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro StdOutHexWord 1-*
 	%rep  %0
-		push		ax
-		movndef		ax, %1
+		%ifnidni	%1, ax
+			push		ax
+			mov		ax, %1
+		%endif
 		StdOutHexByte	ah
-		StdOutHexByte 	al
-		pop		ax
+		StdOutHexByte	al
+		%ifnidni	%1, ax
+			pop		ax
+		%endif
 	%rotate 1
 	%endrep
 %endmacro
