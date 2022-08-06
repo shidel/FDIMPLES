@@ -43,4 +43,4 @@ SECTION .text
 %include "DOSCRT.INC"
 %include "DOSSYS.INC"
 
-	Terminate		0
+	Terminate		[Video_Card]

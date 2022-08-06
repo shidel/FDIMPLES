@@ -30,3 +30,93 @@
 ; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ; NASM 2.15.05, or later
+
+; -----------------------------------------------------------------------------
+
+%idefine Video_MDA 	0
+%idefine Video_CGA 	1
+%idefine Video_EGA 	2
+%idefine Video_MCGA 	3
+%idefine Video_VGA 	4
+
+; -----------------------------------------------------------------------------
+%imacro ProbeVideoCard 0
+
+[section .procs]
+
+%ifndef ProbeVideoCard_PROC_DEFINED
+	%idefine ProbeVideoCard_PROC_DEFINED
+
+ProbeVideoCard_PROC:
+; Assume at least monochrome MDA
+	mov			[Video_Segment], word 0xb000
+	mov			[Video_Card], word Video_MDA
+
+; If color assume at least CGA
+	mov			ax, 0x0040
+	push 			ax
+	pop			es
+	mov			si, 0x0063
+	mov			ax, [es:si]
+	cmp			ax, 0x3d4
+	jne			%%ProbeVGA
+	mov			ax, 0xb800
+	mov			[Video_Segment], word 0xb800
+	mov			[Video_Card], word Video_CGA
+
+
+%%ProbeVGA:
+; Video BIOS - Video Refresh Control, Enable video refresh
+; Returns AL=0x12, if function is supported. Requires VGA or better.
+	mov			ax, 0x1200
+	mov			bl, 0x36
+	int			0x10
+	mov			dx, Video_VGA
+	cmp			al, 0x12
+	je			%%Identified
+
+%%ProbeMCGA:
+; Video BIOS - Video Addressing, Enable CPU video addressing
+; Returns AL=0x12, if function is supported. Requires MCGA/VGA or better.
+
+	mov			ax, 0x1200
+	mov			bl, 0x32
+	int			0x10
+	mov			dx, Video_MCGA
+	cmp			al, 0x12
+	je			%%Identified
+
+%%ProbeEGA:
+; Video BIOS - Get EGA Info. (AL does not need set, but will clear it anyway)
+; If BH is unchanged on return, then EGA or later is not present.
+	mov			ax, 0x1200
+	mov			bx, 0xff10
+	int			0x10
+	mov			dx, Video_EGA
+	cmp			bh, 0xff
+	jne			%%Identified
+
+; Not better than CGA
+	ret
+
+%%Identified:
+	mov			[Video_Card], dx
+	ret
+%endif
+
+[section .bss]
+
+Video_Card:	resw		0
+Video_Segment:	resw		0
+Video_Rows:	resw		0
+Video_Columns:	resw		0
+
+__?SECT?__
+
+	call 			ProbeVideoCard_PROC
+
+%endmacro
+
+; -----------------------------------------------------------------------------
+
+	ProbeVideoCard
