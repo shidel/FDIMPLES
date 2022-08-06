@@ -1,7 +1,7 @@
 #!/bin/bash
 
 rm FDIMPLES.COM >/dev/null
-nasm "FDIMPLES.ASM" -Ilibs/ -fbin -O9 -o "FDIMPLES.COM" || exit 1
+nasm "FDIMPLES.ASM" -ILIBS/ -fbin -O9 -o "FDIMPLES.COM" || exit 1
 if [ ! -f FDIMPLES.COM ] ; then
 	exit 1
 fi;

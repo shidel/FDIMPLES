@@ -1,7 +1,7 @@
 @echo off
 
 del FDIMPLES.COM >nul
-nasm "FDIMPLES.ASM" -Ilibs/ -fbin -O9 -o "FDIMPLES.COM"
+nasm "FDIMPLES.ASM" -ILIBS/ -fbin -O9 -o "FDIMPLES.COM"
 if not exist FDIMPLES.COM goto end
 
 if not exist ..\..\BIN\NUL mkdir ..\..\BIN

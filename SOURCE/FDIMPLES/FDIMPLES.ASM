@@ -29,7 +29,7 @@
 ; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-; NASM 2.14, or later
+; NASM 2.15.05, or later
 
 	use16
 
@@ -37,5 +37,10 @@
 
 	org 0x100
 
-	mov	 		ax, 0x4c00
-	int  		0x21				; terminate with result code
+SECTION .text
+
+%include "NASMEXT.INC"
+%include "DOSCRT.INC"
+%include "DOSSYS.INC"
+
+	Terminate	0
