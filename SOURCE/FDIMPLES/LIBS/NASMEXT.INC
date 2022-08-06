@@ -31,3 +31,121 @@
 
 ; NASM 2.15.05, or later
 
+%imacro movip 1
+	call %%ShortCall
+%%ShortCall:
+	pop	 %1
+%endmacro
+
+%imacro retz 0
+        jnz     %%Skip
+        ret
+    %%Skip:
+%endmacro
+
+%imacro retnz 0
+        jz      %%Skip
+        ret
+    %%Skip:
+%endmacro
+
+%imacro rete 0
+        jne     %%Skip
+        ret
+    %%Skip:
+%endmacro
+
+%imacro retc 0
+        jnc     %%Skip
+        ret
+    %%Skip:
+%endmacro
+
+%imacro pushall 0
+	pushf
+	push	    ax
+	push 	    bx
+	push	    cx
+	push	    dx
+	push	    si
+	push	    di
+	push	    es
+	push	    ds
+	push        bp
+%endmacro
+
+%imacro popall 0
+	pop         bp
+	pop 	    ds
+	pop		    es
+	pop		    di
+	pop		    si
+	pop		    dx
+	pop		    cx
+	pop		    bx
+	pop		    ax
+	popf
+%endmacro
+
+%imacro pushm 0-*
+    %ifidni %0, 0
+        pushall
+    %else
+        %rep  %0
+            push    %1
+        %rotate 1
+        %endrep
+    %endif
+%endmacro
+
+%imacro popm 0-*
+    %ifidni %0, 0
+        popall
+    %else
+        %rep %0
+        %rotate -1
+            pop     %1
+        %endrep
+    %endif
+%endmacro
+
+%imacro movndef 2-*
+; MOV Not Default.
+; When not the default register, generate a mov (or similar) instruction to
+; load the register.
+; MOVNDEF ax, ax		 -> NULL
+; MOVNDEF ax, bx		 -> mov ax, bx
+; MOVNDEF ax, bx, cx, dx -> mov ax, bx; mov cx, dx
+; MOVNDEF ax, bx, cx, ax -> push ax; mov ax, bx; pop cx
+    %ifidni %0, 2
+    	%ifnidni %1, %2
+    		mov	%1, %2
+    	%endif
+    %elifidni %0, 4
+   		%ifidni %1, %4
+	   		push %4
+    	    mov  %1, %2
+			pop  %3
+		%else
+			%ifnidni %1, %2
+				mov     %1, %2
+			%endif
+			%ifnidni %3, %4
+				mov     %3, %4
+			%endif
+		%endif
+	%else
+        %rep  %0 / 2
+			%ifnidni %1, %2
+				push     %2
+			%endif
+            %rotate 2
+        %endrep
+        %rep %0 / 2
+	        %rotate -2
+			%ifnidni %1, %2
+				pop     %1
+			%endif
+        %endrep
+	%endif
+%endmacro
