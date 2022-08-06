@@ -34,8 +34,11 @@
 ; -----------------------------------------------------------------------------
 %imacro Terminate 1-2+
 ; Terminate Program
-; %1  = DOS Exit Code
-; %2+ = Any message sent to STDOUT at exit
+; INPUT:
+; 	%1  = DOS Exit Code
+; 	%2+ = Any message sent to STDOUT at exit
+; OUTPUT:
+; 	None: Does not return
 
 [section .procs]
 
@@ -80,4 +83,36 @@ __?SECT?__
 
 	movndef 	al, %1
 	jmp		TERMINATE_PROC
+%endmacro
+
+; -----------------------------------------------------------------------------
+%imacro StdOutChar 1-*
+; INPUT:  Series of Characters
+; OUTPUT: ah, dl are undefined
+	%ifnidni %0, 1
+		mov		ah, 0x02
+		%rep  %0
+			movndef		dl, %1
+			int    		0x21
+		%rotate 1
+		%endrep
+	%else
+		movndef 	dl, %1
+		mov		ah, 0x02
+		int 		0x21
+	%endif
+%endmacro
+
+; -----------------------------------------------------------------------------
+%imacro StdOutCRLF 0-1	1
+; INPUT:  %1 = Number of CRLF to output
+; OUTPUT: ah, dl, cx are undefined
+	%ifnidni %1, 1
+		movndef		cx, %1
+		%%Loopy:
+			StdOutChar 	13, 10
+			loop		%%Loopy
+	%else
+		StdOutChar	13,10
+	%endif
 %endmacro

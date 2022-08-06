@@ -56,14 +56,17 @@ ProbeVideoCard_PROC:
 	mov			ax, 0x0040
 	push 			ax
 	pop			es
-	mov			si, 0x0063
-	mov			ax, [es:si]
+	mov			ax, [es:0x004a]
+	mov			[Video_Columns], ax
+	mov			ax, [es:0x0084]
+	inc			ax
+	mov			[Video_Rows], ax
+
+	mov			ax, [es:0x0063]
 	cmp			ax, 0x3d4
 	jne			%%ProbeVGA
-	mov			ax, 0xb800
 	mov			[Video_Segment], word 0xb800
 	mov			[Video_Card], word Video_CGA
-
 
 %%ProbeVGA:
 ; Video BIOS - Video Refresh Control, Enable video refresh
@@ -97,6 +100,9 @@ ProbeVideoCard_PROC:
 	jne			%%Identified
 
 ; Not better than CGA
+	mov			ax, 0x0019
+	mov			[Video_Rows], ax
+
 	ret
 
 %%Identified:

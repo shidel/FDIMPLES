@@ -43,4 +43,5 @@ SECTION .text
 %include "DOSCRT.INC"
 %include "DOSSYS.INC"
 
+	StdOutCRLF
 	Terminate		[Video_Card]
