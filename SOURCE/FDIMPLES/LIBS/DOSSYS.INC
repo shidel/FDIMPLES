@@ -64,8 +64,9 @@
 [section .data]
 
 %if %0 != 1
-	%%str:      db %2
-				db 0
+	%%str:
+		db %2
+		db 0
 	%%endstr:
 %endif
 
