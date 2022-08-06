@@ -42,10 +42,10 @@
 
 [section .procs]
 
-%ifndef TERMINATE_PROC_DEFINED
-	%idefine TERMINATE_PROC_DEFINED
+%ifndef Terminate_PROC_DEFINED
+	%idefine Terminate_PROC_DEFINED
 
-	TERMINATE_PROC:
+	Terminate_PROC:
 		push		ax
 		test		si, si
 		jz		%%ProgramExit
@@ -82,13 +82,15 @@ __?SECT?__
 %endif
 
 	movndef 	al, %1
-	jmp		TERMINATE_PROC
+	jmp		Terminate_PROC
 %endmacro
 
 ; -----------------------------------------------------------------------------
 %imacro StdOutChar 1-*
+; Send series of characters to standard output device
 ; INPUT:  Series of Characters
-; OUTPUT: ah, dl are undefined
+; OUTPUT: none
+	pushm		ax, dx
 	%ifnidni %0, 1
 		mov		ah, 0x02
 		%rep  %0
@@ -101,12 +103,15 @@ __?SECT?__
 		mov		ah, 0x02
 		int 		0x21
 	%endif
+	popm		ax, dx
 %endmacro
 
 ; -----------------------------------------------------------------------------
 %imacro StdOutCRLF 0-1	1
+; Send CRLF to standard output device
 ; INPUT:  %1 = Number of CRLF to output
-; OUTPUT: ah, dl, cx are undefined
+; OUTPUT: none
+	push	cx
 	%ifnidni %1, 1
 		movndef		cx, %1
 		%%Loopy:
@@ -115,4 +120,64 @@ __?SECT?__
 	%else
 		StdOutChar	13,10
 	%endif
+	pop	cx
+%endmacro
+; -----------------------------------------------------------------------------
+%imacro StdOutHexByte 1-*
+
+[section .procs]
+
+%ifndef StdOutHexByte_PROC_DEFINED
+	%idefine StdOutHexByte_PROC_DEFINED
+
+	StdOutHexByte_PROC:
+		push	cx
+		mov		cx, 2
+	%%Loopy:
+		push	cx
+		push	ax
+		dec		cx
+		mov		ax, 4
+		mul		cx
+		mov		cx, ax
+		pop		ax
+		push	ax
+		shr		ax, cl
+		and		ax, 0x0f
+		cmp		al, 9
+		jle		%%Digit
+		add		al, 0x57
+		jmp		%%Show
+	%%Digit:
+		add		al, 0x30
+	%%Show:
+		StdOutChar	al
+		pop		ax
+		pop		cx
+		loop		%%Loopy
+		pop		cx
+		ret
+%endif
+
+__?SECT?__
+
+	%rep  %0
+		push		ax
+		movndef		al, %1
+		call		StdOutHexByte_PROC
+		pop		ax
+	%rotate 1
+	%endrep
+
+%endmacro
+; -----------------------------------------------------------------------------
+%imacro StdOutHexWord 1-*
+	%rep  %0
+		push		ax
+		movndef		ax, %1
+		StdOutHexByte	ah
+		StdOutHexByte 	al
+		pop		ax
+	%rotate 1
+	%endrep
 %endmacro

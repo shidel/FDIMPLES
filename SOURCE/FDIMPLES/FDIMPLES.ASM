@@ -43,5 +43,6 @@ SECTION .text
 %include "DOSCRT.INC"
 %include "DOSSYS.INC"
 
+	StdOutHexWord		0x1234, 0x5678, 0x9abc
 	StdOutCRLF
 	Terminate		[Video_Card]
