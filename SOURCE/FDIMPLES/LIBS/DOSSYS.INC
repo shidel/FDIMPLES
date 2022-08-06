@@ -78,6 +78,6 @@ __?SECT?__
 	mov		si, %%str
 %endif
 
-	movndef al, %1
+	movndef 	al, %1
 	jmp		TERMINATE_PROC
 %endmacro
