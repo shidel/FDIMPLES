@@ -140,14 +140,13 @@ __?SECT?__
 
 ; -----------------------------------------------------------------------------
 %imacro StdOutCRLF 0-1	1
-	%ifnidni %1, 1
-		push		cx
-		movndef		cx, %1
-		%%Loopy:
-			StdOutChar 	13, 10
-			loop		%%Loopy
-		pop		cx
-	%else
+
+[section .procs]
+
+%ifndef StdOutCRLF_PROC_DEFINED
+	%idefine StdOutCRLF_PROC_DEFINED
+
+	StdOutCRLF_PROC:
 		pushm		dx, ax
 		mov		ah, 0x02
 		mov		dl, 13
@@ -155,6 +154,20 @@ __?SECT?__
 		mov		dl, 10
 		int		0x21
 		popm		dx, ax
+		ret
+%endif
+
+__?SECT?__
+
+	%ifnidni %1, 1
+		push		cx
+		movndef		cx, %1
+		%%Loopy:
+			call		StdOutCRLF_PROC
+			loop		%%Loopy
+		pop		cx
+	%else
+		call		StdOutCRLF_PROC
 	%endif
 %endmacro
 ; -----------------------------------------------------------------------------
