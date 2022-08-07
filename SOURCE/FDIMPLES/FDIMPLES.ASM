@@ -43,26 +43,13 @@ SECTION .text
 %include "DOSCRT.INC"
 %include "DOSSYS.INC"
 
-	mov			ax, 0x6789
-	StdOutHexWord		ax
+	StdOutHexWord		[Video_Card]
 	StdOutCRLF
-	inc			al
-	StdOutHexWord		ax
+	StdOutHexWord		[Video_Segment]
 	StdOutCRLF
-	inc			al
-	StdOutHexWord		ax
+	StdOutHexWord		[Video_Columns]
 	StdOutCRLF
-	inc			al
-	StdOutHexWord		ax
+	StdOutHexWord		[Video_Rows]
 	StdOutCRLF
 
-	StdOutHexWord		0x0123, 0x5678, 0x9abc
-	StdOutCRLF
-
-	StdOutHexWord		0x1234, 0x5678, 0x9abc
-	StdOutCRLF
-
-	StdOutHexWord		0x1234, 0x5678, 0x9abc
-	StdOutCRLF
-
-	Terminate		[Video_Card]
+	Terminate		0

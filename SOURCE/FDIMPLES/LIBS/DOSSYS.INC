@@ -32,13 +32,41 @@
 ; NASM 2.15.05, or later
 
 ; -----------------------------------------------------------------------------
-%imacro Terminate 1-2+
+; List of macros and functions provided by this file.
+; Note: Macros often have have preferred register to use when passing when
+; passing them a parameter. Using the preferred register will result in saving
+; a few bytes of code. However, it is not required.
+
 ; Terminate Program
+; MACRO:  Terminate 1-2+
 ; INPUT:
-; 	%1  = DOS Exit Code
+; 	%1  = DOS Exit Code (prefers al)
 ; 	%2+ = Any message sent to STDOUT at exit
 ; OUTPUT:
 ; 	None: Does not return
+
+; Send individual characters to standard output device
+; MACRO:  StdOutChar 1-*
+; INPUT:  %1+ = Characters (prefers dl)
+; OUTPUT: none
+
+; Send CRLF to standard output device
+; MACRO:  StdOutCRLF 0-1
+; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
+; OUTPUT: none
+
+; Send byte as HEX to standard output device
+; MACRO:  StdOutHexByte 1-*
+; INPUT:  %1+ = byte to print (prefers al)
+; OUTPUT: none
+
+; Send word as HEX to standard output device
+; MACRO:  StdOutHexWord 1-*
+; INPUT:  %1+ = word to print (prefers ax)
+; OUTPUT: none
+
+; -----------------------------------------------------------------------------
+%imacro Terminate 1-2+
 
 [section .procs]
 ; NASM will combine and place all .procs sections after the .text section
@@ -94,9 +122,6 @@ __?SECT?__
 
 ; -----------------------------------------------------------------------------
 %imacro StdOutChar 1-*
-; Send series of characters to standard output device
-; INPUT:  Series of Characters
-; OUTPUT: none
 	pushm		ax, dx
 	%ifnidni %0, 1
 		mov		ah, 0x02
@@ -115,9 +140,6 @@ __?SECT?__
 
 ; -----------------------------------------------------------------------------
 %imacro StdOutCRLF 0-1	1
-; Send CRLF to standard output device
-; INPUT:  %1 = Number of CRLF to output
-; OUTPUT: none
 	%ifnidni %1, 1
 		push		cx
 		movndef		cx, %1
@@ -137,9 +159,6 @@ __?SECT?__
 %endmacro
 ; -----------------------------------------------------------------------------
 %imacro StdOutHexByte 1-*
-; Send byte as HEX to standard output device
-; INPUT:  %1+ = byte to print
-; OUTPUT: none
 
 [section .procs]
 
@@ -189,9 +208,6 @@ __?SECT?__
 %endmacro
 ; -----------------------------------------------------------------------------
 %imacro StdOutHexWord 1-*
-; Send word as HEX to standard output device
-; INPUT:  %1+ = word to print
-; OUTPUT: none
 	%rep  %0
 		%ifnidni	%1, ax
 			push		ax
