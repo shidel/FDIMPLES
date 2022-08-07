@@ -41,6 +41,9 @@
 ; 	None: Does not return
 
 [section .procs]
+; NASM will combine and place all .procs sections after the .text section
+; The segment change could be inside the if directive. But, I'll put it on the
+; outside. I think it makes the code slightly more readable.
 
 %ifndef Terminate_PROC_DEFINED
 	%idefine Terminate_PROC_DEFINED
@@ -48,7 +51,7 @@
 	Terminate_PROC:
 		push		ax
 		test		si, si
-		jz		%%ProgramExit
+		jz		%%ProgramExit	; if si = 0, no message
 		mov		ah, 0x02
 		cld
 	%%DisplayMessage:
@@ -65,8 +68,10 @@
 %endif
 
 [section .data]
+; NASM will combine and place all .data sections after the .procs section
 
 %if %0 != 1
+	; if more than 1 param, store the rest as a string in the data section
 	%%str:
 		db 		%2
 		db 		0
@@ -74,14 +79,16 @@
 %endif
 
 __?SECT?__
+; Switch back to the section prior to the macro. should be .text. but, maybe
+; not.
 
 %if %0 = 1
-	xor		si, si
+	xor		si, si		; no message
 %else
-	mov		si, %%str
+	mov		si, %%str	; message in data section
 %endif
 
-	movndef 	al, %1
+	movndef 	al, %1		; exit code
 	jmp		Terminate_PROC
 %endmacro
 
@@ -130,6 +137,9 @@ __?SECT?__
 %endmacro
 ; -----------------------------------------------------------------------------
 %imacro StdOutHexByte 1-*
+; Send byte as HEX to standard output device
+; INPUT:  %1+ = byte to print
+; OUTPUT: none
 
 [section .procs]
 
@@ -139,16 +149,16 @@ __?SECT?__
 	StdOutHexByte_PROC:
 		pushm		dx, cx, ax
 
-		mov		cx, 0x0204
-		mov		ah, ch
+		mov		cx, 0x0204	; ch = count, cl = bit rotate
+		mov		ah, ch		; mov ah, 0x02
 	%%Loopy:
-		ror		al, cl
+		ror		al, cl		; rotate first to do high bits
 		mov		dl, al
 		and		dl, 0x0f
-		add		dl, 0x30
+		add		dl, 0x30	; make numbers ascii numbers
 		cmp		dl, 0x39
-		jbe		%%Display
-		add		dl, 0x27
+		jbe		%%Display	; <= to asciii 9
+		add		dl, 0x27	; make value ascii letter
 
 	%%Display:
 		push		ax
@@ -179,6 +189,9 @@ __?SECT?__
 %endmacro
 ; -----------------------------------------------------------------------------
 %imacro StdOutHexWord 1-*
+; Send word as HEX to standard output device
+; INPUT:  %1+ = word to print
+; OUTPUT: none
 	%rep  %0
 		%ifnidni	%1, ax
 			push		ax
