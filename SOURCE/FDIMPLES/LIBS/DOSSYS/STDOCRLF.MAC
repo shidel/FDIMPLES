@@ -1,5 +1,3 @@
-; CRT for DOS v1.0
-
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -31,39 +29,40 @@
 
 ; NASM 2.15.05, or later
 
-%ifndef DOSCRT_INC_DEFINED
-%define DOSCRT_INC_DEFINED
 ; -----------------------------------------------------------------------------
-; List of macros and functions provided by this file.
-; Note: Macros often have have preferred register to use when passing when
-; passing them a parameter. Using the preferred register will result in saving
-; a few bytes of code. However, it is not required.
-
-; Probes video hardware for card type and current settings. It needs called
-; prior to any other DOSCRT macros. However, it can be called multiple times.
-; For example, after mode changes.
-; Registers AX, BX, CX, DX, ES, DI are not preserved.
-; MACRO:  ProbeVideoCard 0
-; INPUT:  none
-; OUTPUT: undefined, sets data in BSS.
-%include "DOSCRT/PROBVID.MAC"
-
+; Send CRLF to standard output device
+; MACRO:  StdOutCRLF 0-1
+; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
+; OUTPUT: none
 ; -----------------------------------------------------------------------------
-; Included card support levels and returned detection values
+%imacro StdOutCRLF 0-1	1
 
-%idefine Video_MDA 	0
-%idefine Video_CGA 	1
-; EGA test is strongly recommended but not required. Otherwise, locked into
-; 25 screen rows.
-%idefine Video_EGA 	2
-; Disable Video_MCGA, VGA, VESA to reduce code size if don't care
-; %idefine Video_MCGA 	3
-; %idefine Video_VGA 	4
-; %idefine Video_VESA	5
+[section .procs]
 
-; -----------------------------------------------------------------------------
-; Automatically initialize video display settings in BSS
+%ifndef StdOutCRLF_PROC_DEFINED
+	%define StdOutCRLF_PROC_DEFINED
 
-ProbeVideoCard
-; -----------------------------------------------------------------------------
+	StdOutCRLF_PROC:
+		pushm		dx, ax
+		mov		ah, 0x02
+		mov		dl, 13
+		int		0x21
+		mov		dl, 10
+		int		0x21
+		popm		dx, ax
+		ret
 %endif
+
+__?SECT?__
+
+	%ifnidni %1, 1
+		push		cx
+		movndef		cx, %1
+		%%Loopy:
+			call		StdOutCRLF_PROC
+			loop		%%Loopy
+		pop		cx
+	%else
+		call		StdOutCRLF_PROC
+	%endif
+%endmacro

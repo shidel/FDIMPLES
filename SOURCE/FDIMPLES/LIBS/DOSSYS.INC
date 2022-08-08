@@ -31,6 +31,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef DOSSYS_INC_DEFINED
+%define DOSSYS_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; List of macros and functions provided by this file.
 ; Note: Macros often have have preferred register to use when passing when
@@ -44,195 +46,31 @@
 ; 	%2+ = Any message sent to STDOUT at exit
 ; OUTPUT:
 ; 	None: Does not return
+%include "DOSSYS/TERMINAT.MAC"
 
 ; Send individual characters to standard output device
 ; MACRO:  StdOutChar 1-*
 ; INPUT:  %1+ = Characters (prefers dl)
 ; OUTPUT: none
+%include "DOSSYS/STDOCHAR.MAC"
 
 ; Send CRLF to standard output device
 ; MACRO:  StdOutCRLF 0-1
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
 ; OUTPUT: none
+%include "DOSSYS/STDOCRLF.MAC"
 
 ; Send byte as HEX to standard output device
 ; MACRO:  StdOutHexByte 1-*
 ; INPUT:  %1+ = byte to print (prefers al)
 ; OUTPUT: none
+%include "DOSSYS/STDOBYTE.MAC"
 
 ; Send word as HEX to standard output device
 ; MACRO:  StdOutHexWord 1-*
 ; INPUT:  %1+ = word to print (prefers ax)
 ; OUTPUT: none
+%include "DOSSYS/STDOWORD.MAC"
 
 ; -----------------------------------------------------------------------------
-%imacro Terminate 1-2+
-
-%if %0 != 1
-
-	[section .procs]
-	; NASM will combine and place all .procs sections after the .text section
-
-	%ifndef Terminate_PROC_DEFINED
-		%idefine Terminate_PROC_DEFINED
-
-		Terminate_PROC:
-			push		ax
-			test		si, si
-			jz		%%ProgramExit	; if si = 0, no message
-			mov		ah, 0x02
-			cld
-		%%DisplayMessage:
-			mov		dl, [si]
-			test		dl, dl
-			jz 		%%ProgramExit
-			inc		si
-			int		0x21
-			jmp		%%DisplayMessage
-		%%ProgramExit:
-			pop		ax
-			mov		ah, 0x4c
-			int		0x21
-	%endif
-
-	[section .data]
-	; NASM will combine and place all .data sections after the .procs section
-
-		; if more than 1 param, store the rest as a string in the data section
-		%%str:
-			db 		%2
-			db 		0
-		%%endstr:
 %endif
-
-__?SECT?__
-; Switch back to the section prior to the macro. should be .text. but, maybe
-; not.
-
-	movndef 	al, %1		; exit code
-
-%if %0 = 1
-	xor		si, si		; no message
-	mov		ah, 0x4c
-	int		0x21
-%else
-	mov		si, %%str	; message in data section
-	jmp		Terminate_PROC
-%endif
-
-%endmacro
-
-; -----------------------------------------------------------------------------
-%imacro StdOutChar 1-*
-	pushm		ax, dx
-	%ifnidni %0, 1
-		mov		ah, 0x02
-		%rep  %0
-			movndef		dl, %1
-			int    		0x21
-		%rotate 1
-		%endrep
-	%else
-		movndef 	dl, %1
-		mov		ah, 0x02
-		int 		0x21
-	%endif
-	popm		ax, dx
-%endmacro
-
-; -----------------------------------------------------------------------------
-%imacro StdOutCRLF 0-1	1
-
-[section .procs]
-
-%ifndef StdOutCRLF_PROC_DEFINED
-	%idefine StdOutCRLF_PROC_DEFINED
-
-	StdOutCRLF_PROC:
-		pushm		dx, ax
-		mov		ah, 0x02
-		mov		dl, 13
-		int		0x21
-		mov		dl, 10
-		int		0x21
-		popm		dx, ax
-		ret
-%endif
-
-__?SECT?__
-
-	%ifnidni %1, 1
-		push		cx
-		movndef		cx, %1
-		%%Loopy:
-			call		StdOutCRLF_PROC
-			loop		%%Loopy
-		pop		cx
-	%else
-		call		StdOutCRLF_PROC
-	%endif
-%endmacro
-; -----------------------------------------------------------------------------
-%imacro StdOutHexByte 1-*
-
-[section .procs]
-
-%ifndef StdOutHexByte_PROC_DEFINED
-	%idefine StdOutHexByte_PROC_DEFINED
-
-	StdOutHexByte_PROC:
-		pushm		dx, cx, ax
-
-		mov		cx, 0x0204	; ch = count, cl = bit rotate
-		mov		ah, ch		; mov ah, 0x02
-	%%Loopy:
-		ror		al, cl		; rotate first to do high bits
-		mov		dl, al
-		and		dl, 0x0f
-		add		dl, 0x30	; make numbers ascii numbers
-		cmp		dl, 0x39
-		jbe		%%Display	; <= to asciii 9
-		add		dl, 0x27	; make value ascii letter
-
-	%%Display:
-		push		ax
-		int		0x21
-		pop		ax
-		dec		ch
-		jnz		%%Loopy
-
-		popm		dx, cx, ax
-
-		ret
-%endif
-
-__?SECT?__
-
-	%rep  %0
-		%ifnidni	%1, al
-			push		ax
-			mov		al, %1
-		%endif
-		call		StdOutHexByte_PROC
-		%ifnidni	%1, al
-			pop		ax
-		%endif
-	%rotate 1
-	%endrep
-
-%endmacro
-; -----------------------------------------------------------------------------
-%imacro StdOutHexWord 1-*
-	%rep  %0
-		%ifnidni	%1, ax
-			push		ax
-			mov		ax, %1
-		%endif
-		StdOutHexByte	ah
-		StdOutHexByte	al
-		%ifnidni	%1, ax
-			pop		ax
-		%endif
-	%rotate 1
-	%endrep
-%endmacro

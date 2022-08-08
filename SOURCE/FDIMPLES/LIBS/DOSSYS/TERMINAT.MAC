@@ -1,5 +1,3 @@
-; CRT for DOS v1.0
-
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -31,39 +29,70 @@
 
 ; NASM 2.15.05, or later
 
-%ifndef DOSCRT_INC_DEFINED
-%define DOSCRT_INC_DEFINED
 ; -----------------------------------------------------------------------------
-; List of macros and functions provided by this file.
-; Note: Macros often have have preferred register to use when passing when
-; passing them a parameter. Using the preferred register will result in saving
-; a few bytes of code. However, it is not required.
-
-; Probes video hardware for card type and current settings. It needs called
-; prior to any other DOSCRT macros. However, it can be called multiple times.
-; For example, after mode changes.
-; Registers AX, BX, CX, DX, ES, DI are not preserved.
-; MACRO:  ProbeVideoCard 0
-; INPUT:  none
-; OUTPUT: undefined, sets data in BSS.
-%include "DOSCRT/PROBVID.MAC"
-
+; Terminate Program
+; MACRO:  Terminate 1-2+
+; INPUT:
+; 	%1  = DOS Exit Code (prefers al)
+; 	%2+ = Any message sent to STDOUT at exit
+; OUTPUT:
+; 	None: Does not return
 ; -----------------------------------------------------------------------------
-; Included card support levels and returned detection values
+%imacro Terminate 1-2+
 
-%idefine Video_MDA 	0
-%idefine Video_CGA 	1
-; EGA test is strongly recommended but not required. Otherwise, locked into
-; 25 screen rows.
-%idefine Video_EGA 	2
-; Disable Video_MCGA, VGA, VESA to reduce code size if don't care
-; %idefine Video_MCGA 	3
-; %idefine Video_VGA 	4
-; %idefine Video_VESA	5
+%if %0 != 1
 
-; -----------------------------------------------------------------------------
-; Automatically initialize video display settings in BSS
+	[section .procs]
+	; NASM will combine and place all .procs sections after the .text section
 
-ProbeVideoCard
-; -----------------------------------------------------------------------------
+	%ifndef Terminate_PROC_DEFINED
+		%idefine Terminate_PROC_DEFINED
+
+		Terminate_PROC:
+			push		ax
+			test		si, si
+			jz		%%ProgramExit	; if si = 0, no message
+			mov		ah, 0x02
+			cld
+		%%DisplayMessage:
+			mov		dl, [si]
+			test		dl, dl
+			jz 		%%ProgramExit
+			inc		si
+			int		0x21
+			jmp		%%DisplayMessage
+		%%ProgramExit:
+			pop		ax
+			mov		ah, 0x4c
+			int		0x21
+	%endif
+
+	[section .data]
+	; NASM will combine and place all .data sections after the .procs section
+
+		; if more than 1 param, store the rest as a string in the data section
+		%%str:
+			db 		%2
+			db 		0
+		%%endstr:
 %endif
+
+__?SECT?__
+; Switch back to the section prior to the macro. should be .text. but, maybe
+; not.
+
+%if %0 = 1
+	%ifnum %1
+		mov		ax, 0x4c00 + %1
+	%else
+		mov		ah, 0x4c
+		movndef		al, %1
+	%endif
+	int		0x21
+%else
+	movndef 	al, %1		; exit code
+	mov		si, %%str	; message in data section
+	jmp		Terminate_PROC
+%endif
+
+%endmacro

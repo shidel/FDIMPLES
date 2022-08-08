@@ -1,5 +1,3 @@
-; CRT for DOS v1.0
-
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -31,39 +29,57 @@
 
 ; NASM 2.15.05, or later
 
-%ifndef DOSCRT_INC_DEFINED
-%define DOSCRT_INC_DEFINED
 ; -----------------------------------------------------------------------------
-; List of macros and functions provided by this file.
-; Note: Macros often have have preferred register to use when passing when
-; passing them a parameter. Using the preferred register will result in saving
-; a few bytes of code. However, it is not required.
-
-; Probes video hardware for card type and current settings. It needs called
-; prior to any other DOSCRT macros. However, it can be called multiple times.
-; For example, after mode changes.
-; Registers AX, BX, CX, DX, ES, DI are not preserved.
-; MACRO:  ProbeVideoCard 0
-; INPUT:  none
-; OUTPUT: undefined, sets data in BSS.
-%include "DOSCRT/PROBVID.MAC"
-
+; Send byte as HEX to standard output device
+; MACRO:  StdOutHexByte 1-*
+; INPUT:  %1+ = byte to print (prefers al)
+; OUTPUT: none
 ; -----------------------------------------------------------------------------
-; Included card support levels and returned detection values
+%imacro StdOutHexByte 1-*
 
-%idefine Video_MDA 	0
-%idefine Video_CGA 	1
-; EGA test is strongly recommended but not required. Otherwise, locked into
-; 25 screen rows.
-%idefine Video_EGA 	2
-; Disable Video_MCGA, VGA, VESA to reduce code size if don't care
-; %idefine Video_MCGA 	3
-; %idefine Video_VGA 	4
-; %idefine Video_VESA	5
+[section .procs]
 
-; -----------------------------------------------------------------------------
-; Automatically initialize video display settings in BSS
+%ifndef StdOutHexByte_PROC_DEFINED
+	%define StdOutHexByte_PROC_DEFINED
 
-ProbeVideoCard
-; -----------------------------------------------------------------------------
+	StdOutHexByte_PROC:
+		pushm		dx, cx, ax
+
+		mov		cx, 0x0204	; ch = count, cl = bit rotate
+		mov		ah, ch		; mov ah, 0x02
+	%%Loopy:
+		ror		al, cl		; rotate first to do high bits
+		mov		dl, al
+		and		dl, 0x0f
+		add		dl, 0x30	; make numbers ascii numbers
+		cmp		dl, 0x39
+		jbe		%%Display	; <= to asciii 9
+		add		dl, 0x27	; make value ascii letter
+
+	%%Display:
+		push		ax
+		int		0x21
+		pop		ax
+		dec		ch
+		jnz		%%Loopy
+
+		popm		dx, cx, ax
+
+		ret
 %endif
+
+__?SECT?__
+
+	%rep  %0
+		%ifnidni	%1, al
+			push		ax
+			mov		al, %1
+		%endif
+		call		StdOutHexByte_PROC
+		%ifnidni	%1, al
+			pop		ax
+		%endif
+	%rotate 1
+	%endrep
+
+%endmacro

@@ -1,5 +1,3 @@
-; CRT for DOS v1.0
-
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -31,39 +29,25 @@
 
 ; NASM 2.15.05, or later
 
-%ifndef DOSCRT_INC_DEFINED
-%define DOSCRT_INC_DEFINED
 ; -----------------------------------------------------------------------------
-; List of macros and functions provided by this file.
-; Note: Macros often have have preferred register to use when passing when
-; passing them a parameter. Using the preferred register will result in saving
-; a few bytes of code. However, it is not required.
-
-; Probes video hardware for card type and current settings. It needs called
-; prior to any other DOSCRT macros. However, it can be called multiple times.
-; For example, after mode changes.
-; Registers AX, BX, CX, DX, ES, DI are not preserved.
-; MACRO:  ProbeVideoCard 0
-; INPUT:  none
-; OUTPUT: undefined, sets data in BSS.
-%include "DOSCRT/PROBVID.MAC"
-
+; Send individual characters to standard output device
+; MACRO:  StdOutChar 1-*
+; INPUT:  %1+ = Characters (prefers dl)
+; OUTPUT: none
 ; -----------------------------------------------------------------------------
-; Included card support levels and returned detection values
-
-%idefine Video_MDA 	0
-%idefine Video_CGA 	1
-; EGA test is strongly recommended but not required. Otherwise, locked into
-; 25 screen rows.
-%idefine Video_EGA 	2
-; Disable Video_MCGA, VGA, VESA to reduce code size if don't care
-; %idefine Video_MCGA 	3
-; %idefine Video_VGA 	4
-; %idefine Video_VESA	5
-
-; -----------------------------------------------------------------------------
-; Automatically initialize video display settings in BSS
-
-ProbeVideoCard
-; -----------------------------------------------------------------------------
-%endif
+%imacro StdOutChar 1-*
+	pushm		ax, dx
+	%ifnidni %0, 1
+		mov		ah, 0x02
+		%rep  %0
+			movndef		dl, %1
+			int    		0x21
+		%rotate 1
+		%endrep
+	%else
+		movndef 	dl, %1
+		mov		ah, 0x02
+		int 		0x21
+	%endif
+	popm		ax, dx
+%endmacro
