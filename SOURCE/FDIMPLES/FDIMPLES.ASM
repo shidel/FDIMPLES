@@ -43,13 +43,13 @@ SECTION .text
 %include "DOSCRT.INC"
 %include "DOSSYS.INC"
 
-	StdOutHexWord		[Video_Card]
-	StdOutCRLF
-	StdOutHexWord		[Video_Segment]
-	StdOutCRLF
-	StdOutHexWord		[Video_Columns]
-	StdOutCRLF
-	StdOutHexWord		[Video_Rows]
-	StdOutCRLF
+;	StdOutHexWord		[Video_Card]
+;	StdOutCRLF
+;	StdOutHexWord		[Video_Segment]
+;	StdOutCRLF
+;	StdOutHexWord		[Video_Columns]
+;	StdOutCRLF
+;	StdOutHexWord		[Video_Rows]
+;	StdOutCRLF
 
 	Terminate		0
