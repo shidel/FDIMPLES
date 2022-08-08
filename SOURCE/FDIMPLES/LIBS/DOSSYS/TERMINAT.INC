@@ -31,56 +31,25 @@
 
 ; -----------------------------------------------------------------------------
 ; Terminate Program
-; MACRO:  Terminate 1-2+
+; MACRO:  Terminate 1-*
 ; INPUT:
 ; 	%1  = DOS Exit Code (prefers al)
 ; 	%2+ = Any message sent to STDOUT at exit
 ; OUTPUT:
 ; 	None: Does not return
 ; -----------------------------------------------------------------------------
-%imacro Terminate 1-2+
+%imacro Terminate 1-*
 
-%if %0 != 1
-
-	[section .procs]
-	; NASM will combine and place all .procs sections after the .text section
-
-	%ifndef Terminate_PROC_DEFINED
-		%idefine Terminate_PROC_DEFINED
-
-		Terminate_PROC:
-			push		ax
-			test		si, si
-			jz		%%ProgramExit	; if si = 0, no message
-			mov		ah, 0x02
-			cld
-		%%DisplayMessage:
-			mov		dl, [si]
-			test		dl, dl
-			jz 		%%ProgramExit
-			inc		si
-			int		0x21
-			jmp		%%DisplayMessage
-		%%ProgramExit:
-			pop		ax
-			mov		ah, 0x4c
-			int		0x21
+	%if %0 > 1
+		%rep  %0 - 1
+		%rotate 1
+			push		si
+			StdOutStr_INTERNAL %1
+			pop		si
+		%endrep
+		%rotate 1
 	%endif
 
-	[section .data]
-	; NASM will combine and place all .data sections after the .procs section
-
-		; if more than 1 param, store the rest as a string in the data section
-		%%str:
-			db 		%2
-			db 		0
-%endif
-
-__?SECT?__
-; Switch back to the section prior to the macro. should be .text. but, maybe
-; not.
-
-%if %0 = 1
 	%ifnum %1
 		mov		ax, 0x4c00 + %1
 	%else
@@ -88,10 +57,5 @@ __?SECT?__
 		movndef		al, %1
 	%endif
 	int		0x21
-%else
-	movndef 	al, %1		; exit code
-	mov		si, %%str	; message in data section
-	jmp		Terminate_PROC
-%endif
 
 %endmacro

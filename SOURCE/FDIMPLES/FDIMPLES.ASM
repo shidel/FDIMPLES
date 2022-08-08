@@ -40,11 +40,10 @@ org 0x100
 SECTION .text
 
 %include "NASMEXT.INC"
-%include "DOSCRT.INC"
 %include "DOSSYS.INC"
+%include "DOSCRT.INC"
 
-	mov			di, TestMsg2
-	StdOutStr		"Video ", TestMsg, di, [Four], "Card: "
+	StdOutStr		'Video Card: '
 	StdOutHexWord		[Video_Card]
 	StdOutCRLF
 	StdOutHexWord		[Video_Segment]
@@ -54,14 +53,5 @@ SECTION .text
 	StdOutHexWord		[Video_Rows]
 	StdOutCRLF
 
-	Terminate		0
-
-TestMsg:
-	db "Test ",0
-TestMsg2:
-	db "Two ",0
-TestMsg3:
-	db "Three ",0
-Four:
-	dw TestMsg3
+	Terminate		0, 'No Error'
 

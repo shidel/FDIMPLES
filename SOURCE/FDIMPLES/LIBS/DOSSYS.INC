@@ -39,15 +39,6 @@
 ; passing them a parameter. Using the preferred register will result in saving
 ; a few bytes of code. However, it is not required.
 
-; Terminate Program
-; MACRO:  Terminate 1-2+
-; INPUT:
-; 	%1  = DOS Exit Code (prefers al)
-; 	%2+ = Any message sent to STDOUT at exit
-; OUTPUT:
-; 	None: Does not return
-%include "DOSSYS/TERMINAT.INC"
-
 ; Send individual characters to standard output device
 ; MACRO:  StdOutChar 1-*
 ; INPUT:  %1+ = Characters (prefers dl)
@@ -78,5 +69,13 @@
 ; OUTPUT: none
 %include "DOSSYS/STDOWORD.INC"
 
+; Terminate Program
+; MACRO:  Terminate 1-2+
+; INPUT:
+; 	%1  = DOS Exit Code (prefers al)
+; 	%2+ = Any message sent to STDOUT at exit
+; OUTPUT:
+; 	None: Does not return
+%include "DOSSYS/TERMINAT.INC"
 ; -----------------------------------------------------------------------------
 %endif
