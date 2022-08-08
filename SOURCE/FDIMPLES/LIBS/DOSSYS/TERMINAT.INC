@@ -74,7 +74,6 @@
 		%%str:
 			db 		%2
 			db 		0
-		%%endstr:
 %endif
 
 __?SECT?__

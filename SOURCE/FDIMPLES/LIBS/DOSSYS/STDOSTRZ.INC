@@ -1,5 +1,3 @@
-; System for DOS v1.0
-
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -31,52 +29,60 @@
 
 ; NASM 2.15.05, or later
 
-%ifndef DOSSYS_INC_DEFINED
-%define DOSSYS_INC_DEFINED
 ; -----------------------------------------------------------------------------
-; List of macros and functions provided by this file.
-; Note: Macros often have have preferred register to use when passing when
-; passing them a parameter. Using the preferred register will result in saving
-; a few bytes of code. However, it is not required.
-
-; Terminate Program
-; MACRO:  Terminate 1-2+
-; INPUT:
-; 	%1  = DOS Exit Code (prefers al)
-; 	%2+ = Any message sent to STDOUT at exit
-; OUTPUT:
-; 	None: Does not return
-%include "DOSSYS/TERMINAT.INC"
-
-; Send individual characters to standard output device
-; MACRO:  StdOutChar 1-*
-; INPUT:  %1+ = Characters (prefers dl)
-; OUTPUT: none
-%include "DOSSYS/STDOCHAR.INC"
-
 ; Send ASCIIz string to standard output device
-; MACRO:  StdOutStr 1+
-; INPUT:  %1+ = ASCIIz string sent to STDOUT (prefers si)
+; MACRO:  StdOutStr 1-*
+; INPUT:  ASCIIz string(s) sent to STDOUT (prefers si)
 ; OUTPUT: none
-%include "DOSSYS/STDOSTRZ.INC"
-
-; Send CRLF to standard output device
-; MACRO:  StdOutCRLF 0-1
-; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
-; OUTPUT: none
-%include "DOSSYS/STDOCRLF.INC"
-
-; Send byte as HEX to standard output device
-; MACRO:  StdOutHexByte 1-*
-; INPUT:  %1+ = byte to print (prefers al)
-; OUTPUT: none
-%include "DOSSYS/STDOBYTE.INC"
-
-; Send word as HEX to standard output device
-; MACRO:  StdOutHexWord 1-*
-; INPUT:  %1+ = word to print (prefers ax)
-; OUTPUT: none
-%include "DOSSYS/STDOWORD.INC"
-
 ; -----------------------------------------------------------------------------
+%imacro StdOutStr_INTERNAL 1
+
+
+[section .procs]
+; NASM will combine and place all .procs sections after the .text section
+
+%ifndef StdOutStr_PROC_DEFINED
+	%idefine StdOutStr_PROC_DEFINED
+
+	StdOutStr_PROC:
+		pushm		ax, dx
+		mov		ah, 0x02
+		cld
+	%%DisplayMessage:
+		mov		dl, [si]
+		test		dl, dl
+		jnz 		%%DisplayChar
+		popm		ax, dx
+		ret
+	%%DisplayChar:
+		inc		si
+		int		0x21
+		jmp		%%DisplayMessage
 %endif
+
+	%ifstr %1
+	[section .data]
+
+		%%str:
+			db 		%1
+			db 		0
+	%endif
+
+	__?SECT?__
+
+		%ifstr %1
+			movndef		si, %%str
+		%else
+			mov		si, %1
+		%endif
+		call		StdOutStr_PROC
+%endmacro
+
+%imacro StdOutStr 1-*
+	%rep  %0
+		push		si
+		StdOutStr_INTERNAL %1
+		pop		si
+	%rotate 1
+	%endrep
+%endmacro

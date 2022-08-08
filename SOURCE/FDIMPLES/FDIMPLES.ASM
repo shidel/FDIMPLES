@@ -31,11 +31,11 @@
 
 ; NASM 2.15.05, or later
 
-	use16
+use16
 
-	cpu 8086
+cpu 8086
 
-	org 0x100
+org 0x100
 
 SECTION .text
 
@@ -43,6 +43,8 @@ SECTION .text
 %include "DOSCRT.INC"
 %include "DOSSYS.INC"
 
+	mov			di, TestMsg2
+	StdOutStr		"Video ", TestMsg, di, [Four], "Card: "
 	StdOutHexWord		[Video_Card]
 	StdOutCRLF
 	StdOutHexWord		[Video_Segment]
@@ -53,3 +55,13 @@ SECTION .text
 	StdOutCRLF
 
 	Terminate		0
+
+TestMsg:
+	db "Test ",0
+TestMsg2:
+	db "Two ",0
+TestMsg3:
+	db "Three ",0
+Four:
+	dw TestMsg3
+
