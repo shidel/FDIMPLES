@@ -48,6 +48,15 @@
 ; OUTPUT: undefined, sets data in BSS.
 %include "DOSCRT/PROBVID.INC"
 
+; Probes for current video settings. It needs called prior to any other DOSCRT
+; macros. It should really be called only once at startup. That is normally
+; handled by DOSCRT.INC.
+; Registers AX, BX, CX, DX, ES, DI are not preserved.
+; MACRO:  InitialVideoSettings 0
+; INPUT:  none
+; OUTPUT: undefined, sets data in BSS.
+%include "DOSCRT/INITIALV.INC"
+
 ; -----------------------------------------------------------------------------
 ; Included card support levels and returned detection values
 
@@ -65,5 +74,7 @@
 ; Automatically initialize video display settings in BSS
 
 ProbeVideoCard
+InitialVideoSettings
+
 ; -----------------------------------------------------------------------------
 %endif

@@ -39,19 +39,62 @@ org 0x100
 
 SECTION .text
 
+
 %include "NASMEXT.INC"
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
+	mov	ax, 0x0000
+ProbeModes:
+	pushm	ax
+	int	0x10
+	popm	ax
+	mov	bl, [es:0x0049]
+	cmp	al, bl
+	jne	.NextMode
+	xor	bh, bh
+	mov	[Modes + bx], byte 1
+.NextMode:
+	inc	al
+	cmp	al, 0x7f
+	jbe	ProbeModes
+
+	mov	al, [Initial_Video_Mode]
+	int	0x10
+
+
+
 	StdOutStr		'Video Card: '
-	StdOutHexWord		[Video_Card]
+	StdOutHexByte		[Video_Card]
 	StdOutCRLF
+	StdOutStr		'Video Mode: '
+	StdOutHexByte		[Video_Mode]
+	StdOutCRLF
+	StdOutStr		'Video Modes: '
+	xor			bx, bx
+	mov			cx, 0x80
+PrintModes:
+	mov			al, [Modes + BX]
+	test			al, al
+	jz			.ModeFalse
+	StdOutHexByte		bl
+	StdOutChar		' '
+.ModeFalse:
+	inc			bx
+	loop			PrintModes
+	StdOutCRLF
+	StdOutStr		'Video Page Address: '
 	StdOutHexWord		[Video_Segment]
+	StdOutChar		':'
+	StdOutHexWord		[Video_Offset]
 	StdOutCRLF
-	StdOutHexWord		[Video_Columns]
-	StdOutCRLF
-	StdOutHexWord		[Video_Rows]
+	StdOutStr		'Video Display: '
+	StdOutHexByte		[Video_Columns]
+	StdOutChar		'x'
+	StdOutHexByte		[Video_Rows]
 	StdOutCRLF
 
 	Terminate		0, 'No Error'
 
+Modes:
+	times 0x80 db 0

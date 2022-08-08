@@ -51,24 +51,33 @@
 ProbeVideoCard_PROC:
 ; Assume at least monochrome MDA
 	mov			[Video_Segment], word 0xb000
-	mov			[Video_Card], word Video_MDA
+	mov			[Video_Card], byte Video_MDA
 
 ; If color assume at least CGA
 	mov			ax, 0x0040
 	push 			ax
 	pop			es
 	mov			ax, [es:0x004a]
-	mov			[Video_Columns], ax
+	mov			[Video_Columns], al
+	mov			ax, [es:0x004c]
+	mov			[Video_Page_Size], ax
+	mov			ax, [es:0x004e]
+	mov			[Video_Offset], ax
+
+	mov			al, [es:0x0049]
+	mov			[Video_Mode], al
+	mov			al, [es:0x0062]
+	mov			[Video_Page], al
+
 	mov			al, [es:0x0084]
 	inc			al
-	xor			ah, ah
-	mov			[Video_Rows], ax
+	mov			[Video_Rows], al
 
 	mov			ax, [es:0x0063]
 	cmp			ax, 0x3d4
 	jne			%%ProbeHardware
 	mov			[Video_Segment], word 0xb800
-	mov			[Video_Card], word Video_CGA
+	mov			[Video_Card], byte Video_CGA
 
 %%ProbeHardware:
 
@@ -82,7 +91,7 @@ ProbeVideoCard_PROC:
 	mov			di, TEMP_256_BUFFER
 	mov			ax, 0x4f00
 	int			0x10
-	mov			dx, Video_VESA
+	mov			dl, Video_VESA
 	cmp			ax, 0x004f
 	je			%%Identified
 %endif
@@ -94,7 +103,7 @@ ProbeVideoCard_PROC:
 	mov			ax, 0x1200
 	mov			bl, 0x36
 	int			0x10
-	mov			dx, Video_VGA
+	mov			dl, Video_VGA
 	cmp			al, 0x12
 	je			%%Identified
 %endif
@@ -107,7 +116,7 @@ ProbeVideoCard_PROC:
 	mov			ax, 0x1200
 	mov			bl, 0x32
 	int			0x10
-	mov			dx, Video_MCGA
+	mov			dl, Video_MCGA
 	cmp			al, 0x12
 	je			%%Identified
 %endif
@@ -119,28 +128,32 @@ ProbeVideoCard_PROC:
 	mov			ax, 0x1200
 	mov			bx, 0xff10
 	int			0x10
-	mov			dx, Video_EGA
+	mov			dl, Video_EGA
 	cmp			bh, 0xff
 	jne			%%Identified
 %endif
 
 ; Not better than CGA
-	mov			ax, 0x0019
-	mov			[Video_Rows], ax
+	mov			al, 0x0019
+	mov			[Video_Rows], al
 
 	ret
 
 %%Identified:
-	mov			[Video_Card], dx
+	mov			[Video_Card], dl
 	ret
 
 
 [section .bss]
 
-Video_Card:	resw		1
-Video_Segment:	resw		1
-Video_Rows:	resw		1
-Video_Columns:	resw		1
+Video_Card:		resb		1
+Video_Mode:		resb		1
+Video_Page:		resb		1
+Video_Page_Size:	resw		1
+Video_Offset:		resw		1
+Video_Segment:		resw		1
+Video_Columns:		resb		1
+Video_Rows:		resb		1
 
 %ifdef Video_VESA
 	%ifndef TEMP_256_BUFFER_DEFINED
