@@ -68,56 +68,58 @@
 ; -----------------------------------------------------------------------------
 %imacro Terminate 1-2+
 
-[section .procs]
-; NASM will combine and place all .procs sections after the .text section
-; The segment change could be inside the if directive. But, I'll put it on the
-; outside. I think it makes the code slightly more readable.
-
-%ifndef Terminate_PROC_DEFINED
-	%idefine Terminate_PROC_DEFINED
-
-	Terminate_PROC:
-		push		ax
-		test		si, si
-		jz		%%ProgramExit	; if si = 0, no message
-		mov		ah, 0x02
-		cld
-	%%DisplayMessage:
-		mov		dl, [si]
-		test		dl, dl
-		jz 		%%ProgramExit
-		inc		si
-		int		0x21
-		jmp		%%DisplayMessage
-	%%ProgramExit:
-		pop		ax
-		mov		ah, 0x4c
-		int		0x21
-%endif
-
-[section .data]
-; NASM will combine and place all .data sections after the .procs section
-
 %if %0 != 1
-	; if more than 1 param, store the rest as a string in the data section
-	%%str:
-		db 		%2
-		db 		0
-	%%endstr:
+
+	[section .procs]
+	; NASM will combine and place all .procs sections after the .text section
+
+	%ifndef Terminate_PROC_DEFINED
+		%idefine Terminate_PROC_DEFINED
+
+		Terminate_PROC:
+			push		ax
+			test		si, si
+			jz		%%ProgramExit	; if si = 0, no message
+			mov		ah, 0x02
+			cld
+		%%DisplayMessage:
+			mov		dl, [si]
+			test		dl, dl
+			jz 		%%ProgramExit
+			inc		si
+			int		0x21
+			jmp		%%DisplayMessage
+		%%ProgramExit:
+			pop		ax
+			mov		ah, 0x4c
+			int		0x21
+	%endif
+
+	[section .data]
+	; NASM will combine and place all .data sections after the .procs section
+
+		; if more than 1 param, store the rest as a string in the data section
+		%%str:
+			db 		%2
+			db 		0
+		%%endstr:
 %endif
 
 __?SECT?__
 ; Switch back to the section prior to the macro. should be .text. but, maybe
 ; not.
 
+	movndef 	al, %1		; exit code
+
 %if %0 = 1
 	xor		si, si		; no message
+	mov		ah, 0x4c
+	int		0x21
 %else
 	mov		si, %%str	; message in data section
+	jmp		Terminate_PROC
 %endif
 
-	movndef 	al, %1		; exit code
-	jmp		Terminate_PROC
 %endmacro
 
 ; -----------------------------------------------------------------------------
