@@ -46,7 +46,7 @@
 ; MACRO:  ProbeVideoCard 0
 ; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
-%include "DOSCRT/PROBVID.MAC"
+%include "DOSCRT/PROBVID.INC"
 
 ; -----------------------------------------------------------------------------
 ; Included card support levels and returned detection values
