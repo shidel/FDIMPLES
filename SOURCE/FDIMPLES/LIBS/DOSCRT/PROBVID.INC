@@ -55,6 +55,9 @@ ProbeVideoCard_PROC:
 	mov			ax, 0x0040
 	push 			ax
 	pop			es
+	mov			al, [es:0x0084]
+	inc			al
+	mov			[Video_Rows], al
 	mov			ax, [es:0x004a]
 	mov			[Video_Columns], al
 	mov			ax, [es:0x004c]
@@ -66,12 +69,11 @@ ProbeVideoCard_PROC:
 
 	mov			al, [es:0x0049]
 	mov			[Video_Mode], al
-	mov			al, [es:0x0062]
-	mov			[Video_Page], al
-
-	mov			al, [es:0x0084]
-	inc			al
-	mov			[Video_Rows], al
+	mov			bh, [es:0x0062]
+	mov			[Video_Page], bh
+	mov			ah, 0x08
+	int			0x10
+	mov			[Video_Attr], ah
 
 	mov			ax, [es:0x0063]
 	cmp			ax, 0x3d4
@@ -148,14 +150,28 @@ ProbeVideoCard_PROC:
 
 Video_Direct:		resb		1
 Video_Card:		resb		1
-Video_Mode:		resb		1
-Video_Page:		resb		1
-Video_Cursor:		resw		1
 Video_Regen:		resw		1
 Video_Offset:		resw		1
 Video_Segment:		resw		1
+Video_MaxXY:
 Video_Columns:		resb		1
 Video_Rows:		resb		1
+Video_WindMinXY:
+Video_WindMinX:		resb		1
+Video_WindMinY:		resb		1
+Video_WindMaxXY:
+Video_WindMaxX:		resb		1
+Video_WindMaxY:		resb		1
+Video_WhereXY:
+Video_WhereX:		resb		1
+Video_WhereY:		resb		1
+
+; Initial state of these variables are created by InitialVideoSettings
+Video_Mode:		resb		1
+Video_Page:		resb		1
+Video_Cursor:		resw		1
+Video_Attr:		resb		1
+
 
 %ifdef Video_VESA
 	TempBuffer 256

@@ -53,8 +53,11 @@ InitialVideoSettings_PROC:
 	mov			[Initial_Video_Cursor], ax
 	mov			al, [es:0x0049]
 	mov			[Initial_Video_Mode], al
-	mov			al, [es:0x0062]
-	mov			[Initial_Video_Page], al
+	mov			bh, [es:0x0062]
+	mov			[Initial_Video_Page], bh
+	mov			ah, 0x08
+	int			0x10
+	mov			[Initial_Video_Attr], ah
 	ret
 
 [section .bss]
@@ -62,6 +65,7 @@ InitialVideoSettings_PROC:
 Initial_Video_Mode:	resb		1
 Initial_Video_Page:	resb		1
 Initial_Video_Cursor:	resw		1
+Initial_Video_Attr:	resb		1
 
 %endif
 

@@ -44,74 +44,11 @@ SECTION .text
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
-	mov	ax, 0x0000
-ProbeModes:
-	pushm	ax
-	int	0x10
-	popm	ax
-	xor	dl, dl
-	mov	bl, [es:0x0049]
-	cmp	al, bl
-	jne	.NextMode
-	inc	dl
-.NextMode:
-	xor	bh, bh
-	mov	bl, al
-	mov	[TEMP_BUFFER_0x80 + bx], dl
-	inc	al
-	cmp	al, 0x7f
-	jbe	ProbeModes
+;	StdOutStr		'Video Display: '
+;	StdOutHexByte		[Video_Columns]
+;	StdOutStr		' x '
+;	StdOutHexByte		[Video_Rows]
+;	StdOutCRLF
 
 	ResetVideoSettings
-
-	StdOutStr		'Video Card: '
-	StdOutHexByte		[Video_Card]
-	StdOutCRLF
-	StdOutStr		'Video Mode: '
-	StdOutHexByte		[Video_Mode]
-	StdOutStr		' ('
-	StdOutHexByte		[Initial_Video_Mode]
-	StdOutChar		')'
-	StdOutCRLF
-	StdOutStr		'Video Cursor: '
-	StdOutHexWord		[Video_Cursor]
-	StdOutStr		' ('
-	StdOutHexWord		[Initial_Video_Cursor]
-	StdOutChar		')'
-	StdOutCRLF
-	StdOutStr		'Video Modes: '
-	xor			bx, bx
-	mov			cx, 0x80
-PrintModes:
-	mov			al, [TEMP_BUFFER_0x80 + bx]
-	test			al, al
-	jz			.ModeFalse
-	StdOutHexByte		bl
-	StdOutChar		' '
-.ModeFalse:
-	inc			bx
-	loop			PrintModes
-	StdOutCRLF
-	StdOutStr		'Video Page: '
-	StdOutHexByte		[Video_Page]
-	StdOutStr		' ('
-	StdOutHexByte		[Initial_Video_Page]
-	StdOutChar		')'
-	StdOutCRLF
-	StdOutStr		'Video Page Address: '
-	StdOutHexWord		[Video_Segment]
-	StdOutChar		':'
-	StdOutHexWord		[Video_Offset]
-	StdOutCRLF
-	StdOutStr		'Video Regen: '
-	StdOutHexWord		[Video_Regen]
-	StdOutCRLF
-	StdOutStr		'Video Display: '
-	StdOutHexByte		[Video_Columns]
-	StdOutStr		' x '
-	StdOutHexByte		[Video_Rows]
-	StdOutCRLF
-
-	Terminate		0, 'No Error'
-
-	TempBuffer 		0x80
+	Terminate		0

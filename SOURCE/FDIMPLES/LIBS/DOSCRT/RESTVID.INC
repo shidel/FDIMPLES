@@ -48,21 +48,18 @@ ResetVideoSettings_PROC:
 	mov			ax, 0x0040
 	push 			ax
 	pop			es
-	mov			ah, [es:0x0049]
+	mov			bh, [es:0x0049]
 	mov			al, [Initial_Video_Mode]
-	cmp			ah, al
+	cmp			bh, al
 	je			%%ResetPage
-	xor			ah, ah
+	; mov			ah, 0x00
 	int			0x10
-	; Must call directly, otherwise NASM will embed the macro's code here
-	; Instead of later (where we want it)
-	call			ProbeVideoCard_PROC
 %%ResetPage:
 	mov			ah, [es:0x0062]
 	mov			al, [Initial_Video_Page]
 	cmp			ah, al
 	je			%%ResetCursor
-	mov			[Video_Page], al
+	; mov			[Video_Page], al
 	mov			ah, 0x05
 	int			0x10
 %%ResetCursor:
@@ -70,10 +67,15 @@ ResetVideoSettings_PROC:
 	mov			cx, [Initial_Video_Cursor]
 	cmp			ax, cx
 	je			%%Done
-	mov			[Video_Cursor], cx
+	; mov			[Video_Cursor], cx
 	mov			ah, 0x01
 	int			0x10
 %%Done:
+	mov			al, [Initial_Video_Attr]
+	mov			[Video_Attr], al
+	; Must call directly, otherwise NASM will embed the macro's code here
+	; Instead of later (where we want it)
+	call			ProbeVideoCard_PROC
 	ret
 
 %endif
