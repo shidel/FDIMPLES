@@ -49,20 +49,27 @@ ProbeModes:
 	pushm	ax
 	int	0x10
 	popm	ax
+	xor	dl, dl
 	mov	bl, [es:0x0049]
 	cmp	al, bl
 	jne	.NextMode
-	xor	bh, bh
-	mov	[Modes + bx], byte 1
+	inc	dl
 .NextMode:
+	xor	bh, bh
+	mov	bl, al
+	mov	[TEMP_BUFFER_0x80 + bx], dl
 	inc	al
 	cmp	al, 0x7f
 	jbe	ProbeModes
 
-	mov	al, [Initial_Video_Mode]
+	mov	al, 0x54
 	int	0x10
 
+	ProbeVideoCard
 
+	xor 	ah, ah
+	mov	al, [Initial_Video_Mode]
+	int	0x10
 
 	StdOutStr		'Video Card: '
 	StdOutHexByte		[Video_Card]
@@ -74,7 +81,7 @@ ProbeModes:
 	xor			bx, bx
 	mov			cx, 0x80
 PrintModes:
-	mov			al, [Modes + BX]
+	mov			al, [TEMP_BUFFER_0x80 + bx]
 	test			al, al
 	jz			.ModeFalse
 	StdOutHexByte		bl
@@ -88,13 +95,15 @@ PrintModes:
 	StdOutChar		':'
 	StdOutHexWord		[Video_Offset]
 	StdOutCRLF
+	StdOutStr		'Video Regen: '
+	StdOutHexWord		[Video_Regen]
+	StdOutCRLF
 	StdOutStr		'Video Display: '
 	StdOutHexByte		[Video_Columns]
-	StdOutChar		'x'
+	StdOutStr		' x '
 	StdOutHexByte		[Video_Rows]
 	StdOutCRLF
 
 	Terminate		0, 'No Error'
 
-Modes:
-	times 0x80 db 0
+	TempBuffer 		0x80

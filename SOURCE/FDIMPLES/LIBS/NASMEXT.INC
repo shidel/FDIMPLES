@@ -69,6 +69,13 @@
     %%Skip:
 %endmacro
 
+%imacro retne 0
+; return if not equal
+        je	%%Skip
+        ret
+    %%Skip:
+%endmacro
+
 %imacro retc 0
 ; return if carry flag is set
         jnc	%%Skip
@@ -173,5 +180,22 @@
 				pop %1
 			%endif
         %endrep
+	%endif
+%endmacro
+
+%imacro TempBuffer 1
+; Include an extremely temporary application wide shared buffer of %1 bytes
+; Care must be taken that multiple functions do not use the buffer while data
+; is still needed.
+	%ifndef TEMP_BUFFER_%1_DEFINED
+		%idefine TEMP_BUFFER_%1_DEFINED
+
+		[section .bss]
+
+		TEMP_BUFFER_%1:
+			resb	%1
+
+		__?SECT?__
+
 	%endif
 %endmacro

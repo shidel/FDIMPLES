@@ -41,7 +41,8 @@
 
 ; Probes video hardware for card type and current settings. It needs called
 ; prior to any other DOSCRT macros. However, it can be called multiple times.
-; For example, after mode changes.
+; For example, after mode changes. Warning: If VESA is enabled, the macro will
+; use a shared temporary buffer in the BSS.
 ; Registers AX, BX, CX, DX, ES, DI are not preserved.
 ; MACRO:  ProbeVideoCard 0
 ; INPUT:  none

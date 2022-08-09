@@ -32,16 +32,14 @@
 ; -----------------------------------------------------------------------------
 ; Probes video hardware for card type and current settings. It needs called
 ; prior to any other DOSCRT macros. However, it can be called multiple times.
-; For example, after mode changes.
+; For example, after mode changes. Warning: If VESA is enabled, the macro will
+; use a shared temporary buffer in the BSS.
 ; Registers AX, BX, CX, DX, ES, DI are not preserved.
 ; MACRO:  ProbeVideoCard 0
 ; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
 ; -----------------------------------------------------------------------------
 %imacro ProbeVideoCard 0
-; Probes video hardware for card type and current settings. It needs called
-; prior to any other DOSCRT macros. However, it can be called multiple times.
-; For example, after mode changes.
 
 %ifndef ProbeVideoCard_PROC_DEFINED
 	%idefine ProbeVideoCard_PROC_DEFINED
@@ -60,7 +58,7 @@ ProbeVideoCard_PROC:
 	mov			ax, [es:0x004a]
 	mov			[Video_Columns], al
 	mov			ax, [es:0x004c]
-	mov			[Video_Page_Size], ax
+	mov			[Video_Regen], ax
 	mov			ax, [es:0x004e]
 	mov			[Video_Offset], ax
 
@@ -88,7 +86,7 @@ ProbeVideoCard_PROC:
 ; Requires SuperVGA.
 	push			cs
 	pop			es
-	mov			di, TEMP_256_BUFFER
+	mov			di, TEMP_BUFFER_256
 	mov			ax, 0x4f00
 	int			0x10
 	mov			dl, Video_VESA
@@ -149,18 +147,14 @@ ProbeVideoCard_PROC:
 Video_Card:		resb		1
 Video_Mode:		resb		1
 Video_Page:		resb		1
-Video_Page_Size:	resw		1
+Video_Regen:		resw		1
 Video_Offset:		resw		1
 Video_Segment:		resw		1
 Video_Columns:		resb		1
 Video_Rows:		resb		1
 
 %ifdef Video_VESA
-	%ifndef TEMP_256_BUFFER_DEFINED
-		%idefine TEMP_256_BUFFER_DEFINED
-		TEMP_256_BUFFER:
-			resb	256
-	%endif
+	TempBuffer 256
 %endif
 
 %endif
