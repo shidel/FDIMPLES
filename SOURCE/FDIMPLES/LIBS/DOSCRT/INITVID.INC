@@ -1,5 +1,3 @@
-; CRT for DOS v1.0
-
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -31,24 +29,7 @@
 
 ; NASM 2.15.05, or later
 
-%ifndef DOSCRT_INC_DEFINED
-%define DOSCRT_INC_DEFINED
 ; -----------------------------------------------------------------------------
-; List of macros and functions provided by this file.
-; Note: Macros often have have preferred register to use when passing when
-; passing them a parameter. Using the preferred register will result in saving
-; a few bytes of code. However, it is not required.
-
-; Probes video hardware for card type and current settings. It needs called
-; prior to any other DOSCRT macros. However, it can be called multiple times.
-; For example, after mode changes. Warning: If VESA is enabled, the macro will
-; use a shared temporary buffer in the BSS.
-; Registers AX, BX, CX, DX, ES, DI are not preserved.
-; MACRO:  ProbeVideoCard 0
-; INPUT:  none
-; OUTPUT: undefined, sets data in BSS.
-%include "DOSCRT/PROBVID.INC"
-
 ; Probes for current video settings. It needs called prior to any other DOSCRT
 ; macros. It should really be called only once at startup. That is normally
 ; handled by DOSCRT.INC.
@@ -56,38 +37,36 @@
 ; MACRO:  InitialVideoSettings 0
 ; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
-%include "DOSCRT/INITVID.INC"
-
-; Restores video settings, to original mode, page, and cursor if needed.
-; Registers AX, BX, CX, DX, ES, DI are not preserved. Should probably call
-; before exit. Automatically, calls ProbeVideoSettings to update data.
-; MACRO:  ResetVideoSettings 0
-; INPUT:  none
-%include "DOSCRT/RESTVID.INC"
-
 ; -----------------------------------------------------------------------------
-; Included overall feature support for DOSCRT
-%idefine Support_BIOS_Video		1
-%idefine Support_Direct_Video   	1
-%idefine Support_Mouse			1
+%imacro InitialVideoSettings 0
 
-; Included card support levels and returned detection values
-%idefine Video_MDA 	0
-%idefine Video_CGA 	1
-; EGA test is strongly recommended but not required. Otherwise, locked into
-; 25 screen rows.
-%idefine Video_EGA 	2
-; Disable Video_MCGA, VGA, VESA to reduce code size if don't care
-; %idefine Video_MCGA 	3
-; %idefine Video_VGA 	4
-; %idefine Video_VESA	5
+%ifndef InitialVideoSettings_PROC_DEFINED
+	%idefine InitialVideoSettings_PROC_DEFINED
 
+[section .procs]
 
-; -----------------------------------------------------------------------------
-; Automatically initialize video display settings in BSS
+InitialVideoSettings_PROC:
+	mov			ax, 0x0040
+	push 			ax
+	pop			es
+	mov			ax, [es:0x0060]
+	mov			[Initial_Video_Cursor], ax
+	mov			al, [es:0x0049]
+	mov			[Initial_Video_Mode], al
+	mov			al, [es:0x0062]
+	mov			[Initial_Video_Page], al
+	ret
 
-ProbeVideoCard
-InitialVideoSettings
+[section .bss]
 
-; -----------------------------------------------------------------------------
+Initial_Video_Mode:	resb		1
+Initial_Video_Page:	resb		1
+Initial_Video_Cursor:	resw		1
+
 %endif
+
+__?SECT?__
+
+	call 			InitialVideoSettings_PROC
+
+%endmacro

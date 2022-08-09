@@ -61,6 +61,8 @@ ProbeVideoCard_PROC:
 	mov			[Video_Regen], ax
 	mov			ax, [es:0x004e]
 	mov			[Video_Offset], ax
+	mov			ax, [es:0x0060]
+	mov			[Video_Cursor], ax
 
 	mov			al, [es:0x0049]
 	mov			[Video_Mode], al
@@ -144,9 +146,11 @@ ProbeVideoCard_PROC:
 
 [section .bss]
 
+Video_Direct:		resb		1
 Video_Card:		resb		1
 Video_Mode:		resb		1
 Video_Page:		resb		1
+Video_Cursor:		resw		1
 Video_Regen:		resw		1
 Video_Offset:		resw		1
 Video_Segment:		resw		1

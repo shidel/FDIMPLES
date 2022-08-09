@@ -62,20 +62,22 @@ ProbeModes:
 	cmp	al, 0x7f
 	jbe	ProbeModes
 
-	mov	al, 0x54
-	int	0x10
-
-	ProbeVideoCard
-
-	xor 	ah, ah
-	mov	al, [Initial_Video_Mode]
-	int	0x10
+	ResetVideoSettings
 
 	StdOutStr		'Video Card: '
 	StdOutHexByte		[Video_Card]
 	StdOutCRLF
 	StdOutStr		'Video Mode: '
 	StdOutHexByte		[Video_Mode]
+	StdOutStr		' ('
+	StdOutHexByte		[Initial_Video_Mode]
+	StdOutChar		')'
+	StdOutCRLF
+	StdOutStr		'Video Cursor: '
+	StdOutHexWord		[Video_Cursor]
+	StdOutStr		' ('
+	StdOutHexWord		[Initial_Video_Cursor]
+	StdOutChar		')'
 	StdOutCRLF
 	StdOutStr		'Video Modes: '
 	xor			bx, bx
@@ -89,6 +91,12 @@ PrintModes:
 .ModeFalse:
 	inc			bx
 	loop			PrintModes
+	StdOutCRLF
+	StdOutStr		'Video Page: '
+	StdOutHexByte		[Video_Page]
+	StdOutStr		' ('
+	StdOutHexByte		[Initial_Video_Page]
+	StdOutChar		')'
 	StdOutCRLF
 	StdOutStr		'Video Page Address: '
 	StdOutHexWord		[Video_Segment]
