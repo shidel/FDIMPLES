@@ -32,62 +32,87 @@
 ; NASM 2.15.05, or later
 
 %imacro movip 1
+; mov	ip (+3 bytes) into register.
 	call %%ShortCall
 %%ShortCall:
 	pop	 %1
 %endmacro
 
+%imacro movipa 1
+; mov	adjusted ip (+0 bytes) into register.
+	call %%ShortCall
+%%ShortCall:
+	pop	%1
+	pushf
+	sub	%1, 0x0003
+	popf
+%endmacro
+
 %imacro retz 0
-        jnz     %%Skip
+; return if zero flag is set
+        jnz	%%Skip
         ret
     %%Skip:
 %endmacro
 
 %imacro retnz 0
-        jz      %%Skip
+; return if zero flag is not set
+        jz	%%Skip
         ret
     %%Skip:
 %endmacro
 
 %imacro rete 0
-        jne     %%Skip
+; return if equal
+        jne	%%Skip
         ret
     %%Skip:
 %endmacro
 
 %imacro retc 0
-        jnc     %%Skip
+; return if carry flag is set
+        jnc	%%Skip
+        ret
+    %%Skip:
+%endmacro
+
+%imacro retnc 0
+; return if carry flag is not set
+        jc	%%Skip
         ret
     %%Skip:
 %endmacro
 
 %imacro pushall 0
+; More or les equivalent to pusha
 	pushf
-	push	    ax
-	push 	    bx
-	push	    cx
-	push	    dx
-	push	    si
-	push	    di
-	push	    es
-	push	    ds
-	push        bp
+	push		ax
+	push		bx
+	push		cx
+	push		dx
+	push		si
+	push		di
+	push		es
+	push		ds
+	push		bp
 %endmacro
 
 %imacro popall 0
-	pop         bp
-	pop 	    ds
-	pop		    es
-	pop		    di
-	pop		    si
-	pop		    dx
-	pop		    cx
-	pop		    bx
-	pop		    ax
+; More or les equivalent to popa
+	pop		bp
+	pop		ds
+	pop		es
+	pop		di
+	pop		si
+	pop		dx
+	pop		cx
+	pop		bx
+	pop		ax
 	popf
 %endmacro
 
 %imacro pushm 0-*
+; push a group of registers
     %ifidni %0, 0
         pushall
     %else
@@ -99,6 +124,7 @@
 %endmacro
 
 %imacro popm 0-*
+; pop a group of registers (in reverse order)
     %ifidni %0, 0
         popall
     %else
@@ -110,9 +136,9 @@
 %endmacro
 
 %imacro movndef 2-*
-; MOV Not Default.
-; When not the default register, generate a mov (or similar) instruction to
-; load the register.
+; MOV if not Default.
+; When not the default preferred register, generate a mov (or similar)
+; instruction to load the register.
 ; MOVNDEF ax, ax		 -> NULL
 ; MOVNDEF ax, bx		 -> mov ax, bx
 ; MOVNDEF ax, bx, cx, dx -> mov ax, bx; mov cx, dx
