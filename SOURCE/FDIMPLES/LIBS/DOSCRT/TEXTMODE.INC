@@ -232,8 +232,8 @@ __?SECT?__
 ; Changes video mode if needed.
 ; Registers are not preserved. Automatically calls ProbeVideoSettings to
 ; update data.
-; MACRO:  TextMode 0
-; INPUT:  none
+; MACRO:  TextMode 1
+; INPUT:  %1 = video mode (prefers al), original returns it to Initial Setting
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
 %imacro TextMode 1

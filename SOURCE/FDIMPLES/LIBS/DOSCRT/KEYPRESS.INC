@@ -34,16 +34,6 @@
 ; MACRO:  KeyPressed 0-1
 ; INPUT:  %1 = [Optional] jump address if key was pressed.
 ; OUTPUT: Carry Flag Set if key has been pressed.
-
-; Test for key not pressed
-; MACRO:  NotKeyPressed 0-1
-; INPUT:  %1 = [Optional] jump address if key was not pressed.
-; OUTPUT: Carry Flag Set if key has been pressed. (Same as KeyPressed)
-
-; Wait for and read key press
-; MACRO:  ReadKey 1
-; INPUT:  none
-; OUTPUT: %1 is key press (prefers ax)
 ; -----------------------------------------------------------------------------
 %imacro KeyPressed 0-1
 
@@ -74,6 +64,11 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
+; Test for key not pressed
+; MACRO:  NotKeyPressed 0-1
+; INPUT:  %1 = [Optional] jump address if key was not pressed.
+; OUTPUT: Carry Flag Set if key has been pressed. (Same as KeyPressed)
+; -----------------------------------------------------------------------------
 %imacro NotKeyPressed 0-1
 
 	KeyPressed
@@ -85,6 +80,11 @@ __?SECT?__
 	%endif
 
 %endmacro
+; -----------------------------------------------------------------------------
+; Wait for and read key press
+; MACRO:  ReadKey 1
+; INPUT:  none
+; OUTPUT: %1 is key press (prefers ax)
 ; -----------------------------------------------------------------------------
 %imacro ReadKey 1
 

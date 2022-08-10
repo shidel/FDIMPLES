@@ -34,31 +34,6 @@
 ; MACRO:  TextColor 1
 ; INPUT:  %1 = 4-bit color (prefers al), original returns it to Initial Setting
 ; OUTPUT: none
-
-; Set the background color for text writes
-; MACRO:  TextBackground 1
-; INPUT:  %1 = 3-bit color (prefers al), original returns it to Initial Setting
-; OUTPUT: none
-
-; Set both foreground and background color.
-; MACRO:  TextAttr 1
-; INPUT:  %1 = 8-bit color (prefers al), original returns it to Initial Setting
-; OUTPUT: none
-
-; Clear foreground text color intensity bit
-; MACRO:  LowVideo 0
-; INPUT:  none
-; OUTPUT: none
-
-; Set foreground text color intensity bit
-; MACRO:  HighVideo 0
-; INPUT:  none
-; OUTPUT: none
-
-; Restore foreground intensity bit to last/original video Initial Setting
-; MACRO:  NormVideo 0
-; INPUT:  none
-; OUTPUT: none
 ; -----------------------------------------------------------------------------
 %imacro TextColor_RESET 0
 
@@ -112,6 +87,11 @@ __?SECT?__
 	%endif
 
 %endmacro
+; -----------------------------------------------------------------------------
+; Set the background color for text writes
+; MACRO:  TextBackground 1
+; INPUT:  %1 = 3-bit color (prefers al), original returns it to Initial Setting
+; OUTPUT: none
 ; -----------------------------------------------------------------------------
 %imacro TextBackground_RESET 0
 
@@ -171,6 +151,11 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
+; Set both foreground and background color.
+; MACRO:  TextAttr 1
+; INPUT:  %1 = 8-bit color (prefers al), original returns it to Initial Setting
+; OUTPUT: none
+; -----------------------------------------------------------------------------
 %imacro TextAttr 1
 
 %ifndef TextAttr_PROC_DEFINED
@@ -197,7 +182,11 @@ __?SECT?__
 	%endif
 
 %endmacro
-
+; -----------------------------------------------------------------------------
+; Clear foreground text color intensity bit
+; MACRO:  LowVideo 0
+; INPUT:  none
+; OUTPUT: none
 ; -----------------------------------------------------------------------------
 %imacro LowVideo 0
 
@@ -205,11 +194,21 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
+; Set foreground text color intensity bit
+; MACRO:  HighVideo 0
+; INPUT:  none
+; OUTPUT: none
+; -----------------------------------------------------------------------------
 %imacro HighVideo 0
 
 	or		[Video_Attr], byte 00001000b
 
 %endmacro
+; -----------------------------------------------------------------------------
+; Restore foreground intensity bit to last/original video Initial Setting
+; MACRO:  NormVideo 0
+; INPUT:  none
+; OUTPUT: none
 ; -----------------------------------------------------------------------------
 %imacro NormVideo 0
 

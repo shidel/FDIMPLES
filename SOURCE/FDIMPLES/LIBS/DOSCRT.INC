@@ -39,7 +39,7 @@
 ; Note: Macros often have have preferred register to use when passing when
 ; passing them a parameter. Using the preferred register will result in saving
 ; a few bytes of code. However, it is not required.
-
+; -----------------------------------------------------------------------------
 ; Probes video hardware for card type and current settings. It needs called
 ; prior to any other DOSCRT macros. However, it can be called multiple times.
 ; For example, after mode changes. Warning: If VESA is enabled, the macro will
@@ -55,6 +55,13 @@
 ; MACRO:  InitialVideoSettings 0
 ; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
+
+; Changes video mode if needed.
+; Registers are not preserved. Automatically calls ProbeVideoSettings to
+; update data.
+; MACRO:  TextMode 1
+; INPUT:  %1 = video mode (prefers al), original returns it to Initial Setting
+; OUTPUT: none
 
 ; Restores video settings, to original mode, page, and cursor if needed.
 ; Requires using InitialVideoSettings macro during startup.
