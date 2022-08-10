@@ -61,7 +61,7 @@
 ; update data.
 ; MACRO:  TextMode 1
 ; INPUT:  %1 = video mode (prefers al), original returns it to Initial Setting
-; OUTPUT: none
+; OUTPUT: Carry Flag set if error occurred.
 
 ; Restores video settings, to original mode, page, and cursor if needed.
 ; Requires using InitialVideoSettings macro during startup.

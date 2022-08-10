@@ -43,8 +43,12 @@ SECTION .text
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
-	TextMode		tmCO40
+	TextMode		0x54
+	jnc			DisplayStuff
+	StdOutStr		'Text mode change error'
+	jmp			Finished
 
+DisplayStuff:
 	mov			al, [Video_Attr]
 	StdOutHexByte 		al
 	TextColor		clRed
@@ -81,7 +85,7 @@ WaitLoop:
 	cmp			ax, 0x1b
 	je			Finished
 	jmp			WaitLoop
-Finished:
 
+Finished:
 	ResetVideoSettings
 	Terminate		0

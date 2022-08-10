@@ -234,7 +234,7 @@ __?SECT?__
 ; update data.
 ; MACRO:  TextMode 1
 ; INPUT:  %1 = video mode (prefers al), original returns it to Initial Setting
-; OUTPUT: none
+; OUTPUT: Carry Flag set if error occurred.
 ; -----------------------------------------------------------------------------
 %imacro TextMode 1
 
@@ -249,13 +249,21 @@ TextMode_PROC:
 	pop			es
 	mov			bh, [es:0x0049]
 	cmp			bh, al
-	je			%%NoModeChange
+	je			%%Done
 	xor			ah, ah
+	pushm			ax, bx
 	int			0x10
 	; Must call directly, otherwise NASM may embed the macro's code here
 	; Instead of later (where we want it)
 	call			ProbeVideoCard_PROC
-%%NoModeChange:
+	popm			ax, bx
+	mov			bh, [es:0x0049]
+	cmp			bh, al
+	je			%%Done
+	stc
+	ret
+%%Done:
+	clc
 	ret
 
 %endif
