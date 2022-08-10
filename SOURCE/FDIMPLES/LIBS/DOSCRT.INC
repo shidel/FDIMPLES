@@ -48,7 +48,6 @@
 ; MACRO:  ProbeVideoCard 0
 ; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
-%include "DOSCRT/PROBVID.INC"
 
 ; Probes for current video settings. It needs called prior to any other DOSCRT
 ; macros. It should really be called only once at startup.
@@ -56,7 +55,6 @@
 ; MACRO:  InitialVideoSettings 0
 ; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
-%include "DOSCRT/INITVID.INC"
 
 ; Restores video settings, to original mode, page, and cursor if needed.
 ; Requires using InitialVideoSettings macro during startup.
@@ -64,7 +62,7 @@
 ; before exit. Automatically, calls ProbeVideoSettings to update data.
 ; MACRO:  ResetVideoSettings 0
 ; INPUT:  none
-%include "DOSCRT/RESTVID.INC"
+%include "DOSCRT/TEXTMODE.INC"
 
 ; Test for key was pressed
 ; MACRO:  KeyPressed 0-1
@@ -124,17 +122,18 @@
 ; EGA test is strongly recommended but not required. Otherwise, locked into
 ; 25 screen rows.
 %idefine Video_EGA 	2
-; Disable Video_MCGA, VGA, VESA to reduce code size if don't care
-; %idefine Video_MCGA 	3
-; %idefine Video_VGA 	4
-; %idefine Video_VESA	5
+; Disable Video_MCGA, VGA, VESA. If you don't care about them and want to
+; reduce the code size a few bytes (+256 bytes BSS for VESA)
+%idefine Video_MCGA 	3
+%idefine Video_VGA 	4
+%idefine Video_VESA	5
 
 ; Standard text video display mode constants
-%idefine dmBW40		0	; 40x25 B/W on Color adapter
-%idefine dmCO40		1	; 40x25 Color on Color adapter
-%idefine dmBW80		2	; 80x25 B/W on Color adapter
-%idefine dmCO80		3	; 80x25 Color on Color adapter
-%idefine dmMono		7	; 80x25 on Monochrome adapter
+%idefine tmBW40		0	; 40x25 B/W on Color adapter
+%idefine tmCO40		1	; 40x25 Color on Color adapter
+%idefine tmBW80		2	; 80x25 B/W on Color adapter
+%idefine tmCO80		3	; 80x25 Color on Color adapter
+%idefine tmMono		7	; 80x25 on Monochrome adapter
 
 ; Foreground and background color constants
 %idefine clBlack	0

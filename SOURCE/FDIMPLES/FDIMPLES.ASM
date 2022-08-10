@@ -43,8 +43,7 @@ SECTION .text
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
-	TextColor		original
-	TextBackground		original
+	TextMode		tmCO40
 
 	mov			al, [Video_Attr]
 	StdOutHexByte 		al

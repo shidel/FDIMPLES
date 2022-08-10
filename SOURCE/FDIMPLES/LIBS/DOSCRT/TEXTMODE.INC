@@ -186,3 +186,127 @@ __?SECT?__
 	call 			ProbeVideoCard_PROC
 
 %endmacro
+; -----------------------------------------------------------------------------
+; Probes for current video settings. It needs called prior to any other DOSCRT
+; macros. It should really be called only once at startup. That is normally
+; handled by DOSCRT.INC.
+; Registers AX, BX, CX, DX, ES, DI are not preserved.
+; MACRO:  InitialVideoSettings 0
+; INPUT:  none
+; OUTPUT: undefined, sets data in BSS.
+; -----------------------------------------------------------------------------
+%imacro InitialVideoSettings 0
+
+%ifndef InitialVideoSettings_PROC_DEFINED
+	%idefine InitialVideoSettings_PROC_DEFINED
+
+[section .procs]
+
+InitialVideoSettings_PROC:
+	mov			ax, 0x0040
+	push 			ax
+	pop			es
+	mov			ax, [es:0x0060]
+	mov			[Initial_Video_Cursor], ax
+	mov			al, [es:0x0049]
+	mov			[Initial_Video_Mode], al
+	mov			bh, [es:0x0062]
+	mov			[Initial_Video_Page], bh
+	mov			ah, 0x08
+	int			0x10
+	mov			[Initial_Video_Attr], ah
+	ret
+
+[section .bss]
+
+Initial_Video_Mode:	resb		1
+Initial_Video_Page:	resb		1
+Initial_Video_Cursor:	resw		1
+
+; This would be in Initial_Video_Settings but is required for NormVideo macro
+; It is declared in ProbeVideoCard instead.
+; Initial_Video_Attr:	resb		1
+
+%endif
+
+__?SECT?__
+
+	call 			InitialVideoSettings_PROC
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Restores video settings, to original mode, page, and cursor if needed.
+; Registers AX, BX, CX, DX, ES, DI are not preserved. Should probably call
+; before exit. Automatically, calls ProbeVideoSettings to update data.
+; MACRO:  ResetVideoSettings 0
+; INPUT:  none
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%imacro ResetVideoSettings 0
+
+%ifndef ResetVideoSettings_PROC_DEFINED
+	%idefine ResetVideoSettings_PROC_DEFINED
+
+[section .procs]
+
+
+ResetVideoSettings_PROC:
+	mov			ax, 0x0040
+	push 			ax
+	pop			es
+	mov			bh, [es:0x0049]
+	mov			al, [Initial_Video_Mode]
+	cmp			bh, al
+	je			%%ResetPage
+	; mov			ah, 0x00
+	int			0x10
+%%ResetPage:
+	mov			ah, [es:0x0062]
+	mov			al, [Initial_Video_Page]
+	cmp			ah, al
+	je			%%ResetCursor
+	; mov			[Video_Page], al
+	mov			ah, 0x05
+	int			0x10
+%%ResetCursor:
+	mov			ax, [es:0x0060]
+	mov			cx, [Initial_Video_Cursor]
+	cmp			ax, cx
+	je			%%Done
+	; mov			[Video_Cursor], cx
+	mov			ah, 0x01
+	int			0x10
+%%Done:
+	mov			al, [Initial_Video_Attr]
+	mov			[Video_Attr], al
+	; Must call directly, otherwise NASM will embed the macro's code here
+	; Instead of later (where we want it)
+	call			ProbeVideoCard_PROC
+	ret
+
+%endif
+
+__?SECT?__
+
+	call 			ResetVideoSettings_PROC
+
+%endmacro
+; -----------------------------------------------------------------------------
+; -----------------------------------------------------------------------------
+%imacro TextMode 1
+
+%ifndef TextMode_PROC_DEFINED
+	%idefine TextMode_PROC_DEFINED
+
+[section .procs]
+
+TextMode_PROC:
+	ret
+
+%endif
+
+__?SECT?__
+
+	call 			TextMode_PROC
+
+%endmacro
