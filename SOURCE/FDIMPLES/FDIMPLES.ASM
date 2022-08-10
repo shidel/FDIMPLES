@@ -39,18 +39,32 @@ org 0x100
 
 SECTION .text
 
-
 %include "NASMEXT.INC"
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
+	StdOutHexByte 		[Video_Attr]
+	TextColor		clRed
+	StdOutHexByte 		[Video_Attr]
+	TextBackground		clWhite
+	StdOutHexByte 		[Video_Attr]
+	StdOutCRLF
+	HighVideo
+	StdOutHexByte 		[Video_Attr]
+	StdOutCRLF
+	NormVideo
+	StdOutHexByte 		[Video_Attr]
+	StdOutCRLF
 WaitLoop:
 	NotKeypressed		WaitLoop
 	ReadKey			ax
 	StdOutHexWord		ax
 	StdOutCRLF
-	cmp			al, 0x03
-	jne			WaitLoop
+	cmp			ax, 0x03
+	je			Finished
+	cmp			ax, 0x1b
+	je			Finished
+	jmp			WaitLoop
 Finished:
 
 	Terminate		0

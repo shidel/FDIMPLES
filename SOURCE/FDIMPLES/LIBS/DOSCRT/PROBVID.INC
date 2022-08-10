@@ -172,6 +172,8 @@ Video_Page:		resb		1
 Video_Cursor:		resw		1
 Video_Attr:		resb		1
 
+; This would be in Initial_Video_Settings but is required for NormVideo macro
+Initial_Video_Attr:	resb		1
 
 %ifdef Video_VESA
 	TempBuffer 256

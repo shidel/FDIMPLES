@@ -1,4 +1,5 @@
 ; CRT for DOS v1.0
+; Similar (but a little different) to a Pascal CRT unit.
 
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
@@ -81,6 +82,7 @@
 ; OUTPUT: %1 is key press (prefers ax)
 %include "DOSCRT/KEYPRESS.INC"
 
+%include "DOSCRT/TEXTATTR.INC"
 ; -----------------------------------------------------------------------------
 ; Included overall feature support for DOSCRT
 %idefine Support_BIOS_Video		1
@@ -129,6 +131,10 @@
 ; Automatically initialize video display settings in BSS
 
 ProbeVideoCard
+
+; Required by NormVideo macro
+mov  	al, [Video_Attr]
+mov	[Initial_Video_Attr], al
 
 ; -----------------------------------------------------------------------------
 %endif

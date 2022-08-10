@@ -1,4 +1,5 @@
 ; System for DOS v1.0
+; Similar (but a little different) to a Pascal DOS unit.
 
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel

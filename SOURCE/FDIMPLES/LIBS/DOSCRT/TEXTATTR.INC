@@ -30,91 +30,92 @@
 ; NASM 2.15.05, or later
 
 ; -----------------------------------------------------------------------------
-; Test for key was pressed
-; MACRO:  KeyPressed 0-1
-; INPUT:  %1 = [Optional] jump address if key was pressed.
-; OUTPUT: Carry Flag Set if key has been pressed.
+; Set the foreground color for text writes
+; MACRO:  TextColor 1
+; INPUT:  %1 = 8-bit color (prefers al)
+; OUTPUT: none
 
-; Test for key not pressed
-; MACRO:  NotKeyPressed 0-1
-; INPUT:  %1 = [Optional] jump address if key was not pressed.
-; OUTPUT: Carry Flag Set if key has been pressed. (Same as KeyPressed)
+; Set the background color for text writes
+; MACRO:  TextBackground 1
+; INPUT:  %1 = 8-bit color (prefers al)
+; OUTPUT: none
 
-; Wait for and read key press
-; MACRO:  ReadKey 1
-; INPUT:  none
-; OUTPUT: %1 is key press (prefers ax)
+
+
 ; -----------------------------------------------------------------------------
-%imacro KeyPressed 0-1
+%imacro TextColor 1
 
-%ifndef KeyPressed_PROC_DEFINED
-	%idefine KeyPressed_PROC_DEFINED
+%ifndef TextColor_PROC_DEFINED
+	%idefine TextColor_PROC_DEFINED
 
 [section .procs]
 
-KeyPressed_PROC:
-	push	ax
-	mov  	ah, 0x01
-	int  	0x16
-	clc
-	jz   	%%Done
-	stc
-%%Done:
-	pop	ax
+TextColor_PROC:
+	and		al, 0x0f
+	mov		ah, [Video_Attr]
+	and		ah, 0xf0
+	or		al, ah
+	mov		[Video_Attr], al
 	ret
-
 %endif
 
 __?SECT?__
 
-	call 		KeyPressed_PROC
-	%if %0 = 1
-		jc	%1
-	%endif
+	push			ax
+	movndef			al, %1
+	call 			TextColor_PROC
+	pop			ax
 
 %endmacro
 ; -----------------------------------------------------------------------------
-%imacro NotKeyPressed 0-1
+%imacro TextBackground 1
 
-	KeyPressed
-
-__?SECT?__
-
-	%if %0 = 1
-		jnc	%1
-	%endif
-
-%endmacro
-; -----------------------------------------------------------------------------
-%imacro ReadKey 1
-
-%ifndef ReadKey_PROC_DEFINED
-	%idefine ReadKey_PROC_DEFINED
+%ifndef TextBackground_PROC_DEFINED
+	%idefine TextBackground_PROC_DEFINED
 
 [section .procs]
 
-ReadKey_PROC:
-	mov  	ah, 0x00
-	int  	0x16
-	cmp	ah, 0x40
-	jnb	%%Done
-	test	al, al
-	jz	%%Done
-	xor	ah, ah
-%%Done:
+TextBackground_PROC:
+	push		cx
+	mov		cl, 0x04
+	and		al, 0x07
+	shl		al, cl
+	mov		ah, [Video_Attr]
+	and		ah, 0x8f
+	or		al, ah
+	mov		[Video_Attr], al
+	pop		cx
 	ret
-
 %endif
 
 __?SECT?__
 
-	%ifnidni %1, ax
-		push	ax
-	%endif
-	call 			ReadKey_PROC
-	%ifnidni %1, ax
-		mov	%1, ax
-		pop	ax
-	%endif
+	push			ax
+	movndef			al, %1
+	call 			TextBackground_PROC
+	pop			ax
+
+%endmacro
+; -----------------------------------------------------------------------------
+%imacro LowVideo 0
+
+	and		[Video_Attr], byte 11110111b
+
+%endmacro
+; -----------------------------------------------------------------------------
+%imacro HighVideo 0
+
+	or		[Video_Attr], byte 00001000b
+
+%endmacro
+; -----------------------------------------------------------------------------
+%imacro NormVideo 0
+
+	push		ax
+	mov		al, [Initial_Video_Attr]
+	and		al, 00001000b
+	and		[Video_Attr], byte 11110111b
+	or		[Video_Attr], al
+	pop		ax
 
 %endmacro

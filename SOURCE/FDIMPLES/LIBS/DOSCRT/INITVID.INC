@@ -65,7 +65,10 @@ InitialVideoSettings_PROC:
 Initial_Video_Mode:	resb		1
 Initial_Video_Page:	resb		1
 Initial_Video_Cursor:	resw		1
-Initial_Video_Attr:	resb		1
+
+; This would be in Initial_Video_Settings but is required for NormVideo macro
+; It is declared in ProbeVideoCard instead.
+; Initial_Video_Attr:	resb		1
 
 %endif
 

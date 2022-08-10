@@ -1,4 +1,4 @@
-; CRT for DOS v1.0
+; Language Extensions and general macros for NASM
 
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
@@ -148,8 +148,8 @@
 ; instruction to load the register.
 ; MOVNDEF ax, ax		 -> NULL
 ; MOVNDEF ax, bx		 -> mov ax, bx
-; MOVNDEF ax, bx, cx, dx -> mov ax, bx; mov cx, dx
-; MOVNDEF ax, bx, cx, ax -> push ax; mov ax, bx; pop cx
+; MOVNDEF ax, bx, cx, dx	 -> mov ax, bx; mov cx, dx
+; MOVNDEF ax, bx, cx, ax 	 -> push ax; mov ax, bx; pop cx
     %ifidni %0, 2
     	%ifnidni %1, %2
     		mov %1, %2
