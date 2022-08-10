@@ -43,18 +43,35 @@ SECTION .text
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
-	StdOutHexByte 		[Video_Attr]
+	TextColor		original
+	TextBackground		original
+
+	mov			al, [Video_Attr]
+	StdOutHexByte 		al
 	TextColor		clRed
-	StdOutHexByte 		[Video_Attr]
+	mov			al, [Video_Attr]
+	StdOutHexByte 		al
 	TextBackground		clWhite
-	StdOutHexByte 		[Video_Attr]
-	StdOutCRLF
+	mov			al, [Video_Attr]
+	StdOutHexByte 		al
 	HighVideo
-	StdOutHexByte 		[Video_Attr]
-	StdOutCRLF
+	mov			al, [Video_Attr]
+	StdOutHexByte 		al
 	NormVideo
-	StdOutHexByte 		[Video_Attr]
+	mov			al, [Video_Attr]
+	StdOutHexByte 		al
 	StdOutCRLF
+	TextColor		original
+	mov			al, [Video_Attr]
+	StdOutHexByte 		al
+	TextColor		original
+	mov			al, [Video_Attr]
+	StdOutHexByte 		al
+	TextColor		original
+	mov			al, [Video_Attr]
+	StdOutHexByte 		al
+	StdOutCRLF
+
 WaitLoop:
 	NotKeypressed		WaitLoop
 	ReadKey			ax

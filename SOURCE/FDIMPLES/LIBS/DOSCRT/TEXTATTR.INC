@@ -32,12 +32,17 @@
 ; -----------------------------------------------------------------------------
 ; Set the foreground color for text writes
 ; MACRO:  TextColor 1
-; INPUT:  %1 = 8-bit color (prefers al)
+; INPUT:  %1 = 4-bit color (prefers al), original returns it to Initial Setting
 ; OUTPUT: none
 
 ; Set the background color for text writes
 ; MACRO:  TextBackground 1
-; INPUT:  %1 = 8-bit color (prefers al)
+; INPUT:  %1 = 3-bit color (prefers al), original returns it to Initial Setting
+; OUTPUT: none
+
+; Set both foreground and background color.
+; MACRO:  TextAttr 1
+; INPUT:  %1 = 8-bit color (prefers al), original returns it to Initial Setting
 ; OUTPUT: none
 
 ; Clear foreground text color intensity bit
@@ -50,11 +55,35 @@
 ; INPUT:  none
 ; OUTPUT: none
 
-; Return foreground intensity bit to last/original video InitialVideoSettings.
+; Restore foreground intensity bit to last/original video Initial Setting
 ; MACRO:  NormVideo 0
 ; INPUT:  none
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
+%imacro TextColor_RESET 0
+
+%ifndef TextColor_RESET_PROC_DEFINED
+	%idefine TextColor_RESET_PROC_DEFINED
+
+[section .procs]
+
+TextColor_RESET_PROC:
+	push		ax
+	mov		al, [Initial_Video_Attr]
+	and		al, 0x0f
+	and		[Video_Attr], byte 0xf0
+	or		[Video_Attr], al
+	pop		ax
+	ret
+
+%endif
+
+__?SECT?__
+
+	call	TextColor_RESET_PROC
+
+%endmacro
+
 %imacro TextColor 1
 
 %ifndef TextColor_PROC_DEFINED
@@ -73,13 +102,41 @@ TextColor_PROC:
 
 __?SECT?__
 
-	push			ax
-	movndef			al, %1
-	call 			TextColor_PROC
-	pop			ax
+	%ifidni %1, original
+		TextColor_RESET
+	%else
+		push			ax
+		movndef			al, %1
+		call 			TextColor_PROC
+		pop			ax
+	%endif
 
 %endmacro
 ; -----------------------------------------------------------------------------
+%imacro TextBackground_RESET 0
+
+%ifndef TextBackground_RESET_PROC_DEFINED
+	%idefine TextBackground_RESET_PROC_DEFINED
+
+[section .procs]
+
+TextBackground_RESET_PROC:
+	push		ax
+	mov		al, [Initial_Video_Attr]
+	and		al, 0xf0
+	and		[Video_Attr], byte 0x0f
+	or		[Video_Attr], al
+	pop		ax
+	ret
+
+%endif
+
+__?SECT?__
+
+	call	TextBackground_RESET_PROC
+
+%endmacro
+
 %imacro TextBackground 1
 
 %ifndef TextBackground_PROC_DEFINED
@@ -98,16 +155,49 @@ TextBackground_PROC:
 	mov		[Video_Attr], al
 	pop		cx
 	ret
+
 %endif
 
 __?SECT?__
 
-	push			ax
-	movndef			al, %1
-	call 			TextBackground_PROC
-	pop			ax
+	%ifidni %1, original
+		TextBackground_RESET
+	%else
+		push			ax
+		movndef			al, %1
+		call 			TextBackground_PROC
+		pop			ax
+	%endif
 
 %endmacro
+; -----------------------------------------------------------------------------
+%imacro TextAttr 1
+
+%ifndef TextAttr_PROC_DEFINED
+	%idefine TextAttr_PROC_DEFINED
+
+[section .procs]
+
+TextAttr_RESET_PROC:
+	push		ax
+	mov		al, [Initial_Video_Attr]
+	mov		[Video_Attr], al
+	pop		ax
+	ret
+
+%endif
+__?SECT?__
+
+	%ifidni %1, original
+		call		TextAttr_RESET_PROC
+	%elifnum %1
+		mov		[Video_Attr], byte %1
+	%else
+		mov		[Video_Attr], %1
+	%endif
+
+%endmacro
+
 ; -----------------------------------------------------------------------------
 %imacro LowVideo 0
 

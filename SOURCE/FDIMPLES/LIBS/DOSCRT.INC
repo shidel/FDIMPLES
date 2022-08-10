@@ -84,12 +84,17 @@
 
 ; Set the foreground color for text writes
 ; MACRO:  TextColor 1
-; INPUT:  %1 = 8-bit color (prefers al)
+; INPUT:  %1 = 4-bit color (prefers al), original returns it to Initial Setting
 ; OUTPUT: none
 
 ; Set the background color for text writes
 ; MACRO:  TextBackground 1
-; INPUT:  %1 = 8-bit color (prefers al)
+; INPUT:  %1 = 3-bit color (prefers al), original returns it to Initial Setting
+; OUTPUT: none
+
+; Set both foreground and background color.
+; MACRO:  TextAttr 1
+; INPUT:  %1 = 8-bit color (prefers al), original returns it to Initial Setting
 ; OUTPUT: none
 
 ; Clear foreground text color intensity bit
@@ -102,7 +107,7 @@
 ; INPUT:  none
 ; OUTPUT: none
 
-; Return foreground intensity bit to last/original video InitialVideoSettings.
+; Restore foreground intensity bit to last/original video Initial Setting
 ; MACRO:  NormVideo 0
 ; INPUT:  none
 ; OUTPUT: none
