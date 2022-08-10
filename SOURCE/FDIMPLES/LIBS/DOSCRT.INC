@@ -124,9 +124,9 @@
 %idefine Video_EGA 	2
 ; Disable Video_MCGA, VGA, VESA. If you don't care about them and want to
 ; reduce the code size a few bytes (+256 bytes BSS for VESA)
-%idefine Video_MCGA 	3
-%idefine Video_VGA 	4
-%idefine Video_VESA	5
+; %idefine Video_MCGA 	3
+; %idefine Video_VGA 	4
+; %idefine Video_VESA	5
 
 ; Standard text video display mode constants
 %idefine tmBW40		0	; 40x25 B/W on Color adapter
