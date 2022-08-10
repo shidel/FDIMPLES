@@ -50,8 +50,7 @@
 %include "DOSCRT/PROBVID.INC"
 
 ; Probes for current video settings. It needs called prior to any other DOSCRT
-; macros. It should really be called only once at startup. That is normally
-; handled by DOSCRT.INC.
+; macros. It should really be called only once at startup.
 ; Registers AX, BX, CX, DX, ES, DI are not preserved.
 ; MACRO:  InitialVideoSettings 0
 ; INPUT:  none
@@ -59,11 +58,28 @@
 %include "DOSCRT/INITVID.INC"
 
 ; Restores video settings, to original mode, page, and cursor if needed.
+; Requires using InitialVideoSettings macro during startup.
 ; Registers AX, BX, CX, DX, ES, DI are not preserved. Should probably call
 ; before exit. Automatically, calls ProbeVideoSettings to update data.
 ; MACRO:  ResetVideoSettings 0
 ; INPUT:  none
 %include "DOSCRT/RESTVID.INC"
+
+; Test for key was pressed
+; MACRO:  KeyPressed 0-1
+; INPUT:  %1 = [Optional] jump address if key was pressed.
+; OUTPUT: Carry Flag Set if key has been pressed.
+
+; Test for key not pressed
+; MACRO:  NotKeyPressed 0-1
+; INPUT:  %1 = [Optional] jump address if key was not pressed.
+; OUTPUT: Carry Flag Set if key has been pressed. (Same as KeyPressed)
+
+; Wait for and read key press
+; MACRO:  ReadKey 1
+; INPUT:  none
+; OUTPUT: %1 is key press (prefers ax)
+%include "DOSCRT/KEYPRESS.INC"
 
 ; -----------------------------------------------------------------------------
 ; Included overall feature support for DOSCRT
@@ -82,12 +98,37 @@
 ; %idefine Video_VGA 	4
 ; %idefine Video_VESA	5
 
+; Standard text video display mode constants
+%idefine dmBW40		0	; 40x25 B/W on Color adapter
+%idefine dmCO40		1	; 40x25 Color on Color adapter
+%idefine dmBW80		2	; 80x25 B/W on Color adapter
+%idefine dmCO80		3	; 80x25 Color on Color adapter
+%idefine dmMono		7	; 80x25 on Monochrome adapter
+
+; Foreground and background color constants
+%idefine clBlack	0
+%idefine clBlue		1
+%idefine clGreen	2
+%idefine clCyan		3
+%idefine clRed		4
+%idefine clMagenta	5
+%idefine clBrown	6
+%idefine clLightGray	7
+
+; Foreground color constants
+%idefine clDarkGray	8
+%idefine clLightBlue	9
+%idefine clLightGreen	10
+%idefine clLightCyan	11
+%idefine clLightRed	12
+%idefine clLightMagenta	13
+%idefine clYellow	14
+%idefine clWhite	15
 
 ; -----------------------------------------------------------------------------
 ; Automatically initialize video display settings in BSS
 
 ProbeVideoCard
-InitialVideoSettings
 
 ; -----------------------------------------------------------------------------
 %endif

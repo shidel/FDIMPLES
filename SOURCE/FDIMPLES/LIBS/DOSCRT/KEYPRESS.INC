@@ -1,5 +1,3 @@
-; FreeDOS Installer (FDI) - My Package List Editor Software
-
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -31,26 +29,90 @@
 
 ; NASM 2.15.05, or later
 
-use16
+; -----------------------------------------------------------------------------
+; Test for key was pressed
+; MACRO:  KeyPressed 0-1
+; INPUT:  %1 = [Optional] jump address if key was pressed.
+; OUTPUT: Carry Flag Set if key has been pressed.
 
-cpu 8086
+; Test for key not pressed
+; MACRO:  NotKeyPressed 0-1
+; INPUT:  %1 = [Optional] jump address if key was not pressed.
+; OUTPUT: Carry Flag Set if key has been pressed. (Same as KeyPressed)
 
-org 0x100
+; Wait for and read key press
+; MACRO:  ReadKey 1
+; INPUT:  none
+; OUTPUT: %1 is key press (prefers ax)
+; -----------------------------------------------------------------------------
+%imacro KeyPressed 0-1
 
-SECTION .text
+%ifndef KeyPressed_PROC_DEFINED
+	%idefine KeyPressed_PROC_DEFINED
 
+[section .procs]
 
-%include "NASMEXT.INC"
-%include "DOSSYS.INC"
-%include "DOSCRT.INC"
+KeyPressed_PROC:
+	push	ax
+	mov  	ah, 0x01
+	int  	0x16
+	clc
+	jz   	%%Done
+	stc
+%%Done:
+	pop	ax
+	ret
 
-WaitLoop:
-	NotKeypressed		WaitLoop
-	ReadKey			ax
-	StdOutHexWord		ax
-	StdOutCRLF
-	cmp			al, 0x03
-	jne			WaitLoop
-Finished:
+%endif
 
-	Terminate		0
+__?SECT?__
+
+	call 		KeyPressed_PROC
+	%if %0 = 1
+		jc	%1
+	%endif
+
+%endmacro
+; -----------------------------------------------------------------------------
+%imacro NotKeyPressed 0-1
+
+	KeyPressed
+
+__?SECT?__
+
+	%if %0 = 1
+		jnc	%1
+	%endif
+
+%endmacro
+; -----------------------------------------------------------------------------
+%imacro ReadKey 1
+
+%ifndef ReadKey_PROC_DEFINED
+	%idefine ReadKey_PROC_DEFINED
+
+[section .procs]
+
+ReadKey_PROC:
+	mov  	ah, 0x00
+	int  	0x16
+	cmp	ah, 0x32
+	jnb	%%Done
+	xor	ah, ah
+%%Done:
+	ret
+
+%endif
+
+__?SECT?__
+
+	%ifnidni %1, ax
+		push	ax
+	%endif
+	call 			ReadKey_PROC
+	%ifnidni %1, ax
+		mov	%1, ax
+		pop	ax
+	%endif
+
+%endmacro
