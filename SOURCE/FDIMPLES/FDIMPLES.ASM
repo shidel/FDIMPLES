@@ -83,4 +83,5 @@ WaitLoop:
 	jmp			WaitLoop
 Finished:
 
+	ResetVideoSettings
 	Terminate		0

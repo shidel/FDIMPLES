@@ -159,10 +159,7 @@
 ; Automatically initialize video display settings in BSS
 
 ProbeVideoCard
-
-; Required by NormVideo macro
-mov  	al, [Video_Attr]
-mov	[Initial_Video_Attr], al
+InitialVideoSettings;
 
 ; -----------------------------------------------------------------------------
 %endif

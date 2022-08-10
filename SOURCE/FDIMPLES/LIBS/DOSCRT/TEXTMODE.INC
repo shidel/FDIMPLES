@@ -172,9 +172,6 @@ Video_Page:		resb		1
 Video_Cursor:		resw		1
 Video_Attr:		resb		1
 
-; This would be in Initial_Video_Settings but is required for NormVideo macro
-Initial_Video_Attr:	resb		1
-
 %ifdef Video_VESA
 	TempBuffer 256
 %endif
@@ -222,10 +219,7 @@ InitialVideoSettings_PROC:
 Initial_Video_Mode:	resb		1
 Initial_Video_Page:	resb		1
 Initial_Video_Cursor:	resw		1
-
-; This would be in Initial_Video_Settings but is required for NormVideo macro
-; It is declared in ProbeVideoCard instead.
-; Initial_Video_Attr:	resb		1
+Initial_Video_Attr:	resb		1
 
 %endif
 
@@ -236,8 +230,48 @@ __?SECT?__
 %endmacro
 ; -----------------------------------------------------------------------------
 ; Restores video settings, to original mode, page, and cursor if needed.
-; Registers AX, BX, CX, DX, ES, DI are not preserved. Should probably call
-; before exit. Automatically, calls ProbeVideoSettings to update data.
+; Registers are not preserved. Automatically calls ProbeVideoSettings to
+; update data.
+; MACRO:  ResetVideoSettings 0
+; INPUT:  none
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%imacro TextMode 1
+
+%ifndef TextMode_PROC_DEFINED
+	%idefine TextMode_PROC_DEFINED
+
+[section .procs]
+
+TextMode_PROC:
+	mov			bx, 0x0040
+	push 			bx
+	pop			es
+	mov			bh, [es:0x0049]
+	cmp			bh, al
+	je			%%NoModeChange
+	xor			ah, ah
+	int			0x10
+	call			ProbeVideoCard_PROC
+%%NoModeChange:
+	ret
+
+%endif
+
+__?SECT?__
+
+	%ifidni %1, original
+		mov		al, [Initial_Video_Mode]
+	%else
+		movndef		al, %1
+	%endif
+	call 			TextMode_PROC
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Restores video settings, to original mode, page, and cursor if needed.
+; Registers are not preserved. Should probably call before exit. Automatically,
+; calls ProbeVideoSettings to update data.
 ; MACRO:  ResetVideoSettings 0
 ; INPUT:  none
 ; OUTPUT: none
@@ -251,16 +285,7 @@ __?SECT?__
 
 
 ResetVideoSettings_PROC:
-	mov			ax, 0x0040
-	push 			ax
-	pop			es
-	mov			bh, [es:0x0049]
-	mov			al, [Initial_Video_Mode]
-	cmp			bh, al
-	je			%%ResetPage
-	; mov			ah, 0x00
-	int			0x10
-%%ResetPage:
+	TextMode		original
 	mov			ah, [es:0x0062]
 	mov			al, [Initial_Video_Page]
 	cmp			ah, al
@@ -292,21 +317,3 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-; -----------------------------------------------------------------------------
-%imacro TextMode 1
-
-%ifndef TextMode_PROC_DEFINED
-	%idefine TextMode_PROC_DEFINED
-
-[section .procs]
-
-TextMode_PROC:
-	ret
-
-%endif
-
-__?SECT?__
-
-	call 			TextMode_PROC
-
-%endmacro
