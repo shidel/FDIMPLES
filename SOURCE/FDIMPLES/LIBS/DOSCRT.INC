@@ -82,6 +82,30 @@
 ; OUTPUT: %1 is key press (prefers ax)
 %include "DOSCRT/KEYPRESS.INC"
 
+; Set the foreground color for text writes
+; MACRO:  TextColor 1
+; INPUT:  %1 = 8-bit color (prefers al)
+; OUTPUT: none
+
+; Set the background color for text writes
+; MACRO:  TextBackground 1
+; INPUT:  %1 = 8-bit color (prefers al)
+; OUTPUT: none
+
+; Clear foreground text color intensity bit
+; MACRO:  LowVideo 0
+; INPUT:  none
+; OUTPUT: none
+
+; Set foreground text color intensity bit
+; MACRO:  HighVideo 0
+; INPUT:  none
+; OUTPUT: none
+
+; Return foreground intensity bit to last/original video InitialVideoSettings.
+; MACRO:  NormVideo 0
+; INPUT:  none
+; OUTPUT: none
 %include "DOSCRT/TEXTATTR.INC"
 ; -----------------------------------------------------------------------------
 ; Included overall feature support for DOSCRT

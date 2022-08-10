@@ -40,8 +40,20 @@
 ; INPUT:  %1 = 8-bit color (prefers al)
 ; OUTPUT: none
 
+; Clear foreground text color intensity bit
+; MACRO:  LowVideo 0
+; INPUT:  none
+; OUTPUT: none
 
+; Set foreground text color intensity bit
+; MACRO:  HighVideo 0
+; INPUT:  none
+; OUTPUT: none
 
+; Return foreground intensity bit to last/original video InitialVideoSettings.
+; MACRO:  NormVideo 0
+; INPUT:  none
+; OUTPUT: none
 ; -----------------------------------------------------------------------------
 %imacro TextColor 1
 
