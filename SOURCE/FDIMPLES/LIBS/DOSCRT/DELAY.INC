@@ -1,5 +1,3 @@
-; FreeDOS Installer (FDI) - My Package List Editor Software
-
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -31,66 +29,74 @@
 
 ; NASM 2.15.05, or later
 
-use16
+; -----------------------------------------------------------------------------
+; Wait for a period of time to elapse. If Support_BIOS_Timer is enabled,
+; it will first attempt to use the BIOS WAIT function. If that fails, it
+; will fall back on counting system timer ticks.
+; MACRO:  Delay 1
+; INPUT:  %1 = Milliseconds to wait, (prefers ax)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%imacro Delay 1
 
-cpu 8086
+%ifndef Delay_PROC_DEFINED
+	%idefine Delay_PROC_DEFINED
 
-org 0x100
+[section .procs]
 
-SECTION .text
+Delay_PROC:
+	pushm		cx, dx
+	test		ax, ax
+	jz		%%Done
+	%ifdef Support_BIOS_Timer
+		push		ax		; Convert Milli to MicroSeconds
+		mov		cl, 0x0a
+		shl		ax, cl
+		mov		dx, ax
+		pop		ax
+		push		ax
+		mov		cl, 0x06
+		shr		ax, cl
+		mov		cx, ax
+		mov		ah, 0x86	; BIOS Wait (AT,PS or better)
+		int		0x15
+		pop		ax
+		jnc		%%Done		; fails fall back to TimerTick
+	%endif
+	xor		dx, dx			; Convert MS to tick count
+	mov		cx, 55
+	div		cx
+	cmp		dx, 23
+	jb		%%SkipRoundUp
+	inc		ax
+%%SkipRoundUp:
+	test		ax, ax
+	jz		%%Done
+	pushm		es, di
+	mov		cx, ax
+	mov		dx, 0x0040
+	mov		es, dx
+	mov		di, 0x006C
+%%NextTick:
+	mov		dx, [es:di]
+%%WaitTick:
+	hlt					; Sleep CPU
+	mov		ax, [es:di]
+	cmp		dx, ax
+	je		%%WaitTick
+	loop		%%NextTick
+	popm		es, di
+%%Done:
+	popm 		cx, dx
+	ret
 
-%include "NASMEXT.INC"
-%include "DOSSYS.INC"
-%include "DOSCRT.INC"
+%endif
 
-	TextMode		0x54
-	jnc			DisplayStuff
-	StdOutStr		'Text mode change error'
-	jmp			Finished
+__?SECT?__
 
-DisplayStuff:
-	mov			al, [Video_Mode]
-	StdOutHexByte		al
-	StdOutCRLF
-	Delay			1000
+	push			ax
+	movndef			ax, %1
+	call 			Delay_PROC
+	pop			ax
 
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	TextColor		clRed
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	TextBackground		clWhite
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	HighVideo
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	NormVideo
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	StdOutCRLF
-	TextColor		original
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	TextColor		original
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	TextColor		original
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	StdOutCRLF
-
-WaitLoop:
-	NotKeypressed		WaitLoop
-	ReadKey			ax
-	StdOutHexWord		ax
-	StdOutCRLF
-	cmp			ax, 0x03
-	je			Finished
-	cmp			ax, 0x1b
-	je			Finished
-	jmp			WaitLoop
-
-Finished:
-	ResetVideoSettings
-	Terminate		0
+%endmacro

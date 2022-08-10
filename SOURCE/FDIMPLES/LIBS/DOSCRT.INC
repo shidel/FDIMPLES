@@ -117,8 +117,17 @@
 ; INPUT:  none
 ; OUTPUT: none
 %include "DOSCRT/TEXTATTR.INC"
+
+; Wait for a period of time to elapse. If Support_BIOS_Timer is enabled,
+; it will first attempt to use the BIOS WAIT function. If that fails, it
+; will fall back on counting system timer ticks.
+; MACRO:  Delay 1
+; INPUT:  %1 = Milliseconds to wait, (prefers ax)
+; OUTPUT: none
+%include "DOSCRT/DELAY.INC"
 ; -----------------------------------------------------------------------------
 ; Included overall feature support for DOSCRT
+; %idefine Support_BIOS_Timer		1
 %idefine Support_BIOS_Video		1
 %idefine Support_Direct_Video   	1
 %idefine Support_Mouse			1
