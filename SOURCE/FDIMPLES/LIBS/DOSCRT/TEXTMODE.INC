@@ -229,10 +229,10 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-; Restores video settings, to original mode, page, and cursor if needed.
+; Changes video mode if needed.
 ; Registers are not preserved. Automatically calls ProbeVideoSettings to
 ; update data.
-; MACRO:  ResetVideoSettings 0
+; MACRO:  TextMode 0
 ; INPUT:  none
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
@@ -252,6 +252,8 @@ TextMode_PROC:
 	je			%%NoModeChange
 	xor			ah, ah
 	int			0x10
+	; Must call directly, otherwise NASM may embed the macro's code here
+	; Instead of later (where we want it)
 	call			ProbeVideoCard_PROC
 %%NoModeChange:
 	ret
@@ -304,7 +306,7 @@ ResetVideoSettings_PROC:
 %%Done:
 	mov			al, [Initial_Video_Attr]
 	mov			[Video_Attr], al
-	; Must call directly, otherwise NASM will embed the macro's code here
+	; Must call directly, otherwise NASM may embed the macro's code here
 	; Instead of later (where we want it)
 	call			ProbeVideoCard_PROC
 	ret
