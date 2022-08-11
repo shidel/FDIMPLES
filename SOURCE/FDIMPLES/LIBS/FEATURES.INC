@@ -45,14 +45,26 @@
 ; pushs ands pops does add up.
 ; %idefine Preserve_Registers		1
 
+; Include DOSCRT screen range checking. Adds several bytes. For small programs,
+; this can be noticeable. Preferably, write code that does not go out of
+; range and don't waste bytes. :-)
+; %idefine DOSCRT_Range_Check		1
+
 ; Include support for additional Interrupt based timer. Disabling this can save
 ; a few bytes. It will then always use system TimerTicks and accuracy will be
 ; +/- 55ms.
 ; %idefine Support_BIOS_Timer		1
 
+; Support BIOS video access. The only method supported at present. It is slower
+; than direct video access.
 %idefine Support_BIOS_Video		1
-%idefine Support_Direct_Video   	1
-%idefine Support_Mouse			1
+
+; Support direct video access. I don't know if I will bother implementing this.
+; Probably. We will see.
+; %idefine Support_Direct_Video   	1
+
+; Include mouse support
+; %idefine Support_Mouse		1
 
 ; Included card support levels and returned detection values
 %idefine Video_MDA 	0

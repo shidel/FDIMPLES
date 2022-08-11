@@ -42,18 +42,22 @@ SECTION .text
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
-	TextMode		0x54
-	jnc			DisplayStuff
-	StdOutStr		'Text mode change error'
-	jmp			Finished
+;	TextMode		0x54
+;	jnc			DisplayStuff
+;	StdOutStr		'Text mode change error'
+;	jmp			Finished
 
 DisplayStuff:
 	StdOutHexByte		[Video_Mode]
 	StdOutCRLF
-	Delay			1000
-	Sound 			500
-	Delay			250
-	NoSound
+	StdOutHexWord 		[Video_WindMin]
+	StdOutChar		'/'
+	StdOutHexWord 		[Video_WindMax]
+	StdOutCRLF
+;	Delay			1000
+;	Sound 			500
+;	Delay			250
+;	NoSound
 
 	StdOutHexByte 		[Video_Attr]
 	TextColor		clRed
@@ -72,6 +76,27 @@ DisplayStuff:
 	TextColor		original
 	StdOutHexByte 		[Video_Attr]
 	StdOutCRLF
+
+	mov			ax, [Video_ScreenMax]
+	sub			ax, 0x0101
+	Window			0x0202, ax
+	TextBackground 		clBlue
+	ClrScr
+	TextColor		original
+	StdOutHexWord 		[Video_WindMin]
+	StdOutChar		'/'
+	StdOutHexWord 		[Video_WindMax]
+	StdOutCRLF
+
+	Window			0x0f, 0x07, 0x30, 0x10
+	TextBackground 		clRed
+	ClrScr
+	TextColor		original
+	StdOutHexWord 		[Video_WindMin]
+	StdOutChar		'/'
+	StdOutHexWord 		[Video_WindMax]
+	StdOutCRLF
+
 
 WaitLoop:
 	NotKeypressed		WaitLoop

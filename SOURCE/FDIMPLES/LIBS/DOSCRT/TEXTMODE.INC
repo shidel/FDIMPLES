@@ -138,11 +138,11 @@ ProbeVideoCard_PROC:
 ; Not better than CGA
 	mov			al, 0x0019
 	mov			[Video_Rows], al
-
-	ret
-
+	jmp			%%Done
 %%Identified:
 	mov			[Video_Card], dl
+
+%%Done:
 	ret
 
 
@@ -153,16 +153,16 @@ Video_Card:		resb		1
 Video_Regen:		resw		1
 Video_Offset:		resw		1
 Video_Segment:		resw		1
-Video_MaxXY:
+Video_ScreenMax:
 Video_Columns:		resb		1
 Video_Rows:		resb		1
-Video_WindMinXY:
+Video_WindMin:
 Video_WindMinX:		resb		1
 Video_WindMinY:		resb		1
-Video_WindMaxXY:
+Video_WindMax:
 Video_WindMaxX:		resb		1
 Video_WindMaxY:		resb		1
-Video_WhereXY:
+Video_Where:
 Video_WhereX:		resb		1
 Video_WhereY:		resb		1
 
@@ -256,6 +256,7 @@ TextMode_PROC:
 	; Must call directly, otherwise NASM may embed the macro's code here
 	; Instead of later (where we want it)
 	call			ProbeVideoCard_PROC
+	call			WindowReset_PROC
 	popm			ax, bx
 	mov			bh, [es:0x0049]
 	cmp			bh, al

@@ -31,20 +31,31 @@
 
 ; -----------------------------------------------------------------------------
 ; -----------------------------------------------------------------------------
-%imacro ClearScreen 0
+%imacro ClrScr 0
 
-%ifndef ClearScreen_PROC_DEFINED
-	%idefine ClearScreen_PROC_DEFINED
+%ifndef ClrScr_PROC_DEFINED
+	%idefine ClrScr_PROC_DEFINED
 
 [section .procs]
 
-ClearScreen_PROC:
+ClrScr_PROC:
+	mov		ax, 0x0600
+	mov		bh, [Video_Attr]
+	mov		cx, [Video_WindMin]
+	mov		dx, [Video_WindMax]
+	sub		cx, 0x0101
+	sub		dx, 0x0101
+	int		0x10
+	mov		ah, 0x02
+	mov		bh, [Video_Page]
+	mov		dx, cx
+	int		0x10
 	ret
 
 %endif
 
 __?SECT?__
 
-	call 			ClearScreen_PROC
+	call 			ClrScr_PROC
 
 %endmacro

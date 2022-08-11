@@ -138,6 +138,7 @@
 
 %include "DOSCRT/SOUND.INC"
 %include "DOSCRT/WINDOW.INC"
+%include "DOSCRT/CLEAR.INC"
 %include "DOSCRT/INSDEL.INC"
 %include "DOSCRT/WRITE.INC"
 
@@ -173,6 +174,7 @@
 ; Automatically initialize video display settings in BSS
 
 ProbeVideoCard
+WindowReset;
 InitialVideoSettings;
 
 ; -----------------------------------------------------------------------------
