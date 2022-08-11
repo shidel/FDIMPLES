@@ -34,6 +34,7 @@
 ; MACRO:  KeyPressed 0-1
 ; INPUT:  %1 = [Optional] jump address if key was pressed.
 ; OUTPUT: Carry Flag Set if key has been pressed.
+; REGS:	  ax
 ; -----------------------------------------------------------------------------
 %imacro KeyPressed 0-1
 
@@ -43,14 +44,14 @@
 [section .procs]
 
 KeyPressed_PROC:
-	push	ax
-	mov  	ah, 0x01
-	int  	0x16
+	RegsPreserve	ax
+	mov  		ah, 0x01
+	int  		0x16
 	clc
-	jz   	%%Done
+	jz   		%%Done
 	stc
 %%Done:
-	pop	ax
+	RegsRestore	ax
 	ret
 
 %endif
@@ -68,6 +69,7 @@ __?SECT?__
 ; MACRO:  NotKeyPressed 0-1
 ; INPUT:  %1 = [Optional] jump address if key was not pressed.
 ; OUTPUT: Carry Flag Set if key has been pressed. (Same as KeyPressed)
+; REGS:	  ax
 ; -----------------------------------------------------------------------------
 %imacro NotKeyPressed 0-1
 
@@ -85,6 +87,7 @@ __?SECT?__
 ; MACRO:  ReadKey 1
 ; INPUT:  none
 ; OUTPUT: %1 is key press (prefers ax)
+; REGS:	  ax
 ; -----------------------------------------------------------------------------
 %imacro ReadKey 1
 
@@ -109,12 +112,12 @@ ReadKey_PROC:
 __?SECT?__
 
 	%ifnidni %1, ax
-		push	ax
+		RegsPreserve	ax
 	%endif
 	call 			ReadKey_PROC
 	%ifnidni %1, ax
-		mov	%1, ax
-		pop	ax
+		mov		%1, ax
+		RegsRestore	ax
 	%endif
 
 %endmacro

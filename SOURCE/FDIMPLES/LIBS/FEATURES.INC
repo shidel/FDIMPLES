@@ -1,3 +1,6 @@
+; Features for DOS v1.0
+; Similar (but a little different) to a Pascal CRT unit.
+
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -29,96 +32,39 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef FEATURES_INC_DEFINED
+%define FEATURES_INC_DEFINED
+
 ; -----------------------------------------------------------------------------
-; Output sound through PC speaker
-; MACRO:  Sound 1
-; INPUT:  %1 = Frequency in Hertz (prefers ax)
-; OUTPUT: none
-; REGS:   ax, cx, dx
+; Features and compile options for macros in the DOS libraries
 ; -----------------------------------------------------------------------------
-%imacro Sound 1
 
-%ifndef Sound_PROC_DEFINED
-	%idefine Sound_PROC_DEFINED
+; When enabled and unless otherwise specified, the macro will preserve all the
+; registers it uses. This can be useful for large and complex programs. However,
+; there will be a small performance hit and the bytes needed for all those
+; pushs ands pops does add up.
+; %idefine Preserve_Registers		1
 
-[section .procs]
+; Include support for additional Interrupt based timer. Disabling this can save
+; a few bytes. It will then always use system TimerTicks and accuracy will be
+; +/- 55ms.
+; %idefine Support_BIOS_Timer		1
 
-Sound_PROC:
-	RegsPreserve	ax, cx ,dx
-	mov		cx, ax
-	cmp		cx, 0x0012
-	jbe		%%NoFrequency
-	mov		dx, 0x0012
-	mov		ax, 0x34dc
-	div		cx
-	jmp		%%SendSound
-%%NoFrequency:
-	xor		ax, ax
-%%SendSound:
-	push		ax
-	mov		al, 10110110b
-	mov		dx, 0x0043
-	out		dx, al
-	mov		dx, 0x0042
-	pop		ax
-	out		dx, al
-	mov		al, ah
-	out		dx, al
-	mov		dx, 0x0061
-	in		al, dx
-	mov		al, 0x03
-	out		dx, al
-	RegsRestore	ax, cx, dx
-	ret
+%idefine Support_BIOS_Video		1
+%idefine Support_Direct_Video   	1
+%idefine Support_Mouse			1
 
+; Included card support levels and returned detection values
+%idefine Video_MDA 	0
+%idefine Video_CGA 	1
+; EGA test is strongly recommended but not required. Otherwise, locked into
+; 25 screen rows.
+%idefine Video_EGA 	2
+; Disable Video_MCGA, VGA, VESA. If you don't care about them and want to
+; reduce the code size a few bytes (+256 bytes BSS for VESA)
+; %idefine Video_MCGA 	3
+; %idefine Video_VGA 	4
+; %idefine Video_VESA	5
+
+; -----------------------------------------------------------------------------
 %endif
-
-__?SECT?__
-
-	%ifnidni %1, ax
-		RegsPreserve	ax
-		mov		ax, %1
-	%endif
-	call 			Sound_PROC
-	%ifnidni %1, ax
-		RegsRestore	ax
-	%endif
-
-%endmacro
-; -----------------------------------------------------------------------------
-; Turns off PC Speaker
-; MACRO:  NoSound 0
-; INPUT:  none
-; OUTPUT: none
-; REGS:   ax, dx
-; -----------------------------------------------------------------------------
-%imacro NoSound 0
-
-%ifndef NoSound_PROC_DEFINED
-	%idefine NoSound_PROC_DEFINED
-
-[section .procs]
-
-NoSound_PROC:
-	RegsPreserve	ax, dx
-	mov		dx, 0x0061
-	in		al, dx
-	and		al, 11111101b
-	out		dx, al
-	mov		al, 10110110b
-	mov		dx, 0x0043
-	out		dx, al
-	mov		dx, 0x0042
-	xor		al, al
-	out		dx, al
-	out		dx, al
-	RegsRestore	ax, dx
-	ret
-
-%endif
-
-__?SECT?__
-
-	call 			NoSound_PROC
-
-%endmacro

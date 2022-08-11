@@ -34,6 +34,9 @@
 
 %ifndef DOSSYS_INC_DEFINED
 %define DOSSYS_INC_DEFINED
+
+%include "NASMEXT.INC"
+%include "FEATURES.INC"
 ; -----------------------------------------------------------------------------
 ; List of macros and functions provided by this file.
 ; Note: Macros often have have preferred register to use when passing when

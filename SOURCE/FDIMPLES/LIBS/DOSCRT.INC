@@ -34,6 +34,10 @@
 
 %ifndef DOSCRT_INC_DEFINED
 %define DOSCRT_INC_DEFINED
+
+%include "NASMEXT.INC"
+%include "FEATURES.INC"
+
 ; -----------------------------------------------------------------------------
 ; List of macros and functions provided by this file.
 ; Note: Macros often have have preferred register to use when passing when
@@ -44,78 +48,75 @@
 ; prior to any other DOSCRT macros. However, it can be called multiple times.
 ; For example, after mode changes. Warning: If VESA is enabled, the macro will
 ; use a shared temporary buffer in the BSS.
-; Registers AX, BX, CX, DX, ES, DI are not preserved.
 ; MACRO:  ProbeVideoCard 0
-; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
+; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
 
 ; Probes for current video settings. It needs called prior to any other DOSCRT
 ; macros. It should really be called only once at startup.
-; Registers AX, BX, CX, DX, ES, DI are not preserved.
 ; MACRO:  InitialVideoSettings 0
-; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
+; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
 
-; Changes video mode if needed.
-; Registers are not preserved. Automatically calls ProbeVideoSettings to
+; Changes video mode if needed. Automatically calls ProbeVideoSettings to
 ; update data.
 ; MACRO:  TextMode 1
 ; INPUT:  %1 = video mode (prefers al), original returns it to Initial Setting
 ; OUTPUT: Carry Flag set if error occurred.
+; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
 
 ; Restores video settings, to original mode, page, and cursor if needed.
-; Requires using InitialVideoSettings macro during startup.
-; Registers AX, BX, CX, DX, ES, DI are not preserved. Should probably call
-; before exit. Automatically, calls ProbeVideoSettings to update data.
+; Requires using InitialVideoSettings macro during startup. Should probably
+; call before exit. Automatically, calls ProbeVideoSettings to update data.
 ; MACRO:  ResetVideoSettings 0
-; INPUT:  none
+; OUTPUT: undefined, sets data in BSS.
+; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
 %include "DOSCRT/TEXTMODE.INC"
 
 ; Test for key was pressed
 ; MACRO:  KeyPressed 0-1
 ; INPUT:  %1 = [Optional] jump address if key was pressed.
 ; OUTPUT: Carry Flag Set if key has been pressed.
+; REGS:	  ax
 
 ; Test for key not pressed
 ; MACRO:  NotKeyPressed 0-1
 ; INPUT:  %1 = [Optional] jump address if key was not pressed.
 ; OUTPUT: Carry Flag Set if key has been pressed. (Same as KeyPressed)
+; REGS:	  ax
 
 ; Wait for and read key press
 ; MACRO:  ReadKey 1
-; INPUT:  none
 ; OUTPUT: %1 is key press (prefers ax)
+; REGS:	  ax
 %include "DOSCRT/KEYPRESS.INC"
 
 ; Set the foreground color for text writes
 ; MACRO:  TextColor 1
 ; INPUT:  %1 = 4-bit color (prefers al), original returns it to Initial Setting
-; OUTPUT: none
+; REGS:   ax
 
 ; Set the background color for text writes
 ; MACRO:  TextBackground 1
 ; INPUT:  %1 = 3-bit color (prefers al), original returns it to Initial Setting
-; OUTPUT: none
+; REGS:   ax, cx
 
 ; Set both foreground and background color.
 ; MACRO:  TextAttr 1
 ; INPUT:  %1 = 8-bit color (prefers al), original returns it to Initial Setting
-; OUTPUT: none
+; REGS:   cx
 
 ; Clear foreground text color intensity bit
 ; MACRO:  LowVideo 0
-; INPUT:  none
-; OUTPUT: none
+; REGS:   none
 
 ; Set foreground text color intensity bit
 ; MACRO:  HighVideo 0
-; INPUT:  none
-; OUTPUT: none
+; REGS:   none
 
 ; Restore foreground intensity bit to last/original video Initial Setting
 ; MACRO:  NormVideo 0
-; INPUT:  none
-; OUTPUT: none
+; REGS:   none
 %include "DOSCRT/TEXTATTR.INC"
 
 ; Wait for a period of time to elapse. If Support_BIOS_Timer is enabled,
@@ -123,32 +124,24 @@
 ; will fall back on counting system timer ticks.
 ; MACRO:  Delay 1
 ; INPUT:  %1 = Milliseconds to wait, (prefers ax)
-; OUTPUT: none
+; REGS:   ax, cx, dx
 %include "DOSCRT/DELAY.INC"
+
+; Output sound through PC speaker
+; MACRO:  Sound 1
+; INPUT:  %1 = Frequency in Hertz (prefers ax)
+; REGS:   ax, cx, dx
+
+; Turns off PC Speaker
+; MACRO:  NoSound 0
+; REGS:   ax, dx
+
 %include "DOSCRT/SOUND.INC"
 %include "DOSCRT/WINDOW.INC"
 %include "DOSCRT/INSDEL.INC"
 %include "DOSCRT/WRITE.INC"
 
 ; -----------------------------------------------------------------------------
-; Included overall feature support for DOSCRT
-; %idefine Support_BIOS_Timer		1
-%idefine Support_BIOS_Video		1
-%idefine Support_Direct_Video   	1
-%idefine Support_Mouse			1
-
-; Included card support levels and returned detection values
-%idefine Video_MDA 	0
-%idefine Video_CGA 	1
-; EGA test is strongly recommended but not required. Otherwise, locked into
-; 25 screen rows.
-%idefine Video_EGA 	2
-; Disable Video_MCGA, VGA, VESA. If you don't care about them and want to
-; reduce the code size a few bytes (+256 bytes BSS for VESA)
-; %idefine Video_MCGA 	3
-; %idefine Video_VGA 	4
-; %idefine Video_VESA	5
-
 ; Standard text video display mode constants
 %idefine tmBW40		0	; 40x25 B/W on Color adapter
 %idefine tmCO40		1	; 40x25 Color on Color adapter

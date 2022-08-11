@@ -31,6 +31,11 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef NASMEXT_INC_DEFINED
+%define NASMEXT_INC_DEFINED
+
+%include "FEATURES.INC"
+
 %imacro movip 1
 ; mov	ip (+3 bytes) into register.
 	call %%ShortCall
@@ -120,26 +125,26 @@
 
 %imacro pushm 0-*
 ; push a group of registers
-    %ifidni %0, 0
-        pushall
-    %else
-        %rep  %0
-            push    %1
-        %rotate 1
-        %endrep
-    %endif
+	%ifidni %0, 0
+		pushall
+	%else
+		%rep  %0
+			push    %1
+		%rotate 1
+		%endrep
+	%endif
 %endmacro
 
 %imacro popm 0-*
 ; pop a group of registers (in reverse order)
-    %ifidni %0, 0
-        popall
-    %else
-        %rep %0
-        %rotate -1
-            pop     %1
-        %endrep
-    %endif
+	%ifidni %0, 0
+		popall
+	%else
+		%rep %0
+		%rotate -1
+			pop     %1
+		%endrep
+	%endif
 %endmacro
 
 %imacro movndef 2-*
@@ -199,3 +204,31 @@
 
 	%endif
 %endmacro
+
+%imacro RegsPreserve 1-*
+	%ifdef Perserve_Registers
+		%ifidni %0, 0
+			pushall
+		%else
+			%rep  %0
+				push    %1
+			%rotate 1
+			%endrep
+		%endif
+	%endif
+%endmacro
+
+%imacro RegsRestore 0-*
+	%ifdef Perserve_Registers
+		%ifidni %0, 0
+			popall
+		%else
+			%rep %0
+			%rotate -1
+				pop     %1
+			%endrep
+		%endif
+	%endif
+%endmacro
+
+%endif

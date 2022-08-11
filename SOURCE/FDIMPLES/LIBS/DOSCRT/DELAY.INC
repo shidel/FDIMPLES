@@ -36,6 +36,7 @@
 ; MACRO:  Delay 1
 ; INPUT:  %1 = Milliseconds to wait, (prefers ax)
 ; OUTPUT: none
+; REGS:   ax, cx, dx
 ; -----------------------------------------------------------------------------
 %imacro Delay 1
 
@@ -45,7 +46,7 @@
 [section .procs]
 
 Delay_PROC:
-	pushm		cx, dx
+	RegsPreserve	cx, dx
 	test		ax, ax
 	jz		%%Done
 	%ifdef Support_BIOS_Timer
@@ -87,16 +88,16 @@ Delay_PROC:
 	loop		%%NextTick
 	popm		es, di
 %%Done:
-	popm 		cx, dx
+	RegsPreserve	cx, dx
 	ret
 
 %endif
 
 __?SECT?__
 
-	push			ax
+	RegsPreserve		ax
 	movndef			ax, %1
 	call 			Delay_PROC
-	pop			ax
+	RegsRestore		ax
 
 %endmacro

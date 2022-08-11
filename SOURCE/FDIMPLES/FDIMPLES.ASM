@@ -39,7 +39,6 @@ org 0x100
 
 SECTION .text
 
-%include "NASMEXT.INC"
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
@@ -49,19 +48,38 @@ SECTION .text
 	jmp			Finished
 
 DisplayStuff:
-	mov			al, [Video_Mode]
-	StdOutHexByte		al
+	StdOutHexByte		[Video_Mode]
 	StdOutCRLF
 	Delay			1000
 	Sound 			500
 	Delay			250
 	NoSound
 
+	StdOutHexByte 		[Video_Attr]
+	TextColor		clRed
+	StdOutHexByte 		[Video_Attr]
+	TextBackground		clWhite
+	StdOutHexByte 		[Video_Attr]
+	HighVideo
+	StdOutHexByte 		[Video_Attr]
+	NormVideo
+	StdOutHexByte 		[Video_Attr]
+	StdOutCRLF
+	TextColor		original
+	StdOutHexByte 		[Video_Attr]
+	TextColor		original
+	StdOutHexByte 		[Video_Attr]
+	TextColor		original
+	StdOutHexByte 		[Video_Attr]
+	StdOutCRLF
+
 WaitLoop:
 	NotKeypressed		WaitLoop
 	ReadKey			ax
+	push			ax
 	StdOutHexWord		ax
 	StdOutCRLF
+	pop			ax
 	cmp			ax, 0x03
 	je			Finished
 	cmp			ax, 0x1b

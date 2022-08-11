@@ -34,6 +34,7 @@
 ; MACRO:  TextColor 1
 ; INPUT:  %1 = 4-bit color (prefers al), original returns it to Initial Setting
 ; OUTPUT: none
+; REGS:   ax
 ; -----------------------------------------------------------------------------
 %imacro TextColor_RESET 0
 
@@ -43,12 +44,12 @@
 [section .procs]
 
 TextColor_RESET_PROC:
-	push		ax
+	RegsPreserve	ax
 	mov		al, [Initial_Video_Attr]
 	and		al, 0x0f
 	and		[Video_Attr], byte 0xf0
 	or		[Video_Attr], al
-	pop		ax
+	RegsRestore	ax
 	ret
 
 %endif
@@ -67,11 +68,13 @@ __?SECT?__
 [section .procs]
 
 TextColor_PROC:
+	RegsPreserve	ax
 	and		al, 0x0f
 	mov		ah, [Video_Attr]
 	and		ah, 0xf0
 	or		al, ah
 	mov		[Video_Attr], al
+	RegsRestore	ax
 	ret
 %endif
 
@@ -80,10 +83,14 @@ __?SECT?__
 	%ifidni %1, original
 		TextColor_RESET
 	%else
-		push			ax
-		movndef			al, %1
+		%ifnidni %1, al
+			RegsPreserve		ax
+			mov			al, %1
+		%endif
 		call 			TextColor_PROC
-		pop			ax
+		%ifnidni %1, al
+			RegsRestore		ax
+		%endif
 	%endif
 
 %endmacro
@@ -92,6 +99,7 @@ __?SECT?__
 ; MACRO:  TextBackground 1
 ; INPUT:  %1 = 3-bit color (prefers al), original returns it to Initial Setting
 ; OUTPUT: none
+; REGS:   ax, cx
 ; -----------------------------------------------------------------------------
 %imacro TextBackground_RESET 0
 
@@ -101,12 +109,12 @@ __?SECT?__
 [section .procs]
 
 TextBackground_RESET_PROC:
-	push		ax
+	RegsPreserve	ax
 	mov		al, [Initial_Video_Attr]
 	and		al, 0xf0
 	and		[Video_Attr], byte 0x0f
 	or		[Video_Attr], al
-	pop		ax
+	RegsRestore	ax
 	ret
 
 %endif
@@ -125,7 +133,7 @@ __?SECT?__
 [section .procs]
 
 TextBackground_PROC:
-	push		cx
+	RegsPreserve	ax, cx
 	mov		cl, 0x04
 	and		al, 0x07
 	shl		al, cl
@@ -133,7 +141,7 @@ TextBackground_PROC:
 	and		ah, 0x8f
 	or		al, ah
 	mov		[Video_Attr], al
-	pop		cx
+	RegsRestore	ax, cx
 	ret
 
 %endif
@@ -143,10 +151,14 @@ __?SECT?__
 	%ifidni %1, original
 		TextBackground_RESET
 	%else
-		push			ax
-		movndef			al, %1
+		%ifnidni %1, al
+			RegsPreserve		ax
+			mov			al, %1
+		%endif
 		call 			TextBackground_PROC
-		pop			ax
+		%ifnidni %1, al
+			RegsRestore		ax
+		%endif
 	%endif
 
 %endmacro
@@ -155,6 +167,7 @@ __?SECT?__
 ; MACRO:  TextAttr 1
 ; INPUT:  %1 = 8-bit color (prefers al), original returns it to Initial Setting
 ; OUTPUT: none
+; REGS:   ax
 ; -----------------------------------------------------------------------------
 %imacro TextAttr 1
 
@@ -164,10 +177,10 @@ __?SECT?__
 [section .procs]
 
 TextAttr_RESET_PROC:
-	push		ax
+	RegsPreserve	ax
 	mov		al, [Initial_Video_Attr]
 	mov		[Video_Attr], al
-	pop		ax
+	RegsRestore	ax
 	ret
 
 %endif
@@ -187,6 +200,7 @@ __?SECT?__
 ; MACRO:  LowVideo 0
 ; INPUT:  none
 ; OUTPUT: none
+; REGS:   none
 ; -----------------------------------------------------------------------------
 %imacro LowVideo 0
 
@@ -198,6 +212,7 @@ __?SECT?__
 ; MACRO:  HighVideo 0
 ; INPUT:  none
 ; OUTPUT: none
+; REGS:   none
 ; -----------------------------------------------------------------------------
 %imacro HighVideo 0
 
@@ -209,14 +224,27 @@ __?SECT?__
 ; MACRO:  NormVideo 0
 ; INPUT:  none
 ; OUTPUT: none
+; REGS:   none
 ; -----------------------------------------------------------------------------
 %imacro NormVideo 0
 
+%ifndef NormVideo_PROC_DEFINED
+	%idefine NormVideo_PROC_DEFINED
+[section .procs]
+
+NormVideo_PROC:
 	push		ax
 	mov		al, [Initial_Video_Attr]
 	and		al, 00001000b
 	and		[Video_Attr], byte 11110111b
 	or		[Video_Attr], al
 	pop		ax
+	ret
+
+%endif
+
+__?SECT?__
+
+	call		NormVideo_PROC
 
 %endmacro
