@@ -38,35 +38,38 @@
 ; -----------------------------------------------------------------------------
 ; Features and compile options for macros in the DOS libraries
 ; -----------------------------------------------------------------------------
+; When enabled, includes some hardware, os and other specific bug fixes.
+; You should probably leave it enabled.
+%idefine DOS_BUG_FIXES
 
 ; When enabled and unless otherwise specified, the macro will preserve all the
 ; registers it uses. This can be useful for large and complex programs. However,
 ; there will be a small performance hit and the bytes needed for all those
 ; pushs ands pops does add up.
-; %idefine Preserve_Registers		1
+; %idefine Preserve_Registers
 
 ; Include DOSCRT screen range checking. Adds several bytes. For small programs,
 ; this can be noticeable. Preferably, write code that does not go out of
 ; range and don't waste bytes. :-)
-; %idefine DOSCRT_Range_Check		1
+; %idefine DOSCRT_Range_Check
 
 ; Include support for additional Interrupt based timer. Disabling this can save
 ; a few bytes. It will then always use system TimerTicks and accuracy will be
 ; +/- 55ms.
-; %idefine Support_BIOS_Timer		1
+; %idefine Support_BIOS_Timer
 
 ; Support BIOS video access. The only method supported at present. It is slower
 ; than direct video access.
-%idefine Support_BIOS_Video		1
+%idefine Support_BIOS_Video
 
 ; Support direct video access. I don't know if I will bother implementing this.
 ; Probably. We will see.
-; %idefine Support_Direct_Video   	1
+; %idefine Support_Direct_Video
 
 ; Include mouse support
-; %idefine Support_Mouse		1
+; %idefine Support_Mouse
 
-; Included card support levels and returned detection values
+; Included card support levels and detection values
 %idefine Video_MDA 	0
 %idefine Video_CGA 	1
 ; EGA test is strongly recommended but not required. Otherwise, locked into

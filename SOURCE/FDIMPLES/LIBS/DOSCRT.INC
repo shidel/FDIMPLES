@@ -137,7 +137,24 @@
 ; REGS:   ax, dx
 
 %include "DOSCRT/SOUND.INC"
+
+; -----------------------------------------------------------------------------
+; Adjusts the window to its maximum size. Does not move cursor. Automatically
+; called at startup and with text mode changes.
+; MACRO: WindowMax 0
+; REGS:  ax
+
+; Set the window size and moves cursor to top/left in window.
+; MACRO: Window 2
+; INPUT:
+;	%1 = Window MinXY (prefers ax)
+;	%2 = Window MaxXY (prefers dx)
+; REGS:  ax, cx, dx
 %include "DOSCRT/WINDOW.INC"
+
+; Clear the current window and moves cursor to top/left in window.
+; MACRO: ClrScr 0
+; REGS: ax, bx, cx, dx
 %include "DOSCRT/CLEAR.INC"
 %include "DOSCRT/INSDEL.INC"
 %include "DOSCRT/WRITE.INC"
@@ -174,8 +191,8 @@
 ; Automatically initialize video display settings in BSS
 
 ProbeVideoCard
-WindowReset;
-InitialVideoSettings;
+WindowMax;
+InitialVideoSettings
 
 ; -----------------------------------------------------------------------------
 %endif

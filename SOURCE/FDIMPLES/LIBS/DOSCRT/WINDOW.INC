@@ -31,21 +31,20 @@
 
 ; -----------------------------------------------------------------------------
 ; Adjusts the window to its maximum size. Does not move cursor.
-; MACRO: WindowReset 0
+; MACRO: WindowMax 0
 ; REGS:  ax
 ; -----------------------------------------------------------------------------
-%imacro WindowReset 0
+%imacro WindowMax 0
 
-%ifndef WindowReset_PROC_DEFINED
-	%idefine WindowReset_PROC_DEFINED
+%ifndef WindowMax_PROC_DEFINED
+	%idefine WindowMax_PROC_DEFINED
 
 [section .procs]
 
-WindowReset_PROC:
+WindowMax_PROC:
 	RegsPreserve		ax
 	mov			ax, [Video_ScreenMax]
 	mov			[Video_WindMax], ax
-	mov			ax, 0x0101
 	mov			[Video_WindMin], ax
 	RegsRestore		ax
 	ret
@@ -54,7 +53,7 @@ WindowReset_PROC:
 
 __?SECT?__
 
-	call 			WindowReset_PROC
+	call 			WindowMax_PROC
 
 %endmacro
 ; -----------------------------------------------------------------------------
@@ -63,11 +62,6 @@ __?SECT?__
 ; INPUT:
 ;	%1 = Window MinXY (prefers ax)
 ;	%2 = Window MaxXY (prefers dx)
-; OR:
-;	%1 = Window Min X (prefers al)
-;	%2 = Window Min Y (prefers ah)
-;	%3 = Window Max X (prefers dl)
-;	%4 = Window Max Y (prefers dh)
 ; REGS:  ax, cx, dx
 ; -----------------------------------------------------------------------------
 %imacro Window 2
@@ -78,6 +72,10 @@ __?SECT?__
 [section .procs]
 
 Window_PROC:
+	%ifdef DOS_BUG_FIXES
+		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
+		pushm		ds, bp
+	%endif
 	%ifdef DOSCRT_Range_Check
 		RegsPreserve	cx
 		mov		cx, [Video_ScreenMax]
@@ -111,12 +109,21 @@ Window_PROC:
 		jmp		%%TryAgain
 	%%OkayY2:
 	%endif
+
+	RegsPreserve 	bx
 	mov		[Video_WindMin], ax
-	mov		[Video_Where], ax
 	mov		[Video_WindMax], dx
+	mov		dx, ax
+	mov		ah, 0x02
+	mov		bh, [Video_Page]
+	int		0x10
+	RegsRestore 	bx
 
 	%ifdef DOSCRT_Range_Check
 		RegsRestore	cx
+	%endif
+	%ifdef DOS_BUG_FIXES
+		popm		ds, bp
 	%endif
 	ret
 
@@ -128,25 +135,5 @@ __?SECT?__
 	movndef	     	ax, %1, dx, %2
 	call		Window_PROC
 	RegsRestore  	ax, dx
-
-%endmacro
-
-%imacro Window 4
-
-%ifndef Window_PROC_DEFINED
-	%idefine Window_PROC_DEFINED
-
-[section .procs]
-
-WindowCoord_PROC:
-	ret
-
-%endif
-
-__?SECT?__
-
-	RegsPreserve ax, dx
-;	movndef	     al, %1, ah, %2, dl, %3, dh, %4
-	RegsRestore  ax, dx
 
 %endmacro

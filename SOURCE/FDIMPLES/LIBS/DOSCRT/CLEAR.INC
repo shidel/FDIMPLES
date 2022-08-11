@@ -30,6 +30,9 @@
 ; NASM 2.15.05, or later
 
 ; -----------------------------------------------------------------------------
+; Clear the current window
+; MACRO: ClrScr 0
+; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
 %imacro ClrScr 0
 
@@ -43,8 +46,6 @@ ClrScr_PROC:
 	mov		bh, [Video_Attr]
 	mov		cx, [Video_WindMin]
 	mov		dx, [Video_WindMax]
-	sub		cx, 0x0101
-	sub		dx, 0x0101
 	int		0x10
 	mov		ah, 0x02
 	mov		bh, [Video_Page]

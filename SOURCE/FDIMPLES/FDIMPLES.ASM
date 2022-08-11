@@ -79,7 +79,7 @@ DisplayStuff:
 
 	mov			ax, [Video_ScreenMax]
 	sub			ax, 0x0101
-	Window			0x0202, ax
+	Window			0x0101, ax
 	TextBackground 		clBlue
 	ClrScr
 	TextColor		original
@@ -88,7 +88,10 @@ DisplayStuff:
 	StdOutHexWord 		[Video_WindMax]
 	StdOutCRLF
 
-	Window			0x0f, 0x07, 0x30, 0x10
+	mov			ax, [Video_WindMax]
+	sub			ax, 0x0101
+
+	Window			0x0202, ax
 	TextBackground 		clRed
 	ClrScr
 	TextColor		original
@@ -96,7 +99,6 @@ DisplayStuff:
 	StdOutChar		'/'
 	StdOutHexWord 		[Video_WindMax]
 	StdOutCRLF
-
 
 WaitLoop:
 	NotKeypressed		WaitLoop

@@ -56,10 +56,10 @@ ProbeVideoCard_PROC:
 	push 			ax
 	pop			es
 	mov			al, [es:0x0084]
-	inc			al
-	mov			[Video_Rows], al
+	mov			[Video_MaxY], al
 	mov			ax, [es:0x004a]
-	mov			[Video_Columns], al
+	dec			ax
+	mov			[Video_MaxX], al
 	mov			ax, [es:0x004c]
 	mov			[Video_Regen], ax
 	mov			ax, [es:0x004e]
@@ -136,8 +136,8 @@ ProbeVideoCard_PROC:
 %endif
 
 ; Not better than CGA
-	mov			al, 0x0019
-	mov			[Video_Rows], al
+	mov			al, 0x0018
+	mov			[Video_MaxY], al
 	jmp			%%Done
 %%Identified:
 	mov			[Video_Card], dl
@@ -154,17 +154,14 @@ Video_Regen:		resw		1
 Video_Offset:		resw		1
 Video_Segment:		resw		1
 Video_ScreenMax:
-Video_Columns:		resb		1
-Video_Rows:		resb		1
+Video_MaxX:		resb		1
+Video_MaxY:		resb		1
 Video_WindMin:
 Video_WindMinX:		resb		1
 Video_WindMinY:		resb		1
 Video_WindMax:
 Video_WindMaxX:		resb		1
 Video_WindMaxY:		resb		1
-Video_Where:
-Video_WhereX:		resb		1
-Video_WhereY:		resb		1
 
 ; Initial state of these variables are created by InitialVideoSettings
 Video_Mode:		resb		1
@@ -256,7 +253,7 @@ TextMode_PROC:
 	; Must call directly, otherwise NASM may embed the macro's code here
 	; Instead of later (where we want it)
 	call			ProbeVideoCard_PROC
-	call			WindowReset_PROC
+	call			WindowMax_PROC
 	popm			ax, bx
 	mov			bh, [es:0x0049]
 	cmp			bh, al

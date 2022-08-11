@@ -157,35 +157,35 @@
 ; MOVNDEF ax, bx, cx, ax 	 -> push ax; mov ax, bx; pop cx
     %ifidni %0, 2
     	%ifnidni %1, %2
-    		mov %1, %2
+    	    mov %1, %2
     	%endif
     %elifidni %0, 4
-   		%ifidni %1, %4
-	   		push %4
+	%ifidni %1, %4
+	    push %4
     	    mov  %1, %2
-			pop %3
-		%else
-			%ifnidni %1, %2
-				mov %1, %2
-			%endif
-			%ifnidni %3, %4
-				mov %3, %4
-			%endif
-		%endif
+	    pop  %3
 	%else
+	    %ifnidni %1, %2
+		mov %1, %2
+	    %endif
+	    %ifnidni %3, %4
+		mov %3, %4
+	    %endif
+	%endif
+    %else
         %rep  %0 / 2
-			%ifnidni %1, %2
-				push %2
-			%endif
+	 %ifnidni %1, %2
+		push %2
+	    %endif
             %rotate 2
         %endrep
         %rep %0 / 2
-	        %rotate -2
-			%ifnidni %1, %2
-				pop %1
-			%endif
+	%rotate -2
+	    %ifnidni %1, %2
+		pop %1
+	    %endif
         %endrep
-	%endif
+    %endif
 %endmacro
 
 %imacro TempBuffer 1
