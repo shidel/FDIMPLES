@@ -125,6 +125,11 @@
 ; INPUT:  %1 = Milliseconds to wait, (prefers ax)
 ; OUTPUT: none
 %include "DOSCRT/DELAY.INC"
+%include "DOSCRT/SOUND.INC"
+%include "DOSCRT/WINDOW.INC"
+%include "DOSCRT/INSDEL.INC"
+%include "DOSCRT/WRITE.INC"
+
 ; -----------------------------------------------------------------------------
 ; Included overall feature support for DOSCRT
 ; %idefine Support_BIOS_Timer		1
