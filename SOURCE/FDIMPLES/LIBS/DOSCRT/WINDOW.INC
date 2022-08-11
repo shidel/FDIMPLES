@@ -45,6 +45,7 @@ WindowMax_PROC:
 	RegsPreserve		ax
 	mov			ax, [Video_ScreenMax]
 	mov			[Video_WindMax], ax
+	xor			ax, ax
 	mov			[Video_WindMin], ax
 	RegsRestore		ax
 	ret
@@ -88,15 +89,6 @@ Window_PROC:
 		jbe		%%NoSwapX
 		xchg		al, dl
 	%%NoSwapX:
-		test		al, al
-		jnz		%%OkayX1
-		inc		al
-		jmp		%%TryAgain
-	%%OkayX1:
-		test		ah, ah
-		jnz		%%OkayY1
-		inc		ah
-		jmp		%%TryAgain
 	%%OkayY1:
 		cmp		dl, cl
 		jbe		%%OkayX2

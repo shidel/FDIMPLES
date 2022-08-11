@@ -42,63 +42,35 @@ SECTION .text
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
-;	TextMode		0x54
-;	jnc			DisplayStuff
-;	StdOutStr		'Text mode change error'
-;	jmp			Finished
+	TextMode		0x54
+	jnc			DisplayStuff
+	StdOutStr		'Text mode change error'
+	jmp			Finished
 
 DisplayStuff:
 	StdOutHexByte		[Video_Mode]
 	StdOutCRLF
-	StdOutHexWord 		[Video_WindMin]
-	StdOutChar		'/'
-	StdOutHexWord 		[Video_WindMax]
-	StdOutCRLF
-;	Delay			1000
-;	Sound 			500
-;	Delay			250
-;	NoSound
 
-	StdOutHexByte 		[Video_Attr]
-	TextColor		clRed
-	StdOutHexByte 		[Video_Attr]
-	TextBackground		clWhite
-	StdOutHexByte 		[Video_Attr]
-	HighVideo
-	StdOutHexByte 		[Video_Attr]
-	NormVideo
-	StdOutHexByte 		[Video_Attr]
-	StdOutCRLF
-	TextColor		original
-	StdOutHexByte 		[Video_Attr]
-	TextColor		original
-	StdOutHexByte 		[Video_Attr]
-	TextColor		original
-	StdOutHexByte 		[Video_Attr]
-	StdOutCRLF
-
-	mov			ax, [Video_ScreenMax]
-	sub			ax, 0x0101
-	Window			0x0101, ax
-	TextBackground 		clBlue
+	mov			cx, 0x0f
+Boxes:
+	push			cx
+	mov			ax, [Video_WindMin]
+	add			ax, 0x0101
+	mov			dx, [Video_WindMax]
+	sub			dx, 0x0101
+	push			ax
+	Window			ax, dx
+	pop			ax
+	TextBackground 		al
 	ClrScr
 	TextColor		original
 	StdOutHexWord 		[Video_WindMin]
 	StdOutChar		'/'
 	StdOutHexWord 		[Video_WindMax]
 	StdOutCRLF
-
-	mov			ax, [Video_WindMax]
-	sub			ax, 0x0101
-
-	Window			0x0202, ax
-	TextBackground 		clRed
-	ClrScr
-	TextColor		original
-	StdOutHexWord 		[Video_WindMin]
-	StdOutChar		'/'
-	StdOutHexWord 		[Video_WindMax]
-	StdOutCRLF
+	Delay 			100
+	pop			cx
+	loop			Boxes
 
 WaitLoop:
 	NotKeypressed		WaitLoop
