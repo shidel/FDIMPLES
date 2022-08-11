@@ -69,7 +69,7 @@
 ; Include mouse support
 ; %idefine Support_Mouse
 
-; Included card support levels and detection values
+; Included card support levels and detection values, MDA & CGA are required
 %idefine Video_MDA 	0
 %idefine Video_CGA 	1
 ; EGA test is strongly recommended but not required. Otherwise, locked into

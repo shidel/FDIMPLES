@@ -206,7 +206,7 @@
 %endmacro
 
 %imacro RegsPreserve 1-*
-	%ifdef Perserve_Registers
+	%ifdef Preserve_Registers
 		%ifidni %0, 0
 			pushall
 		%else
@@ -219,7 +219,7 @@
 %endmacro
 
 %imacro RegsRestore 0-*
-	%ifdef Perserve_Registers
+	%ifdef Preserve_Registers
 		%ifidni %0, 0
 			popall
 		%else

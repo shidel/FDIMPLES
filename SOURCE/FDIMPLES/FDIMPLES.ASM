@@ -61,10 +61,10 @@ Boxes:
 	push			ax
 	Window			ax, dx
 	pop			ax
-	TextBackground 		al
+	TextBackground 		ah
 	ClrScr
 	TextColor		original
-	GotoXY			0x0101
+	GotoXY			0x0001
 	StdOutHexWord 		[Video_WindMin]
 	StdOutChar		'/'
 	StdOutHexWord 		[Video_WindMax]

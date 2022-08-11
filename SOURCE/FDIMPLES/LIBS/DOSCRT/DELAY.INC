@@ -88,7 +88,7 @@ Delay_PROC:
 	loop		%%NextTick
 	popm		es, di
 %%Done:
-	RegsPreserve	cx, dx
+	RegsRestore	cx, dx
 	ret
 
 %endif

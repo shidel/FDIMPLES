@@ -42,6 +42,7 @@
 [section .procs]
 
 ClrScr_PROC:
+	RegsPreserve	ax, bx, cx, dx
 	mov		ax, 0x0600
 	mov		bh, [Video_Attr]
 	mov		cx, [Video_WindMin]
@@ -51,6 +52,7 @@ ClrScr_PROC:
 	mov		bh, [Video_Page]
 	mov		dx, cx
 	int		0x10
+	RegsRestore	ax, bx, cx, dx
 	ret
 
 %endif
