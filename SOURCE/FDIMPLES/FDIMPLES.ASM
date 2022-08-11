@@ -53,32 +53,9 @@ DisplayStuff:
 	StdOutHexByte		al
 	StdOutCRLF
 	Delay			1000
-
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	TextColor		clRed
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	TextBackground		clWhite
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	HighVideo
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	NormVideo
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	StdOutCRLF
-	TextColor		original
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	TextColor		original
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	TextColor		original
-	mov			al, [Video_Attr]
-	StdOutHexByte 		al
-	StdOutCRLF
+	Sound 			500
+	Delay			250
+	NoSound
 
 WaitLoop:
 	NotKeypressed		WaitLoop
@@ -89,8 +66,12 @@ WaitLoop:
 	je			Finished
 	cmp			ax, 0x1b
 	je			Finished
+	mov			cl, 2
+	shl			ax, cl
+	Sound			ax
 	jmp			WaitLoop
 
 Finished:
+	NoSound
 	ResetVideoSettings
 	Terminate		0

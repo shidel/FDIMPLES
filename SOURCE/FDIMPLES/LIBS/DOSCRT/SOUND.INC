@@ -31,7 +31,7 @@
 
 ; -----------------------------------------------------------------------------
 ; -----------------------------------------------------------------------------
-%imacro Sound 0
+%imacro Sound 1
 
 %ifndef Sound_PROC_DEFINED
 	%idefine Sound_PROC_DEFINED
@@ -39,12 +39,76 @@
 [section .procs]
 
 Sound_PROC:
+	pushm		ax, cx ,dx
+	mov		cx, ax
+	cmp		cx, 0x0012
+	jbe		%%NoFrequency
+	mov		dx, 0x0012
+	mov		ax, 0x34dc
+	div		cx
+	jmp		%%SendSound
+%%NoFrequency:
+	xor		ax, ax
+%%SendSound:
+	push		ax
+	mov		al, 10110110b
+	mov		dx, 0x0043
+	out		dx, al
+	mov		dx, 0x0042
+	pop		ax
+	out		dx, al
+	mov		al, ah
+	out		dx, al
+	mov		dx, 0x0061
+	in		al, dx
+	mov		al, 0x03
+	out		dx, al
+	popm		ax, cx, dx
 	ret
 
 %endif
 
 __?SECT?__
 
+	%ifnidni %1, ax
+		push	ax
+		mov	ax, %1
+	%endif
 	call 			Sound_PROC
+	%ifnidni %1, ax
+		pop	ax
+	%endif
+
+%endmacro
+; -----------------------------------------------------------------------------
+; -----------------------------------------------------------------------------
+%imacro NoSound 0
+
+%ifndef NoSound_PROC_DEFINED
+	%idefine NoSound_PROC_DEFINED
+
+[section .procs]
+
+NoSound_PROC:
+	pushm		ax, dx
+	mov		dx, 0x0061
+	in		al, dx
+	and		al, 11111101b
+	out		dx, al
+	mov		al, 10110110b
+	mov		dx, 0x0043
+	out		dx, al
+	mov		dx, 0x0042
+	xor		al, al
+	out		dx, al
+	out		dx, al
+	popm		ax, dx
+	ret
+
+%endif
+
+__?SECT?__
+
+	call 			NoSound_PROC
 
 %endmacro
