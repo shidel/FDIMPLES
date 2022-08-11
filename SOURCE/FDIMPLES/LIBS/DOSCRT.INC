@@ -150,6 +150,11 @@
 ;	%1 = Window MinXY (prefers ax)
 ;	%2 = Window MaxXY (prefers dx)
 ; REGS:  ax, cx, dx
+
+; Adjusts the window to its maximum size. Does not move cursor.
+; MACRO: GotoXY 1
+; INPUT: %1 - XY (prefers ax)
+; REGS:  ax, bx, dx
 %include "DOSCRT/WINDOW.INC"
 
 ; Clear the current window and moves cursor to top/left in window.

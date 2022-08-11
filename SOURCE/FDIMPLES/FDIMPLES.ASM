@@ -64,6 +64,7 @@ Boxes:
 	TextBackground 		al
 	ClrScr
 	TextColor		original
+	GotoXY			0x0101
 	StdOutHexWord 		[Video_WindMin]
 	StdOutChar		'/'
 	StdOutHexWord 		[Video_WindMax]

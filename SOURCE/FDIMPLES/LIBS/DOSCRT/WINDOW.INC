@@ -129,3 +129,54 @@ __?SECT?__
 	RegsRestore  	ax, dx
 
 %endmacro
+; -----------------------------------------------------------------------------
+; Adjusts the window to its maximum size. Does not move cursor.
+; MACRO: GotoXY 1
+; INPUT: %1 - XY (prefers ax)
+; REGS:  ax, bx, dx
+; -----------------------------------------------------------------------------
+%imacro GotoXY 1
+
+%ifndef GotoXY_PROC_DEFINED
+	%idefine GotoXY_PROC_DEFINED
+
+[section .procs]
+
+GotoXY_PROC:
+	RegsPreserve	ax, bx, dx
+	mov		dx, [Video_WindMin]
+	%ifdef DOSCRT_Range_Check
+		mov		bx, [Video_WindMax]
+		sub		bx, dx
+		cmp		al, bl
+		jbe		%%OkayX
+		mov		al, bl
+	%%OkayX:
+		cmp		ah, bh
+		jbe		%%OkayY
+		mov		ah, bh
+	%%OkayY:
+	%endif
+	add		dx, ax
+	mov		bh, [Video_Page]
+	mov		ah, 0x02
+	int		0x10
+	RegsRestore	ax, bx, dx
+	ret
+
+%endif
+
+__?SECT?__
+
+	%ifnidni	%1, ax
+		RegsPreserve	ax
+	%endif
+	movndef		ax, %1
+	call 		GotoXY_PROC
+	%ifnidni	%1, ax
+		RegsRestore	ax
+	%endif
+
+%endmacro
+
+
