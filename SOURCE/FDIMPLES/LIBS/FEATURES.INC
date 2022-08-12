@@ -56,7 +56,7 @@
 ; Include support for additional Interrupt based timer. Disabling this can save
 ; a few bytes. It will then always use system TimerTicks and accuracy will be
 ; +/- 55ms.
-; %idefine Support_BIOS_Timer
+%idefine Support_BIOS_Timer
 
 ; Support BIOS video access. The only method supported at present. It is slower
 ; than direct video access.
@@ -77,9 +77,17 @@
 %idefine Video_EGA 	2
 ; Disable Video_MCGA, VGA, VESA. If you don't care about them and want to
 ; reduce the code size a few bytes (+256 bytes BSS for VESA)
-; %idefine Video_MCGA 	3
-; %idefine Video_VGA 	4
-; %idefine Video_VESA	5
+%idefine Video_MCGA 	3
+%idefine Video_VGA 	4
+%idefine Video_VESA	5
 
+; -----------------------------------------------------------------------------
+; Internal defines to make coding macros simpler
+%undef BIOS_Direct_Video
+%ifdef Support_BIOS_Video
+	%ifdef Support_Direct_Video
+		%idefine BIOS_Direct_Video
+	%endif
+%endif
 ; -----------------------------------------------------------------------------
 %endif

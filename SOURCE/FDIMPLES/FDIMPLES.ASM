@@ -39,10 +39,20 @@ org 0x100
 
 SECTION .text
 
+; Disable default library code features we don't need or want
+%include "FEATURES.INC"
+%undef Preserve_Registers	; Macros preserve all registers when possible
+%undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
+%undef Support_BIOS_Timer	; Use high precision int15 timer if possible
+%undef Support_Direct_Video	; Direct video addressing
+%undef Video_MCGA		; Check for MCGA support
+%undef Video_VGA		; Check for VGA support
+%undef Video_VESA		; Check for SuperVGA support
+
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
-	TextMode		0x54
+	TextMode		0x55
 	jnc			DisplayStuff
 	StdOutStr		'Text mode change error'
 	jmp			Finished
@@ -51,7 +61,7 @@ DisplayStuff:
 	StdOutHexByte		[Video_Mode]
 	StdOutCRLF
 
-	mov			cx, 0x0f
+	mov			cx, 0x07
 Boxes:
 	push			cx
 	mov			ax, [Video_WindMin]
@@ -69,7 +79,7 @@ Boxes:
 	StdOutChar		'/'
 	StdOutHexWord 		[Video_WindMax]
 	StdOutCRLF
-	Delay 			100
+	; Delay 			100
 	pop			cx
 	loop			Boxes
 

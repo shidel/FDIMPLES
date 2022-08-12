@@ -48,7 +48,9 @@
 
 ProbeVideoCard_PROC:
 ; Assume at least monochrome MDA
-	mov			[Video_Segment], word 0xb000
+	%ifdef Support_Direct_Video
+		mov		[Video_Segment], word 0xb000
+	%endif
 	mov			[Video_Card], byte Video_MDA
 
 ; If color assume at least CGA
@@ -60,10 +62,12 @@ ProbeVideoCard_PROC:
 	mov			ax, [es:0x004a]
 	dec			ax
 	mov			[Video_MaxX], al
-	mov			ax, [es:0x004c]
-	mov			[Video_Regen], ax
-	mov			ax, [es:0x004e]
-	mov			[Video_Offset], ax
+	%ifdef Support_Direct_Video
+		mov		ax, [es:0x004c]
+		mov		[Video_Regen], ax
+		mov		ax, [es:0x004e]
+		mov		[Video_Offset], ax
+	%endif
 	mov			ax, [es:0x0060]
 	mov			[Video_Cursor], ax
 
@@ -78,7 +82,9 @@ ProbeVideoCard_PROC:
 	mov			ax, [es:0x0063]
 	cmp			ax, 0x3d4
 	jne			%%ProbeHardware
-	mov			[Video_Segment], word 0xb800
+	%ifdef Support_Direct_Video
+		mov		[Video_Segment], word 0xb800
+	%endif
 	mov			[Video_Card], byte Video_CGA
 
 %%ProbeHardware:
@@ -148,11 +154,16 @@ ProbeVideoCard_PROC:
 
 [section .bss]
 
-Video_Direct:		resb		1
+
 Video_Card:		resb		1
-Video_Regen:		resw		1
-Video_Offset:		resw		1
-Video_Segment:		resw		1
+%ifdef BIOS_Direct_Video
+	Video_Direct:		resb		1
+%endif
+%ifdef Support_Direct_Video
+	Video_Regen:		resw		1
+	Video_Offset:		resw		1
+	Video_Segment:		resw		1
+%endif
 Video_ScreenMax:
 Video_MaxX:		resb		1
 Video_MaxY:		resb		1
