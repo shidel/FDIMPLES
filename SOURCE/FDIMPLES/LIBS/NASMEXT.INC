@@ -206,6 +206,8 @@
 %endmacro
 
 %imacro RegsPreserve 1-*
+; Used by macros. When enabled, macros will preserve (push) a list of registers
+; they use internally.
 	%ifdef Preserve_Registers
 		%ifidni %0, 0
 			pushall
@@ -219,6 +221,8 @@
 %endmacro
 
 %imacro RegsRestore 0-*
+; Used by macros. When enabled, macros will restore (pop) a list of registers
+; they use internally.
 	%ifdef Preserve_Registers
 		%ifidni %0, 0
 			popall
