@@ -304,6 +304,7 @@ __?SECT?__
 
 
 ResetVideoSettings_PROC:
+	PreWriteMouse
 	TextMode		original
 	mov			ah, [es:0x0062]
 	mov			al, [Initial_Video_Page]
@@ -326,6 +327,7 @@ ResetVideoSettings_PROC:
 	; Must call directly, otherwise NASM may embed the macro's code here
 	; Instead of later (where we want it)
 	call			ProbeVideoCard_PROC
+	PostWriteMouse
 	ret
 
 %endif

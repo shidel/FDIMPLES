@@ -50,7 +50,7 @@ PostWriteMouse_PROC:
 __?SECT?__
 %endmacro
 ; -----------------------------------------------------------------------------
-%imacro PreWriteMouse 2
+%imacro PreWriteMouse 0-2
 
 	call 			PreWriteMouse_PROC
 

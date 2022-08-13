@@ -47,7 +47,9 @@ ClrScr_PROC:
 	mov		bh, [Video_Attr]
 	mov		cx, [Video_WindMin]
 	mov		dx, [Video_WindMax]
+	PreWriteMouse	cx, dx
 	int		0x10
+	PostWriteMouse
 	mov		ah, 0x02
 	mov		bh, [Video_Page]
 	mov		dx, cx

@@ -52,7 +52,7 @@ SECTION .text
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
-%if 0 = 1
+%if 0 = 0
 
 	TextMode		0x55
 	jnc			DisplayStuff
