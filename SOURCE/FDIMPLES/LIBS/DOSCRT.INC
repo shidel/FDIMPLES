@@ -170,6 +170,23 @@
 ; REGS: ax, bx, cx, dx
 
 %include "DOSCRT/CLEAR.INC"
+
+; Delete the current line and add fresh one at the bottom of the window
+; MACRO: DelLine 0
+; REGS: ax, bx, cx, dx
+
+; Insert a blank line at the current location
+; MACRO: InsLine 0
+; REGS: ax, bx, cx, dx
+
+; Scrolls the window up
+; MACRO: WindowScrollUp 0
+; REGS: ax, bx, cx, dx
+
+; Scrolls the window down
+; MACRO: WindowScrollDown 0
+; REGS: ax, bx, cx, dx
+
 %include "DOSCRT/INSDEL.INC"
 %include "DOSCRT/WRITE.INC"
 %include "DOSCRT/MOUSE.INC"
@@ -205,8 +222,9 @@
 ; Automatically initialize video display and other settings
 
 ProbeVideoCard
-WindowMax;
+WindowMax
 InitialVideoSettings
+ScrollWindowProcs
 %ifdef Support_Mouse
 	MouseWriteProcs
 %endif

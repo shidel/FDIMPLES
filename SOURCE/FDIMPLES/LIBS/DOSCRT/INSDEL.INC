@@ -30,28 +30,39 @@
 ; NASM 2.15.05, or later
 
 ; -----------------------------------------------------------------------------
-; Delete the current line and add fresh one at the bottom of the window
-; MACRO: DelLine 0
-; REGS: ax, bx, cx, dx
+; Internal Window scroller, always present with DOSCRT.
+; MACRO: ScrollWindowProcs 0
+; ON CALL:
+;	ah = BIOS function (6=Up, 7=down)
+;	al= 0 is entire window, 1 from current line.
+; REGS: bx, cx, dx. Always destroys ax.
 ; -----------------------------------------------------------------------------
-%imacro DelLine 0
+%imacro ScrollWindowProcs 0
 
-%ifndef DelLine_PROC_DEFINED
-	%idefine DelLine_PROC_DEFINED
+%ifndef ScrollWindowInternal_PROC_DEFINED
+	%idefine ScrollWindowInternal_PROC_DEFINED
 
 [section .procs]
 
-DelLine_PROC:
-	RegsPreserve	ax, bx, cx, dx
+ScrollWindowInternal_PROC:
+	RegsPreserve	bx, cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
 	%endif
+	push		ax
+	cmp		al, 0x01
+	jne		%%EntireWindow
 	mov		ah, 0x03		; Get Cursor Pos & Size
 	mov		bh, [Video_Page]
 	int		0x10
 	mov		ch, dh
 	mov		cl, [Video_WindMinX]
-	mov		ax, 0x0601		; Scroll Up 0 lines
+	jmp		%%PerformScroll
+%%EntireWindow:
+	mov		cx, [Video_WindMin]
+%%PerformScroll:
+	pop		ax
+	mov		al, 0x01		; Scroll 1 line
 	mov		bh, [Video_Attr]
 	mov		dx, [Video_WindMax]
 	PreWriteMouse	cx, dx
@@ -64,7 +75,32 @@ DelLine_PROC:
 		popm		ds, bp
 	%endif
 	PostWriteMouse
-	RegsRestore	ax, bx, cx, dx
+	RegsRestore	bx, cx, dx
+	ret
+
+%endif
+
+__?SECT?__
+
+%endmacro
+
+; -----------------------------------------------------------------------------
+; Delete the current line and add fresh one at the bottom of the window
+; MACRO: DelLine 0
+; REGS: ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro DelLine 0
+
+%ifndef DelLine_PROC_DEFINED
+	%idefine DelLine_PROC_DEFINED
+
+[section .procs]
+
+DelLine_PROC:
+	RegsPreserve	ax
+	mov		ax, 0x0601
+	call		ScrollWindowInternal_PROC
+	RegsRestore	ax
 	ret
 
 %endif
@@ -87,29 +123,10 @@ __?SECT?__
 [section .procs]
 
 InsLine_PROC:
-	RegsPreserve	ax, bx, cx, dx
-	%ifdef DOS_BUG_FIXES
-		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
-	%endif
-	mov		ah, 0x03		; Get Cursor Pos & Size
-	mov		bh, [Video_Page]
-	int		0x10
-	mov		ch, dh
-	mov		cl, [Video_WindMinX]
-	mov		ax, 0x0701		; Scroll Down 0 lines
-	mov		bh, [Video_Attr]
-	mov		dx, [Video_WindMax]
-	PreWriteMouse	cx, dx
-	%ifdef DOS_BUG_FIXES
-		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
-		pushm		ds, bp
-	%endif
-	int		0x10
-	%ifdef DOS_BUG_FIXES
-		popm		ds, bp
-	%endif
-	PostWriteMouse
-	RegsRestore	ax, bx, cx, dx
+	RegsPreserve	ax
+	mov		ax, 0x0701
+	call		ScrollWindowInternal_PROC
+	RegsRestore	ax
 	ret
 
 %endif
@@ -117,5 +134,57 @@ InsLine_PROC:
 __?SECT?__
 
 	call 			InsLine_PROC
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Scrolls the window up
+; MACRO: WindowScrollUp 0
+; REGS: ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro WindowScrollUp 0
+
+%ifndef WindowScrollUp_PROC_DEFINED
+	%idefine WindowScrollUp_PROC_DEFINED
+
+[section .procs]
+
+WindowScrollUp_PROC:
+	RegsPreserve	ax
+	mov		ax, 0x0600
+	call		ScrollWindowInternal_PROC
+	RegsRestore	ax
+	ret
+
+%endif
+
+__?SECT?__
+
+	call 			WindowScrollUp_PROC
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Scrolls the window down
+; MACRO: WindowScrollDown 0
+; REGS: ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro WindowScrollDown 0
+
+%ifndef WindowScrollDown_PROC_DEFINED
+	%idefine WindowScrollDown_PROC_DEFINED
+
+[section .procs]
+
+WindowScrollDown_PROC:
+	RegsPreserve	ax
+	mov		ax, 0x0700
+	call		ScrollWindowInternal_PROC
+	RegsRestore	ax
+	ret
+
+%endif
+
+__?SECT?__
+
+	call 			WindowScrollDown_PROC
 
 %endmacro
