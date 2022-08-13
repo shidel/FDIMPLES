@@ -1,5 +1,3 @@
-; FreeDOS Installer (FDI) - My Package List Editor Software
-
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -31,78 +29,36 @@
 
 ; NASM 2.15.05, or later
 
-use16
+; -----------------------------------------------------------------------------
+%imacro MouseWriteProcs 0
+	%ifndef MouseWriteProcs_PROC_DEFINED
+		%idefine MouseWriteProcs_PROC_DEFINED
+[section .procs]
 
-cpu 8086
+PreWriteMouse_PROC:
+	nop
+	nop
+	nop
+	nop
+	ret
 
-org 0x100
+PostWriteMouse_PROC:
+	ret
 
-SECTION .text
-
-; Disable default library code features we don't need or want
-%include "FEATURES.INC"
-%undef Preserve_Registers	; Macros preserve all registers when possible
-%undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
-%undef Support_BIOS_Timer	; Use high precision int15 timer if possible
-%undef Support_Direct_Video	; Direct video addressing
-%undef Video_MCGA		; Check for MCGA support
-%undef Video_VGA		; Check for VGA support
-%undef Video_VESA		; Check for SuperVGA support
-
-%include "DOSSYS.INC"
-%include "DOSCRT.INC"
-
-%if 0 = 1
-
-	TextMode		0x55
-	jnc			DisplayStuff
-	StdOutStr		'Text mode change error'
-	jmp			Finished
-
-DisplayStuff:
-	StdOutHexByte		[Video_Mode]
-	StdOutCRLF
-
-	mov			cx, 0x07
-Boxes:
-	push			cx
-	mov			ax, [Video_WindMin]
-	add			ax, 0x0101
-	mov			dx, [Video_WindMax]
-	sub			dx, 0x0101
-	push			ax
-	Window			ax, dx
-	pop			ax
-	TextBackground 		ah
-	ClrScr
-	TextColor		original
-	GotoXY			0x0001
-	StdOutHexWord 		[Video_WindMin]
-	StdOutChar		'/'
-	StdOutHexWord 		[Video_WindMax]
-	StdOutCRLF
-	; Delay 			100
-	pop			cx
-	loop			Boxes
-
-WaitLoop:
-	NotKeypressed		WaitLoop
-	ReadKey			ax
-	push			ax
-	StdOutHexWord		ax
-	StdOutCRLF
-	pop			ax
-	cmp			ax, 0x03
-	je			Finished
-	cmp			ax, 0x1b
-	je			Finished
-	mov			cl, 2
-	shl			ax, cl
-	Sound			ax
-	jmp			WaitLoop
-
-Finished:
-	NoSound
-	ResetVideoSettings
 %endif
-	Terminate		0
+
+__?SECT?__
+%endmacro
+; -----------------------------------------------------------------------------
+%imacro PreWriteMouse 2
+
+	call 			PreWriteMouse_PROC
+
+%endmacro
+; -----------------------------------------------------------------------------
+%imacro PostWriteMouse 0
+
+	call 			PostWriteMouse_PROC
+
+%endmacro
+; -----------------------------------------------------------------------------

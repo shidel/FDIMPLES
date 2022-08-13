@@ -163,7 +163,7 @@
 %include "DOSCRT/CLEAR.INC"
 %include "DOSCRT/INSDEL.INC"
 %include "DOSCRT/WRITE.INC"
-
+%include "DOSCRT/MOUSE.INC"
 ; -----------------------------------------------------------------------------
 ; Standard text video display mode constants
 %idefine tmBW40		0	; 40x25 B/W on Color adapter
@@ -193,11 +193,12 @@
 %idefine clWhite	15
 
 ; -----------------------------------------------------------------------------
-; Automatically initialize video display settings in BSS
+; Automatically initialize video display and other settings
 
 ProbeVideoCard
 WindowMax;
 InitialVideoSettings
+MouseWriteProcs
 
 ; -----------------------------------------------------------------------------
 %endif
