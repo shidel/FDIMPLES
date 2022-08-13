@@ -205,7 +205,7 @@
 	%endif
 %endmacro
 
-%imacro RegsPreserve 1-*
+%imacro RegsPreserve 0-*
 ; Used by macros. When enabled, macros will preserve (push) a list of registers
 ; they use internally.
 	%ifdef Preserve_Registers
