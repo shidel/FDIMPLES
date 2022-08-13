@@ -79,13 +79,15 @@ Boxes:
 	StdOutHexWord 		[Video_WindMin]
 	StdOutChar		'/'
 	StdOutHexWord 		[Video_WindMax]
-	TextBackground		2
+	Delay 			150
+	StdOutChar		'+'
+	TextBackground		4
 	ClrEOL
 	StdOutCRLF
-	; Delay 			100
+	Delay 			150
 	pop			cx
 	loop			Boxes
-
+	jmp			WaitLoop
 
 WaitLoop:
 	NotKeypressed		WaitLoop

@@ -85,12 +85,15 @@ __?SECT?__
 
 ClrEOL_PROC:
 	RegsPreserve	ax, bx, cx, dx
+	%ifdef DOS_BUG_FIXES
+		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
+	%endif
 	mov		ah, 0x03		; Get Cursor Pos & Size
 	mov		bh, [Video_Page]
 	int		0x10
+	mov		cx, dx
 	mov		ax, 0x0600		; Scroll Up 0 lines
 	mov		bh, [Video_Attr]
-	mov		cx, dx
 	mov		dx, [Video_WindMax]
 	mov		dh, ch
 	PreWriteMouse	cx, dx
