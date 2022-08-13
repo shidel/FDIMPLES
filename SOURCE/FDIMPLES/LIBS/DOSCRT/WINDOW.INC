@@ -30,7 +30,7 @@
 ; NASM 2.15.05, or later
 
 ; -----------------------------------------------------------------------------
-; Adjusts the window to its maximum size. Does not move cursor.
+; Adjust the window to its maximum size. Does not move cursor.
 ; MACRO: WindowMax 0
 ; REGS:  ax
 ; -----------------------------------------------------------------------------
@@ -73,10 +73,6 @@ __?SECT?__
 [section .procs]
 
 Window_PROC:
-	%ifdef DOS_BUG_FIXES
-		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
-		pushm		ds, bp
-	%endif
 	%ifdef DOSCRT_Range_Check
 		RegsPreserve	cx
 		mov		cx, [Video_ScreenMax]
@@ -114,9 +110,6 @@ Window_PROC:
 	%ifdef DOSCRT_Range_Check
 		RegsRestore	cx
 	%endif
-	%ifdef DOS_BUG_FIXES
-		popm		ds, bp
-	%endif
 	ret
 
 %endif
@@ -130,7 +123,7 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-; Adjusts the window to its maximum size. Does not move cursor.
+; Move cursor to new position within window
 ; MACRO: GotoXY 1
 ; INPUT: %1 - XY (prefers ax)
 ; REGS:  ax, bx, dx
@@ -178,5 +171,3 @@ __?SECT?__
 	%endif
 
 %endmacro
-
-

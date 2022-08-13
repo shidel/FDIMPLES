@@ -71,6 +71,7 @@
 ; MACRO:  ResetVideoSettings 0
 ; OUTPUT: undefined, sets data in BSS.
 ; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
+
 %include "DOSCRT/TEXTMODE.INC"
 
 ; Test for key was pressed
@@ -89,6 +90,7 @@
 ; MACRO:  ReadKey 1
 ; OUTPUT: %1 is key press (prefers ax)
 ; REGS:	  ax
+
 %include "DOSCRT/KEYPRESS.INC"
 
 ; Set the foreground color for text writes
@@ -117,6 +119,7 @@
 ; Restore foreground intensity bit to last/original video Initial Setting
 ; MACRO:  NormVideo 0
 ; REGS:   none
+
 %include "DOSCRT/TEXTATTR.INC"
 
 ; Wait for a period of time to elapse. If Support_BIOS_Timer is enabled,
@@ -125,6 +128,7 @@
 ; MACRO:  Delay 1
 ; INPUT:  %1 = Milliseconds to wait, (prefers ax)
 ; REGS:   ax, cx, dx
+
 %include "DOSCRT/DELAY.INC"
 
 ; Output sound through PC speaker
@@ -138,8 +142,7 @@
 
 %include "DOSCRT/SOUND.INC"
 
-; -----------------------------------------------------------------------------
-; Adjusts the window to its maximum size. Does not move cursor. Automatically
+; Adjust the window to its maximum size. Does not move cursor. Automatically
 ; called at startup and with text mode changes.
 ; MACRO: WindowMax 0
 ; REGS:  ax
@@ -151,15 +154,21 @@
 ;	%2 = Window MaxXY (prefers dx)
 ; REGS:  ax, cx, dx
 
-; Adjusts the window to its maximum size. Does not move cursor.
+; Move cursor to new position within window
 ; MACRO: GotoXY 1
 ; INPUT: %1 - XY (prefers ax)
 ; REGS:  ax, bx, dx
+
 %include "DOSCRT/WINDOW.INC"
+
+; Clear the remaining portion of the current line
+; MACRO: ClrEOL 0
+; REGS: ax, bx, cx, dx
 
 ; Clear the current window and moves cursor to top/left in window.
 ; MACRO: ClrScr 0
 ; REGS: ax, bx, cx, dx
+
 %include "DOSCRT/CLEAR.INC"
 %include "DOSCRT/INSDEL.INC"
 %include "DOSCRT/WRITE.INC"
