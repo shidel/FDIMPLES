@@ -30,21 +30,92 @@
 ; NASM 2.15.05, or later
 
 ; -----------------------------------------------------------------------------
+; Delete the current line and add fresh one at the bottom of the window
+; MACRO: DelLine 0
+; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro InsertLine 0
+%imacro DelLine 0
 
-%ifndef InsertLine_PROC_DEFINED
-	%idefine InsertLine_PROC_DEFINED
+%ifndef DelLine_PROC_DEFINED
+	%idefine DelLine_PROC_DEFINED
 
 [section .procs]
 
-InsertLine_PROC:
+DelLine_PROC:
+	RegsPreserve	ax, bx, cx, dx
+	%ifdef DOS_BUG_FIXES
+		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
+	%endif
+	mov		ah, 0x03		; Get Cursor Pos & Size
+	mov		bh, [Video_Page]
+	int		0x10
+	mov		ch, dh
+	mov		cl, [Video_WindMinX]
+	mov		ax, 0x0601		; Scroll Up 0 lines
+	mov		bh, [Video_Attr]
+	mov		dx, [Video_WindMax]
+	PreWriteMouse	cx, dx
+	%ifdef DOS_BUG_FIXES
+		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
+		pushm		ds, bp
+	%endif
+	int		0x10
+	%ifdef DOS_BUG_FIXES
+		popm		ds, bp
+	%endif
+	PostWriteMouse
+	RegsRestore	ax, bx, cx, dx
 	ret
 
 %endif
 
 __?SECT?__
 
-	call 			InsertLine_PROC
+	call 			DelLine_PROC
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Insert a blank line at the current location
+; MACRO: InsLine 0
+; REGS: ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro InsLine 0
+
+%ifndef InsLine_PROC_DEFINED
+	%idefine InsLine_PROC_DEFINED
+
+[section .procs]
+
+InsLine_PROC:
+	RegsPreserve	ax, bx, cx, dx
+	%ifdef DOS_BUG_FIXES
+		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
+	%endif
+	mov		ah, 0x03		; Get Cursor Pos & Size
+	mov		bh, [Video_Page]
+	int		0x10
+	mov		ch, dh
+	mov		cl, [Video_WindMinX]
+	mov		ax, 0x0701		; Scroll Down 0 lines
+	mov		bh, [Video_Attr]
+	mov		dx, [Video_WindMax]
+	PreWriteMouse	cx, dx
+	%ifdef DOS_BUG_FIXES
+		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
+		pushm		ds, bp
+	%endif
+	int		0x10
+	%ifdef DOS_BUG_FIXES
+		popm		ds, bp
+	%endif
+	PostWriteMouse
+	RegsRestore	ax, bx, cx, dx
+	ret
+
+%endif
+
+__?SECT?__
+
+	call 			InsLine_PROC
 
 %endmacro

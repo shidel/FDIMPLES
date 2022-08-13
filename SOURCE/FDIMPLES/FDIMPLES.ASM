@@ -62,7 +62,7 @@ DisplayStuff:
 	StdOutHexByte		[Video_Mode]
 	StdOutCRLF
 
-	mov			cx, 0x07
+	mov			cx, 0x06
 Boxes:
 	push			cx
 	mov			ax, [Video_WindMin]
@@ -87,6 +87,35 @@ Boxes:
 	Delay 			150
 	pop			cx
 	loop			Boxes
+
+	; WindowMax
+	xor			cl, cl
+	mov			ch, [Video_WindMaxY]
+	sub			ch, [Video_WindMinY]
+	push			cx
+	GotoXY			cx
+	StdOutStr		'Test message-'
+	pop			cx
+	StdOutHexWord		cx
+	GotoXY			0x0100
+	TextBackground		1
+	mov			cx, 4
+DelSome:
+	push			cx
+	Delay			200
+	DelLine
+	pop			cx
+	loop			DelSome
+	TextBackground		2
+	mov			cx, 4
+InsSome:
+	push			cx
+	Delay			200
+	InsLine
+	pop			cx
+	loop			InsSome
+
+
 	jmp			WaitLoop
 
 WaitLoop:
