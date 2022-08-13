@@ -47,31 +47,27 @@
 ; MACRO:  StdOutChar 1-*
 ; INPUT:  %1+ = Characters (prefers dl)
 ; OUTPUT: none
-%include "DOSSYS/STDOCHAR.INC"
 
 ; Send ASCIIz string to standard output device
 ; MACRO:  StdOutStr 1+
 ; INPUT:  %1+ = ASCIIz string sent to STDOUT (prefers si)
 ; OUTPUT: none
-%include "DOSSYS/STDOSTRZ.INC"
 
 ; Send CRLF to standard output device
 ; MACRO:  StdOutCRLF 0-1
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
 ; OUTPUT: none
-%include "DOSSYS/STDOCRLF.INC"
 
 ; Send byte as HEX to standard output device
 ; MACRO:  StdOutHexByte 1-*
 ; INPUT:  %1+ = byte to print (prefers al)
 ; OUTPUT: none
-%include "DOSSYS/STDOBYTE.INC"
 
 ; Send word as HEX to standard output device
 ; MACRO:  StdOutHexWord 1-*
 ; INPUT:  %1+ = word to print (prefers ax)
 ; OUTPUT: none
-%include "DOSSYS/STDOWORD.INC"
+%include "DOSSYS/STDOUT.INC"
 
 ; Terminate Program
 ; MACRO:  Terminate 1-2+
