@@ -64,10 +64,10 @@
 
 ; Support direct video access. I don't know if I will bother implementing this.
 ; Probably. We will see.
-; %idefine Support_Direct_Video
+%idefine Support_Direct_Video
 
 ; Include mouse support
-; %idefine Support_Mouse
+%idefine Support_Mouse
 
 ; Included card support levels and detection values, MDA & CGA are required
 %idefine Video_MDA 	0

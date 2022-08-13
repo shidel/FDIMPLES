@@ -45,14 +45,13 @@ SECTION .text
 %undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
 %undef Support_BIOS_Timer	; Use high precision int15 timer if possible
 %undef Support_Direct_Video	; Direct video addressing
+%undef Support_Mouse		; Mouse support
 %undef Video_MCGA		; Check for MCGA support
 %undef Video_VGA		; Check for VGA support
 %undef Video_VESA		; Check for SuperVGA support
 
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
-
-%if 0 = 0
 
 	TextMode		0x55
 	jnc			DisplayStuff
@@ -104,5 +103,5 @@ WaitLoop:
 Finished:
 	NoSound
 	ResetVideoSettings
-%endif
+
 	Terminate		0

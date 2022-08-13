@@ -48,17 +48,22 @@ PostWriteMouse_PROC:
 %endif
 
 __?SECT?__
+
 %endmacro
 ; -----------------------------------------------------------------------------
 %imacro PreWriteMouse 0-2
 
+%ifdef Support_Mouse
 	call 			PreWriteMouse_PROC
+%endif
 
 %endmacro
 ; -----------------------------------------------------------------------------
 %imacro PostWriteMouse 0
 
+%ifdef Support_Mouse
 	call 			PostWriteMouse_PROC
+%endif
 
 %endmacro
 ; -----------------------------------------------------------------------------

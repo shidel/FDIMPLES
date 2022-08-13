@@ -198,7 +198,8 @@
 ProbeVideoCard
 WindowMax;
 InitialVideoSettings
-MouseWriteProcs
-
+%ifdef Support_Mouse
+	MouseWriteProcs
+%endif
 ; -----------------------------------------------------------------------------
 %endif

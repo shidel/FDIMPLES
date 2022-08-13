@@ -252,12 +252,13 @@ __?SECT?__
 [section .procs]
 
 TextMode_PROC:
+	PreWriteMouse
 	mov			bx, 0x0040
 	push 			bx
 	pop			es
 	mov			bh, [es:0x0049]
 	cmp			bh, al
-	je			%%Done
+	je			%%NoModeChange
 	xor			ah, ah
 	pushm			ax, bx
 	int			0x10
@@ -268,11 +269,13 @@ TextMode_PROC:
 	popm			ax, bx
 	mov			bh, [es:0x0049]
 	cmp			bh, al
-	je			%%Done
+	je			%%NoModeChange
 	stc
-	ret
-%%Done:
+	jmp			%%Done
+%%NoModeChange:
 	clc
+%%Done:
+	PostWriteMouse
 	ret
 
 %endif
@@ -304,7 +307,6 @@ __?SECT?__
 
 
 ResetVideoSettings_PROC:
-	PreWriteMouse
 	TextMode		original
 	mov			ah, [es:0x0062]
 	mov			al, [Initial_Video_Page]
@@ -327,7 +329,6 @@ ResetVideoSettings_PROC:
 	; Must call directly, otherwise NASM may embed the macro's code here
 	; Instead of later (where we want it)
 	call			ProbeVideoCard_PROC
-	PostWriteMouse
 	ret
 
 %endif
