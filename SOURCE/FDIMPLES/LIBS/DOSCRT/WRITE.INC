@@ -29,22 +29,35 @@
 
 ; NASM 2.15.05, or later
 
-; -----------------------------------------------------------------------------
-; -----------------------------------------------------------------------------
-%imacro Write 0
+%imacro WriteProcs 0
 
-%ifndef Write_PROC_DEFINED
-	%idefine Write_PROC_DEFINED
+%ifndef WriteInternal_PROC_DEFINED
+	%idefine WriteInternal_PROC_DEFINED
 
 [section .procs]
 
-Write_PROC:
+WriteRawCharInternal_PROC:
 	ret
 
 %endif
 
 __?SECT?__
 
-	call 			Write_PROC
-
 %endmacro
+
+; -----------------------------------------------------------------------------
+; Write individual raw characters to display
+; MACRO:  WriteRawChar 1-*
+; INPUT:  %1+ = Characters (prefers dl)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%imacro WriteRawChar 1-*
+	RegsPreserve		ax
+	%rep  %0
+		movndef			al, %1
+		call 			WriteRawCharInternal_PROC
+	%rotate 1
+	%endrep
+	RegsRestore		ax
+%endmacro
+; -----------------------------------------------------------------------------

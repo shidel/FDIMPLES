@@ -41,7 +41,7 @@ SECTION .text
 
 ; Disable default library code features we don't need or want
 %include "FEATURES.INC"
-%undef Preserve_Registers	; Macros preserve all registers when possible
+%idefine Preserve_Registers	; Macros preserve all registers when possible
 %undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
 %undef Support_BIOS_Timer	; Use high precision int15 timer if possible
 %undef Support_Direct_Video	; Direct video addressing

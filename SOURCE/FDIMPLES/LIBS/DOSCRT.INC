@@ -188,7 +188,9 @@
 ; REGS: ax, bx, cx, dx
 
 %include "DOSCRT/INSDEL.INC"
+
 %include "DOSCRT/WRITE.INC"
+
 %include "DOSCRT/MOUSE.INC"
 ; -----------------------------------------------------------------------------
 ; Standard text video display mode constants
@@ -225,6 +227,7 @@ ProbeVideoCard
 WindowMax
 InitialVideoSettings
 ScrollWindowProcs
+WriteProcs
 %ifdef Support_Mouse
 	MouseWriteProcs
 %endif
