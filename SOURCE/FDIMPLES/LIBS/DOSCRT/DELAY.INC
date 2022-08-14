@@ -46,9 +46,9 @@
 [section .procs]
 
 Delay_PROC:
-	RegsPreserve	cx, dx
-	test		ax, ax
-	jz		%%Done
+	RegsPreserve		cx, dx
+	test			ax, ax
+	jz			%%Done
 	%ifdef Support_BIOS_Timer
 		push		ax		; Convert Milli to MicroSeconds
 		mov		cl, 0x0a
@@ -64,31 +64,31 @@ Delay_PROC:
 		pop		ax
 		jnc		%%Done		; fails fall back to TimerTick
 	%endif
-	xor		dx, dx			; Convert MS to tick count
-	mov		cx, 55
-	div		cx
-	cmp		dx, 23
-	jb		%%SkipRoundUp
-	inc		ax
+	xor			dx, dx			; Convert MS to tick count
+	mov			cx, 55
+	div			cx
+	cmp			dx, 23
+	jb			%%SkipRoundUp
+	inc			ax
 %%SkipRoundUp:
-	test		ax, ax
-	jz		%%Done
-	pushm		es, di
-	mov		cx, ax
-	mov		dx, 0x0040
-	mov		es, dx
-	mov		di, 0x006C
+	test			ax, ax
+	jz			%%Done
+	pushm			es, di
+	mov			cx, ax
+	mov			dx, 0x0040
+	mov			es, dx
+	mov			di, 0x006C
 %%NextTick:
-	mov		dx, [es:di]
+	mov			dx, [es:di]
 %%WaitTick:
 	hlt					; Sleep CPU
-	mov		ax, [es:di]
-	cmp		dx, ax
-	je		%%WaitTick
-	loop		%%NextTick
-	popm		es, di
+	mov			ax, [es:di]
+	cmp			dx, ax
+	je			%%WaitTick
+	loop			%%NextTick
+	popm			es, di
 %%Done:
-	RegsRestore	cx, dx
+	RegsRestore		cx, dx
 	ret
 
 %endif

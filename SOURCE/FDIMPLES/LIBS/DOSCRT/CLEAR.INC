@@ -42,26 +42,26 @@
 [section .procs]
 
 ClrScr_PROC:
-	RegsPreserve	ax, bx, cx, dx
-	mov		ax, 0x0600	; Scroll Up 0 lines
-	mov		bh, [Video_Attr]
-	mov		cx, [Video_WindMin]
-	mov		dx, [Video_WindMax]
-	PreWriteMouse	cx, dx
+	RegsPreserve		ax, bx, cx, dx
+	mov			ax, 0x0600	; Scroll Up 0 lines
+	mov			bh, [Video_Attr]
+	mov			cx, [Video_WindMin]
+	mov			dx, [Video_WindMax]
+	PreWriteMouse		cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
 		pushm		ds, bp
 	%endif
-	int		0x10
+	int			0x10
 	%ifdef DOS_BUG_FIXES
 		popm		ds, bp
 	%endif
 	PostWriteMouse
-	mov		ah, 0x02	; Set Cursor Position
-	mov		bh, [Video_Page]
-	mov		dx, cx
-	int		0x10
-	RegsRestore	ax, bx, cx, dx
+	mov			ah, 0x02	; Set Cursor Position
+	mov			bh, [Video_Page]
+	mov			dx, cx
+	int			0x10
+	RegsRestore		ax, bx, cx, dx
 	ret
 
 %endif
@@ -84,29 +84,29 @@ __?SECT?__
 [section .procs]
 
 ClrEOL_PROC:
-	RegsPreserve	ax, bx, cx, dx
+	RegsPreserve		ax, bx, cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
 	%endif
-	mov		ah, 0x03		; Get Cursor Pos & Size
-	mov		bh, [Video_Page]
-	int		0x10
-	mov		cx, dx
-	mov		ax, 0x0600		; Scroll Up 0 lines
-	mov		bh, [Video_Attr]
-	mov		dx, [Video_WindMax]
-	mov		dh, ch
-	PreWriteMouse	cx, dx
+	mov			ah, 0x03		; Get Cursor Pos & Size
+	mov			bh, [Video_Page]
+	int			0x10
+	mov			cx, dx
+	mov			ax, 0x0600		; Scroll Up 0 lines
+	mov			bh, [Video_Attr]
+	mov			dx, [Video_WindMax]
+	mov			dh, ch
+	PreWriteMouse		cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
 		pushm		ds, bp
 	%endif
-	int		0x10
+	int			0x10
 	%ifdef DOS_BUG_FIXES
 		popm		ds, bp
 	%endif
 	PostWriteMouse
-	RegsRestore	ax, bx, cx, dx
+	RegsRestore		ax, bx, cx, dx
 	ret
 
 %endif

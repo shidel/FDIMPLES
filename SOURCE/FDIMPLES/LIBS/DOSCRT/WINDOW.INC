@@ -98,14 +98,14 @@ Window_PROC:
 	%%OkayY2:
 	%endif
 
-	RegsPreserve 	bx
-	mov		[Video_WindMin], ax
-	mov		[Video_WindMax], dx
-	mov		dx, ax
-	mov		ah, 0x02
-	mov		bh, [Video_Page]
-	int		0x10
-	RegsRestore 	bx
+	RegsPreserve 		bx
+	mov			[Video_WindMin], ax
+	mov			[Video_WindMax], dx
+	mov			dx, ax
+	mov			ah, 0x02
+	mov			bh, [Video_Page]
+	int			0x10
+	RegsRestore 		bx
 
 	%ifdef DOSCRT_Range_Check
 		RegsRestore	cx
@@ -116,10 +116,10 @@ Window_PROC:
 
 __?SECT?__
 
-	RegsPreserve 	ax, dx
-	movndef	     	ax, %1, dx, %2
-	call		Window_PROC
-	RegsRestore  	ax, dx
+	RegsPreserve 		ax, dx
+	movndef	     		ax, %1, dx, %2
+	call			Window_PROC
+	RegsRestore  		ax, dx
 
 %endmacro
 ; -----------------------------------------------------------------------------
@@ -136,8 +136,8 @@ __?SECT?__
 [section .procs]
 
 GotoXY_PROC:
-	RegsPreserve	ax, bx, dx
-	mov		dx, [Video_WindMin]
+	RegsPreserve		ax, bx, dx
+	mov			dx, [Video_WindMin]
 	%ifdef DOSCRT_Range_Check
 		mov		bx, [Video_WindMax]
 		sub		bx, dx
@@ -150,23 +150,23 @@ GotoXY_PROC:
 		mov		ah, bh
 	%%OkayY:
 	%endif
-	add		dx, ax
-	mov		bh, [Video_Page]
-	mov		ah, 0x02
-	int		0x10
-	RegsRestore	ax, bx, dx
+	add			dx, ax
+	mov			bh, [Video_Page]
+	mov			ah, 0x02
+	int			0x10
+	RegsRestore		ax, bx, dx
 	ret
 
 %endif
 
 __?SECT?__
 
-	%ifnidni	%1, ax
+	%ifnidni %1, ax
 		RegsPreserve	ax
 	%endif
-	movndef		ax, %1
-	call 		GotoXY_PROC
-	%ifnidni	%1, ax
+	movndef			ax, %1
+	call 			GotoXY_PROC
+	%ifnidni %1, ax
 		RegsRestore	ax
 	%endif
 

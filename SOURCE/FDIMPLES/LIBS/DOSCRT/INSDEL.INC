@@ -45,37 +45,37 @@
 [section .procs]
 
 ScrollWindowInternal_PROC:
-	RegsPreserve	bx, cx, dx
+	RegsPreserve		bx, cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
 	%endif
-	push		ax
-	cmp		al, 0x01
-	jne		%%EntireWindow
-	mov		ah, 0x03		; Get Cursor Pos & Size
-	mov		bh, [Video_Page]
-	int		0x10
-	mov		ch, dh
-	mov		cl, [Video_WindMinX]
-	jmp		%%PerformScroll
+	push			ax
+	cmp			al, 0x01
+	jne			%%EntireWindow
+	mov			ah, 0x03		; Get Cursor Pos & Size
+	mov			bh, [Video_Page]
+	int			0x10
+	mov			ch, dh
+	mov			cl, [Video_WindMinX]
+	jmp			%%PerformScroll
 %%EntireWindow:
-	mov		cx, [Video_WindMin]
+	mov			cx, [Video_WindMin]
 %%PerformScroll:
-	pop		ax
-	mov		al, 0x01		; Scroll 1 line
-	mov		bh, [Video_Attr]
-	mov		dx, [Video_WindMax]
-	PreWriteMouse	cx, dx
+	pop			ax
+	mov			al, 0x01		; Scroll 1 line
+	mov			bh, [Video_Attr]
+	mov			dx, [Video_WindMax]
+	PreWriteMouse		cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
 		pushm		ds, bp
 	%endif
-	int		0x10
+	int			0x10
 	%ifdef DOS_BUG_FIXES
 		popm		ds, bp
 	%endif
 	PostWriteMouse
-	RegsRestore	bx, cx, dx
+	RegsRestore		bx, cx, dx
 	ret
 
 %endif
@@ -97,10 +97,10 @@ __?SECT?__
 [section .procs]
 
 DelLine_PROC:
-	RegsPreserve	ax
-	mov		ax, 0x0601
-	call		ScrollWindowInternal_PROC
-	RegsRestore	ax
+	RegsPreserve		ax
+	mov			ax, 0x0601
+	call			ScrollWindowInternal_PROC
+	RegsRestore		ax
 	ret
 
 %endif
@@ -123,10 +123,10 @@ __?SECT?__
 [section .procs]
 
 InsLine_PROC:
-	RegsPreserve	ax
-	mov		ax, 0x0701
-	call		ScrollWindowInternal_PROC
-	RegsRestore	ax
+	RegsPreserve		ax
+	mov			ax, 0x0701
+	call			ScrollWindowInternal_PROC
+	RegsRestore		ax
 	ret
 
 %endif
@@ -149,10 +149,10 @@ __?SECT?__
 [section .procs]
 
 WindowScrollUp_PROC:
-	RegsPreserve	ax
-	mov		ax, 0x0600
-	call		ScrollWindowInternal_PROC
-	RegsRestore	ax
+	RegsPreserve		ax
+	mov			ax, 0x0600
+	call			ScrollWindowInternal_PROC
+	RegsRestore		ax
 	ret
 
 %endif
@@ -175,10 +175,10 @@ __?SECT?__
 [section .procs]
 
 WindowScrollDown_PROC:
-	RegsPreserve	ax
-	mov		ax, 0x0700
-	call		ScrollWindowInternal_PROC
-	RegsRestore	ax
+	RegsPreserve		ax
+	mov			ax, 0x0700
+	call			ScrollWindowInternal_PROC
+	RegsRestore		ax
 	ret
 
 %endif

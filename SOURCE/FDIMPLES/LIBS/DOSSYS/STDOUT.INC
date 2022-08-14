@@ -36,20 +36,20 @@
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
 %imacro StdOutChar 1-*
-	pushm		ax, dx
-	%ifnidni %0, 1
-		mov		ah, 0x02
-		%rep  %0
-			movndef		dl, %1
-			int    		0x21
-		%rotate 1
-		%endrep
-	%else
-		movndef 	dl, %1
-		mov		ah, 0x02
-		int 		0x21
-	%endif
-	popm		ax, dx
+	pushm			ax, dx
+%ifnidni %0, 1
+	mov			ah, 0x02
+	%rep  %0
+		movndef		dl, %1
+		int    		0x21
+	%rotate 1
+	%endrep
+%else
+	movndef 		dl, %1
+	mov			ah, 0x02
+	int 			0x21
+%endif
+	popm			ax, dx
 %endmacro
 ; -----------------------------------------------------------------------------
 ; Send CRLF to standard output device
@@ -81,8 +81,8 @@ __?SECT?__
 		push		cx
 		movndef		cx, %1
 		%%Loopy:
-			call		StdOutCRLF_PROC
-			loop		%%Loopy
+			call	StdOutCRLF_PROC
+			loop	%%Loopy
 		pop		cx
 	%else
 		call		StdOutCRLF_PROC
@@ -123,16 +123,16 @@ __?SECT?__
 	[section .data]
 
 		%%str:
-			db 		%1
-			db 		0
+			db	%1
+			db	0
 	%endif
 
 	__?SECT?__
 
 		%ifstr %1
-			movndef		si, %%str
+			movndef	si, %%str
 		%else
-			mov		si, %1
+			mov	si, %1
 		%endif
 		call		StdOutStr_PROC
 %endmacro
@@ -187,13 +187,13 @@ __?SECT?__
 __?SECT?__
 
 	%rep  %0
-		%ifnidni	%1, al
-			push		ax
-			mov		al, %1
+		%ifnidni %1, al
+			push	ax
+			mov	al, %1
 		%endif
 		call		StdOutHexByte_PROC
-		%ifnidni	%1, al
-			pop		ax
+		%ifnidni %1, al
+			pop	ax
 		%endif
 	%rotate 1
 	%endrep
@@ -207,14 +207,14 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro StdOutHexWord 1-*
 	%rep  %0
-		%ifnidni	%1, ax
-			push		ax
-			mov		ax, %1
+		%ifnidni %1, ax
+			push	ax
+			mov	ax, %1
 		%endif
 		StdOutHexByte	ah
 		StdOutHexByte	al
-		%ifnidni	%1, ax
-			pop		ax
+		%ifnidni %1, ax
+			pop	ax
 		%endif
 	%rotate 1
 	%endrep

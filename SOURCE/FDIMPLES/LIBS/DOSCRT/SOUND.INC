@@ -44,31 +44,31 @@
 [section .procs]
 
 Sound_PROC:
-	RegsPreserve	ax, cx ,dx
-	mov		cx, ax
-	cmp		cx, 0x0012
-	jbe		%%NoFrequency
-	mov		dx, 0x0012
-	mov		ax, 0x34dc
-	div		cx
-	jmp		%%SendSound
+	RegsPreserve		ax, cx ,dx
+	mov			cx, ax
+	cmp			cx, 0x0012
+	jbe			%%NoFrequency
+	mov			dx, 0x0012
+	mov			ax, 0x34dc
+	div			cx
+	jmp			%%SendSound
 %%NoFrequency:
-	xor		ax, ax
+	xor			ax, ax
 %%SendSound:
-	push		ax
-	mov		al, 10110110b
-	mov		dx, 0x0043
-	out		dx, al
-	mov		dx, 0x0042
-	pop		ax
-	out		dx, al
-	mov		al, ah
-	out		dx, al
-	mov		dx, 0x0061
-	in		al, dx
-	mov		al, 0x03
-	out		dx, al
-	RegsRestore	ax, cx, dx
+	push			ax
+	mov			al, 10110110b
+	mov			dx, 0x0043
+	out			dx, al
+	mov			dx, 0x0042
+	pop			ax
+	out			dx, al
+	mov			al, ah
+	out			dx, al
+	mov			dx, 0x0061
+	in			al, dx
+	mov			al, 0x03
+	out			dx, al
+	RegsRestore		ax, cx, dx
 	ret
 
 %endif
@@ -100,19 +100,19 @@ __?SECT?__
 [section .procs]
 
 NoSound_PROC:
-	RegsPreserve	ax, dx
-	mov		dx, 0x0061
-	in		al, dx
-	and		al, 11111101b
-	out		dx, al
-	mov		al, 10110110b
-	mov		dx, 0x0043
-	out		dx, al
-	mov		dx, 0x0042
-	xor		al, al
-	out		dx, al
-	out		dx, al
-	RegsRestore	ax, dx
+	RegsPreserve		ax, dx
+	mov			dx, 0x0061
+	in			al, dx
+	and			al, 11111101b
+	out			dx, al
+	mov			al, 10110110b
+	mov			dx, 0x0043
+	out			dx, al
+	mov			dx, 0x0042
+	xor			al, al
+	out			dx, al
+	out			dx, al
+	RegsRestore		ax, dx
 	ret
 
 %endif

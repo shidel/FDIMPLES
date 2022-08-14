@@ -40,22 +40,22 @@
 ; -----------------------------------------------------------------------------
 %imacro Terminate 1-*
 
-	%if %0 > 1
-		%rep  %0 - 1
-		%rotate 1
-			push		si
-			StdOutStr_INTERNAL %1
-			pop		si
-		%endrep
-		%rotate 1
-	%endif
+%if %0 > 1
+	%rep  %0 - 1
+	%rotate 1
+		push		si
+		StdOutStr_INTERNAL %1
+		pop		si
+	%endrep
+	%rotate 1
+%endif
 
-	%ifnum %1
-		mov		ax, 0x4c00 + %1
-	%else
-		mov		ah, 0x4c
-		movndef		al, %1
-	%endif
-	int		0x21
+%ifnum %1
+	mov			ax, 0x4c00 + %1
+%else
+	mov			ah, 0x4c
+	movndef			al, %1
+%endif
+	int			0x21
 
 %endmacro

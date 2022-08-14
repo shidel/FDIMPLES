@@ -37,6 +37,8 @@
 [section .procs]
 
 WriteRawCharInternal_PROC:
+	; mov			ah, 0x09
+
 	ret
 
 %endif
@@ -54,8 +56,8 @@ __?SECT?__
 %imacro WriteRawChar 1-*
 	RegsPreserve		ax
 	%rep  %0
-		movndef			al, %1
-		call 			WriteRawCharInternal_PROC
+		movndef		al, %1
+		call 		WriteRawCharInternal_PROC
 	%rotate 1
 	%endrep
 	RegsRestore		ax

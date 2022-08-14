@@ -44,12 +44,12 @@
 [section .procs]
 
 TextColor_RESET_PROC:
-	RegsPreserve	ax
-	mov		al, [Initial_Video_Attr]
-	and		al, 0x0f
-	and		[Video_Attr], byte 0xf0
-	or		[Video_Attr], al
-	RegsRestore	ax
+	RegsPreserve		ax
+	mov			al, [Initial_Video_Attr]
+	and			al, 0x0f
+	and			[Video_Attr], byte 0xf0
+	or			[Video_Attr], al
+	RegsRestore		ax
 	ret
 
 %endif
@@ -68,30 +68,30 @@ __?SECT?__
 [section .procs]
 
 TextColor_PROC:
-	RegsPreserve	ax
-	and		al, 0x0f
-	mov		ah, [Video_Attr]
-	and		ah, 0xf0
-	or		al, ah
-	mov		[Video_Attr], al
-	RegsRestore	ax
+	RegsPreserve		ax
+	and			al, 0x0f
+	mov			ah, [Video_Attr]
+	and			ah, 0xf0
+	or			al, ah
+	mov			[Video_Attr], al
+	RegsRestore		ax
 	ret
 %endif
 
 __?SECT?__
 
-	%ifidni %1, original
-		TextColor_RESET
-	%else
-		%ifnidni %1, al
-			RegsPreserve		ax
-			mov			al, %1
-		%endif
-		call 			TextColor_PROC
-		%ifnidni %1, al
-			RegsRestore		ax
-		%endif
+%ifidni %1, original
+	TextColor_RESET
+%else
+	%ifnidni %1, al
+		RegsPreserve	ax
+		mov		al, %1
 	%endif
+	call 			TextColor_PROC
+	%ifnidni %1, al
+		RegsRestore	ax
+	%endif
+%endif
 
 %endmacro
 ; -----------------------------------------------------------------------------
@@ -109,19 +109,19 @@ __?SECT?__
 [section .procs]
 
 TextBackground_RESET_PROC:
-	RegsPreserve	ax
-	mov		al, [Initial_Video_Attr]
-	and		al, 0xf0
-	and		[Video_Attr], byte 0x0f
-	or		[Video_Attr], al
-	RegsRestore	ax
+	RegsPreserve		ax
+	mov			al, [Initial_Video_Attr]
+	and			al, 0xf0
+	and			[Video_Attr], byte 0x0f
+	or			[Video_Attr], al
+	RegsRestore		ax
 	ret
 
 %endif
 
 __?SECT?__
 
-	call	TextBackground_RESET_PROC
+	call			TextBackground_RESET_PROC
 
 %endmacro
 
@@ -133,33 +133,33 @@ __?SECT?__
 [section .procs]
 
 TextBackground_PROC:
-	RegsPreserve	ax, cx
-	mov		cl, 0x04
-	and		al, 0x07
-	shl		al, cl
-	mov		ah, [Video_Attr]
-	and		ah, 0x8f
-	or		al, ah
-	mov		[Video_Attr], al
-	RegsRestore	ax, cx
+	RegsPreserve		ax, cx
+	mov			cl, 0x04
+	and			al, 0x07
+	shl			al, cl
+	mov			ah, [Video_Attr]
+	and			ah, 0x8f
+	or			al, ah
+	mov			[Video_Attr], al
+	RegsRestore		ax, cx
 	ret
 
 %endif
 
 __?SECT?__
 
-	%ifidni %1, original
-		TextBackground_RESET
-	%else
-		%ifnidni %1, al
-			RegsPreserve		ax
-			mov			al, %1
-		%endif
-		call 			TextBackground_PROC
-		%ifnidni %1, al
-			RegsRestore		ax
-		%endif
+%ifidni %1, original
+	TextBackground_RESET
+%else
+	%ifnidni %1, al
+		RegsPreserve	ax
+		mov		al, %1
 	%endif
+	call 			TextBackground_PROC
+	%ifnidni %1, al
+		RegsRestore	ax
+	%endif
+%endif
 
 %endmacro
 ; -----------------------------------------------------------------------------
@@ -177,10 +177,10 @@ __?SECT?__
 [section .procs]
 
 TextAttr_RESET_PROC:
-	RegsPreserve	ax
-	mov		al, [Initial_Video_Attr]
-	mov		[Video_Attr], al
-	RegsRestore	ax
+	RegsPreserve		ax
+	mov			al, [Initial_Video_Attr]
+	mov			[Video_Attr], al
+	RegsRestore		ax
 	ret
 
 %endif
@@ -204,7 +204,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro LowVideo 0
 
-	and		[Video_Attr], byte 11110111b
+	and			[Video_Attr], byte 11110111b
 
 %endmacro
 ; -----------------------------------------------------------------------------
@@ -216,7 +216,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro HighVideo 0
 
-	or		[Video_Attr], byte 00001000b
+	or			[Video_Attr], byte 00001000b
 
 %endmacro
 ; -----------------------------------------------------------------------------
@@ -233,18 +233,18 @@ __?SECT?__
 [section .procs]
 
 NormVideo_PROC:
-	push		ax
-	mov		al, [Initial_Video_Attr]
-	and		al, 00001000b
-	and		[Video_Attr], byte 11110111b
-	or		[Video_Attr], al
-	pop		ax
+	push			ax
+	mov			al, [Initial_Video_Attr]
+	and			al, 00001000b
+	and			[Video_Attr], byte 11110111b
+	or			[Video_Attr], al
+	pop			ax
 	ret
 
 %endif
 
 __?SECT?__
 
-	call		NormVideo_PROC
+	call			NormVideo_PROC
 
 %endmacro

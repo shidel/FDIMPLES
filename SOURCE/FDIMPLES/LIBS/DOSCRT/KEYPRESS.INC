@@ -44,23 +44,23 @@
 [section .procs]
 
 KeyPressed_PROC:
-	RegsPreserve	ax
-	mov  		ah, 0x01
-	int  		0x16
+	RegsPreserve		ax
+	mov  			ah, 0x01
+	int  			0x16
 	clc
-	jz   		%%Done
+	jz   			%%Done
 	stc
 %%Done:
-	RegsRestore	ax
+	RegsRestore		ax
 	ret
 
 %endif
 
 __?SECT?__
 
-	call 		KeyPressed_PROC
+	call 			KeyPressed_PROC
 	%if %0 = 1
-		jc	%1
+		jc		%1
 	%endif
 
 %endmacro
@@ -78,7 +78,7 @@ __?SECT?__
 __?SECT?__
 
 	%if %0 = 1
-		jnc	%1
+		jnc		%1
 	%endif
 
 %endmacro
@@ -97,13 +97,13 @@ __?SECT?__
 [section .procs]
 
 ReadKey_PROC:
-	mov  	ah, 0x00
-	int  	0x16
-	cmp	ah, 0x40
-	jnb	%%Done
-	test	al, al
-	jz	%%Done
-	xor	ah, ah
+	mov  			ah, 0x00
+	int  			0x16
+	cmp			ah, 0x40
+	jnb			%%Done
+	test			al, al
+	jz			%%Done
+	xor			ah, ah
 %%Done:
 	ret
 
