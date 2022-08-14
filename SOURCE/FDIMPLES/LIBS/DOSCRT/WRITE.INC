@@ -44,6 +44,29 @@ WriteCharInternal_PROC:
 	mov			bx,[Video_PageAttr]
 	int			0x10
 	pop			ax
+	test			[Video_Options], byte vcbControls
+	jnz			%%DisplayChar
+	cmp			al, 0x20
+	jae			%%DisplayChar
+	cmp			al, 0x0d
+	je			%%ProcessCR
+	cmp			al, 0x0a
+	je			%%ProcessLF
+	cmp			al, 0x08
+	je			%%ProcessBS
+	jmp			%%DisplayChar
+%%ProcessCR:			; Carriage Return
+	mov			dl, [Video_WindMinX]
+	jmp			%%PostDisplayChar
+%%ProcessLF:			; Line Feed
+	inc			dh
+	jmp			%%PostDisplayChar
+%%ProcessBS:			; Backspace
+	cmp			dl, [Video_WindMinX]
+	jbe			%%PostDisplayChar
+	dec			dl
+	jmp			%%PostDisplayChar
+%%DisplayChar:
 	PreWriteMouse		dx
 	mov			ah, 0x09		; Write the Char/Attr
 	; mov			al, "Character"		; already set
@@ -52,13 +75,15 @@ WriteCharInternal_PROC:
 	mov			cx, 0x0001		; Char count
 	int			0x10
 	PostWriteMouse
-	mov			ax, [Video_WindMin]	; Move Cursor to next
+	inc			dl			; Move to next position
+%%PostDisplayChar:
+	mov			ax, [Video_WindMin]
 	mov			cx, [Video_WindMax]
-	inc			dl
 	cmp			dl, cl			; Past end of line
-	jbe			%%PositionOkay
+	jbe			%%NoAutoFeed
 	mov			dl, al
 	inc			dh
+%%NoAutoFeed:
 	cmp			dh, ch			; Past last row
 	jbe			%%PositionOkay
 	test			[Video_Options], byte vcbScroll

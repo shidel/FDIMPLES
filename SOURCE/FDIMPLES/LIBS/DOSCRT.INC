@@ -223,7 +223,7 @@
 ; -----------------------------------------------------------------------------
 ; Automatically initialize video display and other settings
 
-mov [Video_Options], byte 00000010b
+mov [Video_Options], byte vcbDirect + vcbScroll ; + vcbControls
 ProbeVideoCard
 WindowMax
 InitialVideoSettings

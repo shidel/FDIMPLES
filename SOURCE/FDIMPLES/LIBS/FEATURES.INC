@@ -83,9 +83,10 @@
 
 ; -----------------------------------------------------------------------------
 ; Video control option bits
-%idefine vcbDIRECT	00000001b
-%idefine vcbScroll	00000010b
-
+; default is vcbDirectVideo + vcbScroll
+%idefine vcbDirect	00000001b	; Use Direct Video if possible
+%idefine vcbScroll	00000010b	; Enable last line auto-scroll
+%idefine vcbControls 	00000100b	; Print, dont process control chars
 ; -----------------------------------------------------------------------------
 ; Internal defines to make coding macros simpler
 %undef BIOS_Direct_Video
