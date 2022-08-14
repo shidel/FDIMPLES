@@ -82,6 +82,11 @@
 %idefine Video_VESA	5
 
 ; -----------------------------------------------------------------------------
+; Video control option bits
+%idefine vcbDIRECT	00000001b
+%idefine vcbScroll	00000010b
+
+; -----------------------------------------------------------------------------
 ; Internal defines to make coding macros simpler
 %undef BIOS_Direct_Video
 %ifdef Support_BIOS_Video

@@ -36,7 +36,7 @@
 
 [section .procs]
 
-WriteRawCharInternal_PROC:
+WriteCharInternal_PROC:
 	RegsPreserve		bx, cx, dx
 	; push ax,  see - https://fd.lod.bz/rbil/interrup/video/1003.html
 	push			ax			; Some BIOS clear AX
@@ -61,8 +61,7 @@ WriteRawCharInternal_PROC:
 	inc			dh
 	cmp			dh, ch			; Past last row
 	jbe			%%PositionOkay
-	mov			al, [Video_Scrolling]
-	test			al, al
+	test			[Video_Options], byte vcbScroll
 	jnz			%%ScrollUp
 	mov			dh, ah			; Goto Top of Window
 	jmp			%%PositionOkay
@@ -70,7 +69,7 @@ WriteRawCharInternal_PROC:
 	dec			dh			; Cursor back up one
 	push			dx			; save position
 	mov			dx, cx			; WindMax
-	mov			cx, [Video_WindMin]
+	mov			cx, ax			; WindMin
 	xchg			bl, bh			; swap page/attr
 	mov			ax, 0x0601		; Scroll up one line
 	%ifdef DOS_BUG_FIXES
@@ -105,11 +104,11 @@ __?SECT?__
 ; INPUT:  %1+ = Characters (prefers dl)
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
-%imacro WriteRawChar 1-*
+%imacro WriteChar 1-*
 	RegsPreserve		ax
 	%rep  %0
 		movndef		al, %1
-		call 		WriteRawCharInternal_PROC
+		call 		WriteCharInternal_PROC
 	%rotate 1
 	%endrep
 	RegsRestore		ax

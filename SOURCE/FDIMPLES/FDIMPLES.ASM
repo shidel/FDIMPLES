@@ -131,7 +131,7 @@ WaitLoop:
 	ReadKey			ax
 	push			ax
 	; StdOutHexWord		ax
-	WriteRawChar		al
+	WriteChar		al
 	; StdOutCRLF
 	pop			ax
 	cmp			ax, 0x03
@@ -142,12 +142,6 @@ WaitLoop:
 	shl			ax, cl
 	; Sound			ax
 	jmp			WaitLoop
-
-	TextColor		clYellow
-	WriteRawChar		'a'
-	TextColor		clCyan
-	WriteRawChar		'b'
-	StdOutCRLF		2
 
 
 Finished:

@@ -154,13 +154,9 @@ ProbeVideoCard_PROC:
 
 [section .bss]
 
+Video_Card:	resb		1
+Video_Options:	resb 		1
 
-Video_Card:		resb		1
-Video_Scrolling:	resb 		1
-%ifdef BIOS_Direct_Video
-	Video_Direct:		resb		1
-				resb		1
-%endif
 %ifdef Support_Direct_Video
 	Video_Regen:		resw		1
 	Video_Offset:		resw		1

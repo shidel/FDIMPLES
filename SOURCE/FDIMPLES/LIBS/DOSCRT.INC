@@ -223,7 +223,7 @@
 ; -----------------------------------------------------------------------------
 ; Automatically initialize video display and other settings
 
-mov [Video_Scrolling], byte 1
+mov [Video_Options], byte 00000010b
 ProbeVideoCard
 WindowMax
 InitialVideoSettings
