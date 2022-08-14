@@ -37,8 +37,60 @@
 [section .procs]
 
 WriteRawCharInternal_PROC:
-	; mov			ah, 0x09
-
+	RegsPreserve		bx, cx, dx
+	; push ax,  see - https://fd.lod.bz/rbil/interrup/video/1003.html
+	push			ax			; Some BIOS clear AX
+	mov			ah, 0x03		; Get Cursor Pos & Size
+	mov			bx,[Video_PageAttr]
+	int			0x10
+	pop			ax
+	PreWriteMouse		dx
+	mov			ah, 0x09		; Write the Char/Attr
+	; mov			al, "Character"		; already set
+	; mov			bh, [Video_Page]	; already set
+	; mov			bl, [Video_Attr]	; already set
+	mov			cx, 0x0001		; Char count
+	int			0x10
+	PostWriteMouse
+	mov			ax, [Video_WindMin]	; Move Cursor to next
+	mov			cx, [Video_WindMax]
+	inc			dl
+	cmp			dl, cl			; Past end of line
+	jbe			%%PositionOkay
+	mov			dl, al
+	inc			dh
+	cmp			dh, ch			; Past last row
+	jbe			%%PositionOkay
+	mov			al, [Video_Scrolling]
+	test			al, al
+	jnz			%%ScrollUp
+	mov			dh, ah			; Goto Top of Window
+	jmp			%%PositionOkay
+%%ScrollUp:
+	dec			dh			; Cursor back up one
+	push			dx			; save position
+	mov			dx, cx			; WindMax
+	mov			cx, [Video_WindMin]
+	xchg			bl, bh			; swap page/attr
+	mov			ax, 0x0601		; Scroll up one line
+	%ifdef DOS_BUG_FIXES
+		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
+		pushm		ds, bp
+	%endif
+	PreWriteMouse		cx, dx
+	int			0x10
+	%ifdef DOS_BUG_FIXES
+		popm		ds, bp
+	%endif
+	PostWriteMouse
+	xchg			bl, bh			; swap page/attr back
+	pop			dx			; restore position
+%%PositionOkay:
+	mov			ah, 0x02		; Move Cursor
+	; mov			bh, [Video_Page]	; already set
+	; mov			dx, "Cursor position"
+	int			0x10
+	RegsRestore		bx, cx, dx
 	ret
 
 %endif

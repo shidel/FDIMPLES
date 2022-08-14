@@ -53,6 +53,7 @@ SECTION .text
 %include "DOSSYS.INC"
 %include "DOSCRT.INC"
 
+%if 0=1
 	TextMode		0x55
 	jnc			DisplayStuff
 	StdOutStr		'Text mode change error'
@@ -118,12 +119,20 @@ InsSome:
 
 	jmp			WaitLoop
 
+%endif
+
+	Window			0x0101, 0x050a
+	TextBackground		clBlue
+	ClrScr
+	TextBackground		clGreen
+
 WaitLoop:
 	NotKeypressed		WaitLoop
 	ReadKey			ax
 	push			ax
-	StdOutHexWord		ax
-	StdOutCRLF
+	; StdOutHexWord		ax
+	WriteRawChar		al
+	; StdOutCRLF
 	pop			ax
 	cmp			ax, 0x03
 	je			Finished
@@ -131,11 +140,18 @@ WaitLoop:
 	je			Finished
 	mov			cl, 2
 	shl			ax, cl
-	Sound			ax
+	; Sound			ax
 	jmp			WaitLoop
 
+	TextColor		clYellow
+	WriteRawChar		'a'
+	TextColor		clCyan
+	WriteRawChar		'b'
+	StdOutCRLF		2
+
+
 Finished:
-	NoSound
+	; NoSound
 	ResetVideoSettings
 
 	Terminate		0

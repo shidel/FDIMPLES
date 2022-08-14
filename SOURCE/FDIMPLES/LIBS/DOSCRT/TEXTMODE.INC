@@ -156,29 +156,35 @@ ProbeVideoCard_PROC:
 
 
 Video_Card:		resb		1
+Video_Scrolling:	resb 		1
 %ifdef BIOS_Direct_Video
 	Video_Direct:		resb		1
+				resb		1
 %endif
 %ifdef Support_Direct_Video
 	Video_Regen:		resw		1
 	Video_Offset:		resw		1
 	Video_Segment:		resw		1
 %endif
+
 Video_ScreenMax:
 Video_MaxX:		resb		1
 Video_MaxY:		resb		1
+
 Video_WindMin:
 Video_WindMinX:		resb		1
 Video_WindMinY:		resb		1
+
 Video_WindMax:
 Video_WindMaxX:		resb		1
 Video_WindMaxY:		resb		1
 
 ; Initial state of these variables are created by InitialVideoSettings
-Video_Mode:		resb		1
-Video_Page:		resb		1
 Video_Cursor:		resw		1
+Video_PageAttr:
 Video_Attr:		resb		1
+Video_Page:		resb		1
+Video_Mode:		resb		1
 
 %ifdef Video_VESA
 	TempBuffer 256
@@ -224,10 +230,10 @@ InitialVideoSettings_PROC:
 
 [section .bss]
 
-Initial_Video_Mode:	resb		1
-Initial_Video_Page:	resb		1
 Initial_Video_Cursor:	resw		1
 Initial_Video_Attr:	resb		1
+Initial_Video_Page:	resb		1
+Initial_Video_Mode:	resb		1
 
 %endif
 
