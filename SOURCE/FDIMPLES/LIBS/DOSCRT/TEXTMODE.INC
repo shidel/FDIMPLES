@@ -175,6 +175,10 @@ Video_WindMax:
 Video_WindMaxX:		resb		1
 Video_WindMaxY:		resb		1
 
+Video_Tab:
+Video_HTab:		resb		1
+Video_VTab:		resb		1
+
 ; Initial state of these variables are created by InitialVideoSettings
 Video_Cursor:		resw		1
 Video_PageAttr:

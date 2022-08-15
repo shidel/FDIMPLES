@@ -46,20 +46,27 @@ WriteCharInternal_PROC:
 	pop			ax
 	test			[Video_Options], byte vcbControls
 	jnz			%%DisplayChar
-	cmp			al, 0x20
+	cmp			al, 0x10
 	jae			%%DisplayChar
 	cmp			al, 0x0d
 	je			%%ProcessCR
 	cmp			al, 0x0a
 	je			%%ProcessLF
+	cmp			al, 0x09
+	je			%%ProcessHT
 	cmp			al, 0x08
 	je			%%ProcessBS
+	; cmp			al, 0x07 		; bell
+	; cmp			al, 0x0b 		; vtab
+	; cmp			al, 0x0c 		; form-feed
 	jmp			%%DisplayChar
 %%ProcessCR:			; Carriage Return
 	mov			dl, [Video_WindMinX]
 	jmp			%%PostDisplayChar
 %%ProcessLF:			; Line Feed
 	inc			dh
+	jmp			%%PostDisplayChar
+%%ProcessHT:			; Horizontal Tab
 	jmp			%%PostDisplayChar
 %%ProcessBS:			; Backspace
 	cmp			dl, [Video_WindMinX]
