@@ -59,6 +59,7 @@
 %endif
 	int			0x21
 
+	%define  DO_NOT_INITIALIZE_LIBS
 	%include 'DOSLIBS.INC'
 	Include_LIB_Functions
 

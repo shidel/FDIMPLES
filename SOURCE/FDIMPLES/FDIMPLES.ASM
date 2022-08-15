@@ -41,7 +41,7 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES for library and options
 
-; %undef Preserve_Registers	; Macros preserve all registers when possible
+%undef Preserve_Registers	; Macros preserve all registers when possible
 %undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
 %undef Support_BIOS_Timer	; Use high precision int15 timer if possible
 %undef Support_Direct_Video	; Direct video addressing
@@ -50,39 +50,19 @@ SECTION .text
 %undef Video_VGA		; Check for VGA support
 %undef Video_VESA		; Check for SuperVGA support
 
-%include "DOSLIBS.INC"		; One INC to include them all.
+%include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
+				; initialization routines. Calls to those
+				; routines gets inserted automatically. For
+				; example DOSCRT requires preparation. If those
+				; are not needed, you can save some bytes by
+				; including only the required LIBS directly.
 
-	TextMode		0x3
-	jnc			DisplayStuff
-	WriteStr		'Text mode change error'
-	Terminate		1
+	; TextMode		0x3
+	; jnc			DisplayStuff
+	; WriteStr		'Text mode change error'
+	; Terminate		1
 
- DisplayStuff:
-	ClrScr
-	mov			[Video_WindMaxX], byte 0x10
-	TextAttr 		0x1f
-	ClrScr
-	mov			cx, 20
-.PrintNext:
-	push			cx
-.PrintChars:
-	regpush			cx
-	TextAttr 		0x1f
-	WriteChar		'A'
-	regpop			cx
-	loop			.PrintChars
-	TextAttr 		0x1e
-	WriteChar		0x09, 'B'
-	WriteCRLF
-	Delay			50
-	pop			cx
-	loop			.PrintNext
-	WriteChar		0x09, 'B'
-	WriteCRLF
-	;WriteHexByte		0x9A,0xBC
-	;WriteCRLF
-	;WriteHexWord		0x1234,0x5678
-	;WriteCRLF
+DisplayStuff:
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions
