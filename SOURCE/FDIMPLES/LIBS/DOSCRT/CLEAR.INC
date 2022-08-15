@@ -36,10 +36,7 @@
 ; MACRO: ClrScr 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro ClrScr 0
-
-%ifndef ClrScr_PROC_DEFINED
-	%idefine ClrScr_PROC_DEFINED
+%imacro ClrScr_INTERNAL 0
 
 [section .procs]
 
@@ -66,9 +63,13 @@ ClrScr_PROC:
 	RegsRestore		ax, bx, cx, dx
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro ClrScr 0
+
+	PROC_REQUIRE ClrScr
 
 	call 			ClrScr_PROC
 
@@ -78,10 +79,7 @@ __?SECT?__
 ; MACRO: ClrEOL 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro ClrEOL 0
-
-%ifndef ClrEOL_PROC_DEFINED
-	%idefine ClrEOL_PROC_DEFINED
+%imacro ClrEOL_INTERNAL 0
 
 [section .procs]
 
@@ -111,13 +109,19 @@ ClrEOL_PROC:
 	RegsRestore		ax, bx, cx, dx
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro ClrEOL 0
+
+	PROC_REQUIRE ClrEOL
 
 	call 			ClrEOL_PROC
 
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE ClrScr
+	PROC_PROVIDE ClrEOL
 %endif

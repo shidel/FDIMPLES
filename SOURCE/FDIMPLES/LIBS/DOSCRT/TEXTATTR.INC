@@ -38,10 +38,7 @@
 ; OUTPUT: none
 ; REGS:   ax
 ; -----------------------------------------------------------------------------
-%imacro TextColor_RESET 0
-
-%ifndef TextColor_RESET_PROC_DEFINED
-	%idefine TextColor_RESET_PROC_DEFINED
+%imacro TextColor_RESET_INTERNAL 0
 
 [section .procs]
 
@@ -54,18 +51,11 @@ TextColor_RESET_PROC:
 	RegsRestore		ax
 	ret
 
-%endif
-
 __?SECT?__
-
-	call	TextColor_RESET_PROC
 
 %endmacro
 
-%imacro TextColor 1
-
-%ifndef TextColor_PROC_DEFINED
-	%idefine TextColor_PROC_DEFINED
+%imacro TextColor_INTERNAL 0
 
 [section .procs]
 
@@ -78,13 +68,18 @@ TextColor_PROC:
 	mov			[Video_Attr], al
 	RegsRestore		ax
 	ret
-%endif
 
 __?SECT?__
 
+%endmacro
+
+%imacro TextColor 1
+
 %ifidni %1, original
-	TextColor_RESET
+	PROC_REQUIRE 		TextColor_RESET
+	call			TextColor_RESET_PROC
 %else
+	PROC_REQUIRE 		TextColor
 	%ifnidni %1, al
 		RegsPreserve	ax
 		mov		al, %1
@@ -103,10 +98,7 @@ __?SECT?__
 ; OUTPUT: none
 ; REGS:   ax, cx
 ; -----------------------------------------------------------------------------
-%imacro TextBackground_RESET 0
-
-%ifndef TextBackground_RESET_PROC_DEFINED
-	%idefine TextBackground_RESET_PROC_DEFINED
+%imacro TextBackground_RESET_INTERNAL 0
 
 [section .procs]
 
@@ -119,18 +111,11 @@ TextBackground_RESET_PROC:
 	RegsRestore		ax
 	ret
 
-%endif
-
 __?SECT?__
-
-	call			TextBackground_RESET_PROC
 
 %endmacro
 
-%imacro TextBackground 1
-
-%ifndef TextBackground_PROC_DEFINED
-	%idefine TextBackground_PROC_DEFINED
+%imacro TextBackground_INTERNAL 0
 
 [section .procs]
 
@@ -146,13 +131,18 @@ TextBackground_PROC:
 	RegsRestore		ax, cx
 	ret
 
-%endif
-
 __?SECT?__
 
+%endmacro
+
+%imacro TextBackground 1
+
+
 %ifidni %1, original
-	TextBackground_RESET
+	PROC_REQUIRE 		TextBackground_RESET
+	call			TextBackground_RESET_PROC
 %else
+	PROC_REQUIRE  		TextBackground
 	%ifnidni %1, al
 		RegsPreserve	ax
 		mov		al, %1
@@ -171,10 +161,7 @@ __?SECT?__
 ; OUTPUT: none
 ; REGS:   ax
 ; -----------------------------------------------------------------------------
-%imacro TextAttr 1
-
-%ifndef TextAttr_PROC_DEFINED
-	%idefine TextAttr_PROC_DEFINED
+%imacro TextAttr_RESET_INTERNAL 0
 
 [section .procs]
 
@@ -185,10 +172,14 @@ TextAttr_RESET_PROC:
 	RegsRestore		ax
 	ret
 
-%endif
 __?SECT?__
 
+%endmacro
+
+%imacro TextAttr 1
+
 	%ifidni %1, original
+		PROC_REQUIRE 	TextAttr_RESET
 		call		TextAttr_RESET_PROC
 	%elifnum %1
 		mov		[Video_Attr], byte %1
@@ -228,10 +219,8 @@ __?SECT?__
 ; OUTPUT: none
 ; REGS:   none
 ; -----------------------------------------------------------------------------
-%imacro NormVideo 0
+%imacro NormVideo_INTERNAL 0
 
-%ifndef NormVideo_PROC_DEFINED
-	%idefine NormVideo_PROC_DEFINED
 [section .procs]
 
 NormVideo_PROC:
@@ -243,13 +232,24 @@ NormVideo_PROC:
 	pop			ax
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro NormVideo 0
+
+	PROC_REQUIRE 		NormVideo
 
 	call			NormVideo_PROC
 
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE TextColor_RESET
+	PROC_PROVIDE TextColor
+	PROC_PROVIDE TextBackground_RESET
+	PROC_PROVIDE TextBackground
+	PROC_PROVIDE TextAttr_RESET
+	PROC_PROVIDE NormVideo
+
 %endif

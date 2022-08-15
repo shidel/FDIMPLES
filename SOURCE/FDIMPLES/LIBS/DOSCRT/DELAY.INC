@@ -40,10 +40,7 @@
 ; OUTPUT: none
 ; REGS:   ax, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro Delay 1
-
-%ifndef Delay_PROC_DEFINED
-	%idefine Delay_PROC_DEFINED
+%imacro Delay_INTERNAL 0
 
 [section .procs]
 
@@ -93,9 +90,13 @@ Delay_PROC:
 	RegsRestore		cx, dx
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro Delay 1
+
+	PROC_REQUIRE Delay
 
 	RegsPreserve		ax
 	movndef			ax, %1
@@ -105,4 +106,5 @@ __?SECT?__
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE Delay
 %endif

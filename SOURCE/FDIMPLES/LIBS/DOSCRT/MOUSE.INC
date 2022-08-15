@@ -32,22 +32,26 @@
 %ifndef MOUSE_INC_DEFINED
 %define MOUSE_INC_DEFINED
 ; -----------------------------------------------------------------------------
-%imacro MouseWriteProcs 0
-	%ifndef MouseWriteProcs_PROC_DEFINED
-		%idefine MouseWriteProcs_PROC_DEFINED
+%imacro PreWriteMouse_INTERNAL 0
+
 [section .procs]
 
 PreWriteMouse_PROC:
 	nop
 	nop
-	nop
-	nop
 	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro PostWriteMouse_INTERNAL 0
+
+[section .procs]
 
 PostWriteMouse_PROC:
+	nop
 	ret
-
-%endif
 
 __?SECT?__
 
@@ -56,6 +60,9 @@ __?SECT?__
 %imacro PreWriteMouse 0-2
 
 %ifdef Support_Mouse
+
+	PROC_REQUIRE		PreWriteMouse
+
 	call 			PreWriteMouse_PROC
 %endif
 
@@ -64,10 +71,16 @@ __?SECT?__
 %imacro PostWriteMouse 0
 
 %ifdef Support_Mouse
+
+	PROC_REQUIRE		PostWriteMouse
+
 	call 			PostWriteMouse_PROC
 %endif
 
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE		PreWriteMouse
+	PROC_PROVIDE		PostWriteMouse
+
 %endif

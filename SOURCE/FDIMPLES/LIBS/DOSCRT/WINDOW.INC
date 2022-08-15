@@ -36,10 +36,7 @@
 ; MACRO: WindowMax 0
 ; REGS:  ax
 ; -----------------------------------------------------------------------------
-%imacro WindowMax 0
-
-%ifndef WindowMax_PROC_DEFINED
-	%idefine WindowMax_PROC_DEFINED
+%imacro WindowMax_INTERNAL 0
 
 [section .procs]
 
@@ -52,9 +49,13 @@ WindowMax_PROC:
 	RegsRestore		ax
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro WindowMax 0
+
+	PROC_REQUIRE 		WindowMax
 
 	call 			WindowMax_PROC
 
@@ -67,10 +68,7 @@ __?SECT?__
 ;	%2 = Window MaxXY (prefers dx)
 ; REGS:  ax, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro Window 2
-
-%ifndef Window_PROC_DEFINED
-	%idefine Window_PROC_DEFINED
+%imacro Window_INTERNAL 0
 
 [section .procs]
 
@@ -114,9 +112,13 @@ Window_PROC:
 	%endif
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro Window 2
+
+	PROC_REQUIRE Window
 
 	RegsPreserve 		ax, dx
 	movndef	     		ax, %1, dx, %2
@@ -130,10 +132,7 @@ __?SECT?__
 ; INPUT: %1 - XY (prefers ax)
 ; REGS:  ax, bx, dx
 ; -----------------------------------------------------------------------------
-%imacro GotoXY 1
-
-%ifndef GotoXY_PROC_DEFINED
-	%idefine GotoXY_PROC_DEFINED
+%imacro GotoXY_INTERNAL 0
 
 [section .procs]
 
@@ -159,9 +158,13 @@ GotoXY_PROC:
 	RegsRestore		ax, bx, dx
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro GotoXY 1
+
+	PROC_REQUIRE GotoXY
 
 	%ifnidni %1, ax
 		RegsPreserve	ax
@@ -175,4 +178,8 @@ __?SECT?__
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE WindowMax
+	PROC_PROVIDE Window
+	PROC_PROVIDE GotoXY
+
 %endif

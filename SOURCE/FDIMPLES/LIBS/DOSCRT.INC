@@ -225,9 +225,5 @@ ProbeVideoCard
 WindowMax
 InitialVideoSettings
 ScrollWindowProcs
-WriteChar_INTERNAL
-%ifdef Support_Mouse
-	MouseWriteProcs
-%endif
 ; -----------------------------------------------------------------------------
 

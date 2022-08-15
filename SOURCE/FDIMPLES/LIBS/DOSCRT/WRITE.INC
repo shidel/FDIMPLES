@@ -34,9 +34,6 @@
 ; -----------------------------------------------------------------------------
 %imacro WriteChar_INTERNAL 0
 
-%ifndef WriteChar_INTERNAL_DEFINED
-	%idefine WriteChar_INTERNAL_DEFINED
-
 [section .procs]
 
 WriteChar_PROC:
@@ -154,8 +151,6 @@ WriteChar_PROC:
 	RegsRestore		bx, cx, dx
 	ret
 
-%endif
-
 __?SECT?__
 
 %endmacro
@@ -166,6 +161,9 @@ __?SECT?__
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
 %imacro WriteChar 1-*
+
+	PROC_REQUIRE		WriteChar
+
 	RegsPreserve		ax
 	%rep  %0
 		movndef		al, %1
@@ -176,4 +174,7 @@ __?SECT?__
 %endmacro
 ; *****************************************************************************
 %else
+
+	PROC_PROVIDE		WriteChar
+
 %endif
