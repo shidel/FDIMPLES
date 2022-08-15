@@ -57,12 +57,8 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-	; TextMode		0x3
-	; jnc			DisplayStuff
-	; WriteStr		'Text mode change error'
-	; Terminate		1
-
-DisplayStuff:
+Main:
+	WriteStr		'Hello world!'
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions

@@ -248,6 +248,7 @@ __?SECT?__
 
 %imacro WriteStr_SUBMAC 1
 
+	PROC_REQUIRE WriteChar
 	PROC_REQUIRE WriteStr
 
 [section .data]
@@ -273,6 +274,7 @@ __?SECT?__
 %endmacro
 
 %imacro WriteStr 1-*
+
 	%rep  %0
 		WriteStr_SUBMAC %1
 	%rotate 1
