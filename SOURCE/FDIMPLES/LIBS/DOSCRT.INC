@@ -186,6 +186,30 @@
 
 %include "DOSCRT/INSDEL.INC"
 
+; Write individual characters to display
+; MACRO:  WriteChar 1-*
+; INPUT:  %1+ = Characters (prefers al)
+; REG: 	  ax, bx, cx, dx
+
+; Write CRLF to display
+; MACRO:  WriteCRLF 0-1
+; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
+; REG: 	  ax, bx, cx, dx
+
+; Send ASCIIz string to display
+; MACRO:  WriteStr 1-*
+; INPUT:  ASCIIz string(s) to sent to display (prefers si)
+; REGS:   ax, bx, cx, dx, si
+
+; Send byte as HEX to display
+; MACRO:  WriteHexByte 1-*
+; INPUT:  %1+ = byte to display (prefers al)
+; REGS:   ax, bx, cx, dx
+
+; Send word as HEX to display
+; MACRO:  WriteHexWord 1-*
+; INPUT:  %1+ = word to display (prefers ax)
+; REGS:   ax, bx, cx, dx
 %include "DOSCRT/WRITE.INC"
 
 %include "DOSCRT/MOUSE.INC"
