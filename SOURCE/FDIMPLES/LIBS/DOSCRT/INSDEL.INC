@@ -39,14 +39,11 @@
 ;	al= 0 is entire window, 1 from current line.
 ; REGS: bx, cx, dx. Always destroys ax.
 ; -----------------------------------------------------------------------------
-%imacro ScrollWindowProcs 0
-
-%ifndef ScrollWindowInternal_PROC_DEFINED
-	%idefine ScrollWindowInternal_PROC_DEFINED
+%imacro ScrollWindowUpDown_INTERNAL 0
 
 [section .procs]
 
-ScrollWindowInternal_PROC:
+ScrollWindowUpDown_PROC:
 	RegsPreserve		bx, cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
@@ -91,23 +88,24 @@ __?SECT?__
 ; MACRO: DelLine 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro DelLine 0
-
-%ifndef DelLine_PROC_DEFINED
-	%idefine DelLine_PROC_DEFINED
+%imacro DelLine_INTERNAL 0
 
 [section .procs]
 
 DelLine_PROC:
 	RegsPreserve		ax
 	mov			ax, 0x0601
-	call			ScrollWindowInternal_PROC
+	call			ScrollWindowUpDown_PROC
 	RegsRestore		ax
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro DelLine 0
+
+	PROC_REQUIRE 		DelLine
 
 	call 			DelLine_PROC
 
@@ -117,23 +115,24 @@ __?SECT?__
 ; MACRO: InsLine 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro InsLine 0
-
-%ifndef InsLine_PROC_DEFINED
-	%idefine InsLine_PROC_DEFINED
+%imacro InsLine_INTERNAL 0
 
 [section .procs]
 
 InsLine_PROC:
 	RegsPreserve		ax
 	mov			ax, 0x0701
-	call			ScrollWindowInternal_PROC
+	call			ScrollWindowUpDown_PROC
 	RegsRestore		ax
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro InsLine 0
+
+	PROC_REQUIRE		InsLine
 
 	call 			InsLine_PROC
 
@@ -143,23 +142,24 @@ __?SECT?__
 ; MACRO: WindowScrollUp 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro WindowScrollUp 0
-
-%ifndef WindowScrollUp_PROC_DEFINED
-	%idefine WindowScrollUp_PROC_DEFINED
+%imacro WindowScrollUp_INTERNAL 0
 
 [section .procs]
 
 WindowScrollUp_PROC:
 	RegsPreserve		ax
 	mov			ax, 0x0600
-	call			ScrollWindowInternal_PROC
+	call			ScrollWindowUpDown_PROC
 	RegsRestore		ax
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro WindowScrollUp 0
+
+	PROC_REQUIRE 		WindowScrollUp
 
 	call 			WindowScrollUp_PROC
 
@@ -169,27 +169,33 @@ __?SECT?__
 ; MACRO: WindowScrollDown 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro WindowScrollDown 0
-
-%ifndef WindowScrollDown_PROC_DEFINED
-	%idefine WindowScrollDown_PROC_DEFINED
+%imacro WindowScrollDown_INTERNAL 0
 
 [section .procs]
 
 WindowScrollDown_PROC:
 	RegsPreserve		ax
 	mov			ax, 0x0700
-	call			ScrollWindowInternal_PROC
+	call			ScrollWindowUpDown_PROC
 	RegsRestore		ax
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro WindowScrollDown 0
+
+	PROC_REQUIRE 		WindowScrollDown
 
 	call 			WindowScrollDown_PROC
 
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE ScrollWindowUpDown
+	PROC_PROVIDE DelLine
+	PROC_PROVIDE InsLine
+	PROC_PROVIDE ScrollWindowUp
+	PROC_PROVIDE ScrollWindowDown
 %endif
