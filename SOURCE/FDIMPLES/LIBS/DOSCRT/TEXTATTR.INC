@@ -251,5 +251,4 @@ __?SECT?__
 	PROC_PROVIDE TextBackground
 	PROC_PROVIDE TextAttr_RESET
 	PROC_PROVIDE NormVideo
-
 %endif

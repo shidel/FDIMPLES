@@ -38,10 +38,7 @@
 ; OUTPUT: Carry Flag Set if key has been pressed.
 ; REGS:	  ax
 ; -----------------------------------------------------------------------------
-%imacro KeyPressed 0-1
-
-%ifndef KeyPressed_PROC_DEFINED
-	%idefine KeyPressed_PROC_DEFINED
+%imacro KeyPressed_INTERNAL 0
 
 [section .procs]
 
@@ -56,9 +53,13 @@ KeyPressed_PROC:
 	RegsRestore		ax
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro KeyPressed 0-1
+
+	PROC_REQUIRE 		KeyPressed
 
 	call 			KeyPressed_PROC
 	%if %0 = 1
@@ -75,10 +76,9 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro NotKeyPressed 0-1
 
-	KeyPressed
+	PROC_REQUIRE 		KeyPressed
 
-__?SECT?__
-
+	call 			KeyPressed_PROC
 	%if %0 = 1
 		jnc		%1
 	%endif
@@ -91,10 +91,7 @@ __?SECT?__
 ; OUTPUT: %1 is key press (prefers ax)
 ; REGS:	  ax
 ; -----------------------------------------------------------------------------
-%imacro ReadKey 1
-
-%ifndef ReadKey_PROC_DEFINED
-	%idefine ReadKey_PROC_DEFINED
+%imacro ReadKey_INTERNAL 0
 
 [section .procs]
 
@@ -109,9 +106,13 @@ ReadKey_PROC:
 %%Done:
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro ReadKey 1
+
+	PROC_REQUIRE 		ReadKey
 
 	%ifnidni %1, ax
 		RegsPreserve	ax
@@ -125,4 +126,6 @@ __?SECT?__
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE 		Keypressed
+	PROC_PROVIDE 		ReadKey
 %endif

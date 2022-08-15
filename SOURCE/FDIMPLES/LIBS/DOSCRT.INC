@@ -224,6 +224,5 @@ mov [Video_Tab], word 0x0408
 ProbeVideoCard
 WindowMax
 InitialVideoSettings
-ScrollWindowProcs
 ; -----------------------------------------------------------------------------
 

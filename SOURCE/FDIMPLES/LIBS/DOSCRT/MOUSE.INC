@@ -82,5 +82,4 @@ __?SECT?__
 %else
 	PROC_PROVIDE		PreWriteMouse
 	PROC_PROVIDE		PostWriteMouse
-
 %endif

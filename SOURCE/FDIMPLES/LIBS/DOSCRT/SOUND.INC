@@ -38,10 +38,7 @@
 ; OUTPUT: none
 ; REGS:   ax, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro Sound 1
-
-%ifndef Sound_PROC_DEFINED
-	%idefine Sound_PROC_DEFINED
+%imacro Sound_INTERNAL 0
 
 [section .procs]
 
@@ -73,9 +70,13 @@ Sound_PROC:
 	RegsRestore		ax, cx, dx
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro Sound 1
+
+	PROC_REQUIRE		Sound
 
 	%ifnidni %1, ax
 		RegsPreserve	ax
@@ -94,10 +95,7 @@ __?SECT?__
 ; OUTPUT: none
 ; REGS:   ax, dx
 ; -----------------------------------------------------------------------------
-%imacro NoSound 0
-
-%ifndef NoSound_PROC_DEFINED
-	%idefine NoSound_PROC_DEFINED
+%imacro NoSound_INTERNAL 0
 
 [section .procs]
 
@@ -117,13 +115,19 @@ NoSound_PROC:
 	RegsRestore		ax, dx
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro NoSound 0
+
+	PROC_REQUIRE		NoSound
 
 	call 			NoSound_PROC
 
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE		Sound
+	PROC_PROVIDE		NoSound
 %endif

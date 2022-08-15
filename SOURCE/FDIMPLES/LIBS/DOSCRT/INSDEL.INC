@@ -77,8 +77,6 @@ ScrollWindowUpDown_PROC:
 	RegsRestore		bx, cx, dx
 	ret
 
-%endif
-
 __?SECT?__
 
 %endmacro
@@ -89,6 +87,8 @@ __?SECT?__
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
 %imacro DelLine_INTERNAL 0
+
+	PROC_REQUIRE 		ScrollWindowUpDown
 
 [section .procs]
 
@@ -117,6 +117,8 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro InsLine_INTERNAL 0
 
+	PROC_REQUIRE 		ScrollWindowUpDown
+
 [section .procs]
 
 InsLine_PROC:
@@ -144,6 +146,8 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro WindowScrollUp_INTERNAL 0
 
+	PROC_REQUIRE 		ScrollWindowUpDown
+
 [section .procs]
 
 WindowScrollUp_PROC:
@@ -170,6 +174,8 @@ __?SECT?__
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
 %imacro WindowScrollDown_INTERNAL 0
+
+	PROC_REQUIRE 		ScrollWindowUpDown
 
 [section .procs]
 

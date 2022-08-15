@@ -181,5 +181,4 @@ __?SECT?__
 	PROC_PROVIDE WindowMax
 	PROC_PROVIDE Window
 	PROC_PROVIDE GotoXY
-
 %endif

@@ -313,7 +313,6 @@ __?SECT?__
 
 [section .procs]
 
-
 ResetVideoSettings_PROC:
 	TextMode		original
 	mov			ah, [es:0x0062]
