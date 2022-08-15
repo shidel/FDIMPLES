@@ -37,6 +37,7 @@
 [section .procs]
 
 WriteChar_PROC:
+; al = character to display
 	RegsPreserve		bx, cx, dx
 	; push ax,  see - https://fd.lod.bz/rbil/interrup/video/1003.html
 	push			ax			; Some BIOS clear AX
@@ -155,10 +156,10 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-; Write individual raw characters to display
-; MACRO:  WriteRawChar 1-*
-; INPUT:  %1+ = Characters (prefers dl)
-; OUTPUT: none
+; Write individual characters to display
+; MACRO:  WriteChar 1-*
+; INPUT:  %1+ = Characters (prefers al)
+; REG: 	  ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
 %imacro WriteChar 1-*
 
@@ -172,7 +173,198 @@ __?SECT?__
 	%endrep
 	RegsRestore		ax
 %endmacro
+; -----------------------------------------------------------------------------
+; Write CRLF to display
+; MACRO:  WriteCRLF 0-1
+; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
+; REG: 	  ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro WriteCRLF_INTERNAL 0
+
+	PROC_REQUIRE WriteChar
+
+[section .procs]
+
+WriteCRLF_PROC:
+	RegsPreserve		ax
+	mov			al, CR
+	call			WriteChar_PROC
+	mov			al, LF
+	call			WriteChar_PROC
+	RegsRestore		ax
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro WriteCRLF 0-1 1
+
+	PROC_REQUIRE 		WriteCRLF
+
+	%ifnidni %1, 1
+		RegsPreserve	cx
+		movndef		cx, %1
+		%%Loopy:
+			regpush cx
+			call	WriteCRLF_PROC
+			regpop  cx
+			loop	%%Loopy
+		RegsRestore	cx
+	%else
+		call		WriteCRLF_PROC
+	%endif
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Send ASCIIz string to display
+; MACRO:  WriteStr 1-*
+; INPUT:  ASCIIz string(s) to sent to display (prefers si)
+; REGS:   ax, bx, cx, dx, si
+; -----------------------------------------------------------------------------
+%imacro WriteStr_INTERNAL 0
+
+	PROC_REQUIRE WriteChar
+
+[section .procs]
+
+WriteStr_PROC:
+; DS:SI = Address of ASCIIz string
+	RegsPreserve		ax
+	cld
+%%DisplayMessage:
+	lodsb
+	test			al, al
+	jz 			%%NoDisplayChar
+	call			WriteChar_PROC
+	jmp			%%DisplayMessage
+%%NoDisplayChar:
+	RegsRestore		ax
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro WriteStr_SUBMAC 1
+
+	PROC_REQUIRE WriteStr
+
+[section .data]
+
+	%ifstr %1
+
+	%%str:
+		db		%1
+		db		0
+	%endif
+
+__?SECT?__
+
+	RegsPreserve		si
+	%ifstr %1
+		movndef		si, %%str
+	%else
+		mov		si, %1
+	%endif
+	call			WriteStr_PROC
+	RegsRestore		si
+
+%endmacro
+
+%imacro WriteStr 1-*
+	%rep  %0
+		WriteStr_SUBMAC %1
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send byte as HEX to display
+; MACRO:  WriteHexByte 1-*
+; INPUT:  %1+ = byte to display (prefers al)
+; REGS:   ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro WriteHexByte_INTERNAL 0
+
+	PROC_REQUIRE WriteChar
+
+[section .procs]
+
+WriteHexByte_PROC:
+	RegsPreserve		dx, cx
+
+	mov			cx, 0x0204	; ch = count, cl = bit rotate
+	mov			ah, ch		; mov ah, 0x02
+%%Loopy:
+	ror			al, cl		; rotate first to do high bits
+	mov			dl, al
+	and			dl, 0x0f
+	add			dl, 0x30	; make numbers ascii numbers
+	cmp			dl, 0x39
+	jbe			%%Display	; <= to asciii 9
+	add			dl, 0x27	; make value ascii letter
+
+%%Display:
+	regpush			cx
+	push			ax
+	mov			al, dl
+	call			WriteChar_PROC
+	pop			ax
+	regpop			cx
+	dec			ch
+	jnz			%%Loopy
+
+	RegsRestore		dx, cx
+
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro WriteHexByte 1-*
+
+	PROC_REQUIRE WriteHexByte
+
+	%rep  %0
+		%ifnidni %1, al
+			RegsPreserve 	ax
+			mov	al, %1
+		%endif
+		call		WriteHexByte_PROC
+		%ifnidni %1, al
+			RegsPreserve 	ax
+		%endif
+	%rotate 1
+	%endrep
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Send word as HEX to display
+; MACRO:  WriteHexWord 1-*
+; INPUT:  %1+ = word to display (prefers ax)
+; REGS:   ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro WriteHexWord 1-*
+	%rep  %0
+		%ifnidni %1, ax
+			RegsPreserve	ax
+			mov	ax, %1
+		%endif
+		regpush		ax
+		WriteHexByte	ah
+		regpop		ax
+		WriteHexByte	al
+		%ifnidni %1, ax
+			RegsRestore	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE		WriteChar
+	PROC_PROVIDE		WriteCRLF
+	PROC_PROVIDE		WriteStr
+	PROC_PROVIDE		WriteHexByte
 %endif

@@ -40,59 +40,59 @@
 ; -----------------------------------------------------------------------------
 ; When enabled, includes some hardware, os and other specific bug fixes.
 ; You should probably leave it enabled.
-%idefine DOS_BUG_FIXES
+%define DOS_BUG_FIXES
 
 ; When enabled and unless otherwise specified, the macro will preserve all the
 ; registers it uses. This can be useful for large and complex programs. However,
 ; there will be a small performance hit and the bytes needed for all those
 ; pushs ands pops does add up.
-; %idefine Preserve_Registers
+%define Preserve_Registers
 
 ; Include DOSCRT screen range checking. Adds several bytes. For small programs,
 ; this can be noticeable. Preferably, write code that does not go out of
 ; range and don't waste bytes. :-)
-; %idefine DOSCRT_Range_Check
+%define DOSCRT_Range_Check
 
 ; Include support for additional Interrupt based timer. Disabling this can save
 ; a few bytes. It will then always use system TimerTicks and accuracy will be
 ; +/- 55ms.
-%idefine Support_BIOS_Timer
+%define Support_BIOS_Timer
 
 ; Support BIOS video access. The only method supported at present. It is slower
 ; than direct video access.
-%idefine Support_BIOS_Video
+%define Support_BIOS_Video
 
 ; Support direct video access. I don't know if I will bother implementing this.
 ; Probably. We will see.
-%idefine Support_Direct_Video
+%define Support_Direct_Video
 
 ; Include mouse support
-%idefine Support_Mouse
+%define Support_Mouse
 
 ; Included card support levels and detection values, MDA & CGA are required
-%idefine Video_MDA 	0
-%idefine Video_CGA 	1
+%define Video_MDA 	0
+%define Video_CGA 	1
 ; EGA test is strongly recommended but not required. Otherwise, locked into
 ; 25 screen rows.
-%idefine Video_EGA 	2
+%define Video_EGA 	2
 ; Disable Video_MCGA, VGA, VESA. If you don't care about them and want to
 ; reduce the code size a few bytes (+256 bytes BSS for VESA)
-%idefine Video_MCGA 	3
-%idefine Video_VGA 	4
-%idefine Video_VESA	5
+%define Video_MCGA 	3
+%define Video_VGA 	4
+%define Video_VESA	5
 
 ; -----------------------------------------------------------------------------
 ; Video control option bits
 ; default is vcbDirectVideo + vcbScroll
-%idefine vcbDirect	00000001b	; Use Direct Video if possible
-%idefine vcbScroll	00000010b	; Enable last line auto-scroll
-%idefine vcbControls 	00000100b	; Print, dont process control chars
+%define vcbDirect	00000001b	; Use Direct Video if possible
+%define vcbScroll	00000010b	; Enable last line auto-scroll
+%define vcbControls 	00000100b	; Print, dont process control chars
 ; -----------------------------------------------------------------------------
 ; Internal defines to make coding macros simpler
 %undef BIOS_Direct_Video
 %ifdef Support_BIOS_Video
 	%ifdef Support_Direct_Video
-		%idefine BIOS_Direct_Video
+		%define BIOS_Direct_Video
 	%endif
 %endif
 ; -----------------------------------------------------------------------------

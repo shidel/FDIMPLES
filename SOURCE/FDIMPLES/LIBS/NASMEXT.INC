@@ -36,7 +36,10 @@
 
 %include "FEATURES.INC"
 ; -----------------------------------------------------------------------------
-
+%idefine CR 0x0d
+%idefine LF 0x0a
+%idefine CRLF CR,LF
+; -----------------------------------------------------------------------------
 %imacro movip 1
 ; mov	ip (+3 bytes) into register.
 	call %%ShortCall
@@ -225,6 +228,34 @@
 ; Used by macros. When enabled, macros will restore (pop) a list of registers
 ; they use internally.
 	%ifdef Preserve_Registers
+		%ifidni %0, 0
+			popall
+		%else
+			%rep %0
+			%rotate -1
+				pop     %1
+			%endrep
+		%endif
+	%endif
+%endmacro
+
+%imacro regpush 0-*
+; When Registers are not Preserved, perform push
+	%ifndef Preserve_Registers
+		%ifidni %0, 0
+			pushall
+		%else
+			%rep  %0
+				push    %1
+			%rotate 1
+			%endrep
+		%endif
+	%endif
+%endmacro
+
+%imacro regpop 0-*
+; When Registers are not Preserved, perform pop
+	%ifndef Preserve_Registers
 		%ifidni %0, 0
 			popall
 		%else

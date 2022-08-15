@@ -64,7 +64,6 @@
 [section .procs]
 
 StdOutCRLF_PROC:
-; CX = Count of CRLF to output
 	pushm			dx, ax
 	mov			ah, 0x02
 	mov			dl, 0x0d

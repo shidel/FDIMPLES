@@ -41,21 +41,20 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES for library and options
 
-%idefine Preserve_Registers	; Macros preserve all registers when possible
 ; %undef Preserve_Registers	; Macros preserve all registers when possible
 %undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
 %undef Support_BIOS_Timer	; Use high precision int15 timer if possible
 %undef Support_Direct_Video	; Direct video addressing
-; %undef Support_Mouse		; Mouse support
+%undef Support_Mouse		; Include Mouse support
 %undef Video_MCGA		; Check for MCGA support
 %undef Video_VGA		; Check for VGA support
 %undef Video_VESA		; Check for SuperVGA support
 
 %include "DOSLIBS.INC"		; One INC to include them all.
 
-	TextMode		0x54
+	TextMode		0x3
 	jnc			DisplayStuff
-	; WriteLn			'Text mode change error'
+	WriteStr		'Text mode change error'
 	Terminate		1
 
  DisplayStuff:
@@ -67,19 +66,25 @@ SECTION .text
 .PrintNext:
 	push			cx
 .PrintChars:
-	; push			cx
+	regpush			cx
 	TextAttr 		0x1f
 	WriteChar		'A'
-	; pop			cx
+	regpop			cx
 	loop			.PrintChars
 	TextAttr 		0x1e
-	WriteChar		0x09, 'B', 0x0d, 0x0a
+	WriteChar		0x09, 'B'
+	WriteCRLF
 	Delay			50
 	pop			cx
 	loop			.PrintNext
-	WriteChar		0x09, 'B', 0x0d, 0x0a
+	WriteChar		0x09, 'B'
+	WriteCRLF
+	;WriteHexByte		0x9A,0xBC
+	;WriteCRLF
+	;WriteHexWord		0x1234,0x5678
+	;WriteCRLF
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions
 
-; 	Include_LIB_Functions	; Include any addditional LIB functions
+; 	Include_LIB_Functions	; Include any additional LIB functions
