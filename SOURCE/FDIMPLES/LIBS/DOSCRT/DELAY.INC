@@ -29,6 +29,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef DELAY_INC_DEFINED
+%define DELAY_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; Wait for a period of time to elapse. If Support_BIOS_Timer is enabled,
 ; it will first attempt to use the BIOS WAIT function. If that fails, it
@@ -101,3 +103,6 @@ __?SECT?__
 	RegsRestore		ax
 
 %endmacro
+; *****************************************************************************
+%else
+%endif

@@ -29,6 +29,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef CLEAR_INC_DEFINED
+%define CLEAR_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; Clear the current window
 ; MACRO: ClrScr 0
@@ -116,3 +118,6 @@ __?SECT?__
 	call 			ClrEOL_PROC
 
 %endmacro
+; *****************************************************************************
+%else
+%endif

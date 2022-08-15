@@ -29,6 +29,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef SOUND_INC_DEFINED
+%define SOUND_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; Output sound through PC speaker
 ; MACRO:  Sound 1
@@ -122,3 +124,6 @@ __?SECT?__
 	call 			NoSound_PROC
 
 %endmacro
+; *****************************************************************************
+%else
+%endif

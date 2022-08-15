@@ -29,6 +29,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef WINDOW_INC_DEFINED
+%define WINDOW_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; Adjust the window to its maximum size. Does not move cursor.
 ; MACRO: WindowMax 0
@@ -171,3 +173,6 @@ __?SECT?__
 	%endif
 
 %endmacro
+; *****************************************************************************
+%else
+%endif

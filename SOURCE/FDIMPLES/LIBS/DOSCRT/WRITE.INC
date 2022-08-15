@@ -29,6 +29,9 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef WRITE_INC_DEFINED
+%define WRITE_INC_DEFINED
+; -----------------------------------------------------------------------------
 %imacro WriteChar_INTERNAL 0
 
 %ifndef WriteChar_INTERNAL_DEFINED
@@ -171,4 +174,6 @@ __?SECT?__
 	%endrep
 	RegsRestore		ax
 %endmacro
-
+; *****************************************************************************
+%else
+%endif

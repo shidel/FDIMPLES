@@ -29,6 +29,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef TEXTMODE_INC_DEFINED
+%define TEXTMODE_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; Probes video hardware for card type and current settings. It needs called
 ; prior to any other DOSCRT macros. However, it can be called multiple times.
@@ -344,4 +346,6 @@ __?SECT?__
 	call 			ResetVideoSettings_PROC
 
 %endmacro
-; -----------------------------------------------------------------------------
+; *****************************************************************************
+%else
+%endif

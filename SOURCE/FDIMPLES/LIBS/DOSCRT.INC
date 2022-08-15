@@ -32,12 +32,9 @@
 
 ; NASM 2.15.05, or later
 
-%ifndef DOSCRT_INC_DEFINED
-%define DOSCRT_INC_DEFINED
-
-%include "NASMEXT.INC"
+; -----------------------------------------------------------------------------
 %include "FEATURES.INC"
-
+%include "NASMEXT.INC"
 ; -----------------------------------------------------------------------------
 ; List of macros and functions provided by this file.
 ; Note: Macros often have have preferred register to use when passing when
@@ -233,6 +230,4 @@ WriteChar_INTERNAL
 	MouseWriteProcs
 %endif
 ; -----------------------------------------------------------------------------
-%endif
-
 

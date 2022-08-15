@@ -29,6 +29,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef MOUSE_INC_DEFINED
+%define MOUSE_INC_DEFINED
 ; -----------------------------------------------------------------------------
 %imacro MouseWriteProcs 0
 	%ifndef MouseWriteProcs_PROC_DEFINED
@@ -66,4 +68,6 @@ __?SECT?__
 %endif
 
 %endmacro
-; -----------------------------------------------------------------------------
+; *****************************************************************************
+%else
+%endif

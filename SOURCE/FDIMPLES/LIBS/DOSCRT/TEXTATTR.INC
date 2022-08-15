@@ -29,6 +29,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef TEXTATTR_INC_DEFINED
+%define TEXTATTR_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; Set the foreground color for text writes
 ; MACRO:  TextColor 1
@@ -248,3 +250,6 @@ __?SECT?__
 	call			NormVideo_PROC
 
 %endmacro
+; *****************************************************************************
+%else
+%endif

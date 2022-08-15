@@ -29,6 +29,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef KEYPRESS_INC_DEFINED
+%define KEYPRESS_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; Test for key was pressed
 ; MACRO:  KeyPressed 0-1
@@ -121,3 +123,6 @@ __?SECT?__
 	%endif
 
 %endmacro
+; *****************************************************************************
+%else
+%endif

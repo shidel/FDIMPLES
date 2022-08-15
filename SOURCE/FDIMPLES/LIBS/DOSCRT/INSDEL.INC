@@ -29,6 +29,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef INSDEL_INC_DEFINED
+%define INSDEL_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; Internal Window scroller, always present with DOSCRT.
 ; MACRO: ScrollWindowProcs 0
@@ -188,3 +190,6 @@ __?SECT?__
 	call 			WindowScrollDown_PROC
 
 %endmacro
+; *****************************************************************************
+%else
+%endif

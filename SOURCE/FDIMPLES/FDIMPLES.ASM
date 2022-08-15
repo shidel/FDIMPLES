@@ -77,16 +77,9 @@ SECTION .text
 ;	loop			.PrintNext
 ;	WriteChar		0x09, 'B', 0x0d, 0x0a
 
-	StdOutStr		'Hello there.'
-	StdOutCRLF
-	StdOutStr		'My good friend.'
-	StdOutCRLF
-	StdOutHexWord		0x1234
-	StdOutCRLF
 
 Finished:
 	Terminate		0
-	ret
 
 	Include_LIB_Functions	; Include functions called by macros
 ;	Include_LIB_Functions	; Include functions called by macros
