@@ -59,17 +59,21 @@ SECTION .text
 	; WriteLn			'Text mode change error'
 	Terminate		1
 
-
 DisplayStuff:
+	ClrScr
+	mov			[Video_WindMaxX], byte 0x10
+	mov			[Video_Attr], byte 0x1f
+	ClrScr
 	mov			cx, 20
-.PrintNext:
+PrintNext:
 	push			cx
-.PrintChars:
+PrintChars:
 	WriteChar		'A'
-	loop			.PrintChars
+	loop			PrintChars
 	WriteChar		0x09, 'B', 0x0d, 0x0a
 	pop			cx
-	loop			.PrintNext
+	Delay			50
+	loop			PrintNext
 	WriteChar		0x09, 'B', 0x0d, 0x0a
 
 Finished:

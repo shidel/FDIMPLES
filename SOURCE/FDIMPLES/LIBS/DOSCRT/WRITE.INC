@@ -67,6 +67,33 @@ WriteCharInternal_PROC:
 	inc			dh
 	jmp			%%PostDisplayChar
 %%ProcessHT:			; Horizontal Tab
+	push			dx
+	mov			ax, dx
+	sub			ax, [Video_WindMin]
+	xor			ah, ah
+	mov			cl, [Video_HTab]
+	%ifdef DOSCRT_Range_Check
+		test		cl, cl
+		jnz		%%GoodTabValue
+		mov		cl, 0x01
+		%%GoodTabValue:
+	%endif
+	test			al, al
+	jz			%%StartPosition
+	dec			al
+	%%StartPosition:
+	dec			cl
+	div			cl
+	inc			al
+	mul			cl
+	mov			dx, ax
+	pop			ax
+	mov			dh, ah
+	add			dx, [Video_WindMin]
+	cmp			dl, [Video_WindMaxX]
+	jbe			%%PostDisplayChar 	; check past edge
+	mov			dl, [Video_WindMin]
+	inc			dh
 	jmp			%%PostDisplayChar
 %%ProcessBS:			; Backspace
 	cmp			dl, [Video_WindMinX]
@@ -129,7 +156,6 @@ WriteCharInternal_PROC:
 __?SECT?__
 
 %endmacro
-
 ; -----------------------------------------------------------------------------
 ; Write individual raw characters to display
 ; MACRO:  WriteRawChar 1-*
