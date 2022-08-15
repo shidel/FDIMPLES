@@ -28,7 +28,8 @@
 ; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ; NASM 2.15.05, or later
-
+%ifndef TERMINAT_INC_DEFINED
+%define TERMINAT_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; Terminate Program
 ; MACRO:  Terminate 1-*
@@ -58,10 +59,12 @@
 %endif
 	int			0x21
 
-; %ifndef DOSLIBS_INC_DEFINED
-;	%define DOSLIBS_INCLUDED_DEFINED
-;	%include 'DOSLIBS.INC'
-;	Include_LIB_Functions
-; %endif
+%ifndef DOSLIBS_INC_DEFINED
+	%define DOSLIBS_INCLUDED_DEFINED
+	%include 'DOSLIBS.INC'
+	Include_LIB_Functions
+%endif
 
 %endmacro
+; -----------------------------------------------------------------------------
+%endif

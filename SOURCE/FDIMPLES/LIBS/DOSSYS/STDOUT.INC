@@ -29,6 +29,8 @@
 
 ; NASM 2.15.05, or later
 
+%ifndef STDOUT_INC_DEFINED
+%define STDOUT_INC_DEFINED
 ; -----------------------------------------------------------------------------
 ; Send individual characters to standard output device
 ; MACRO:  StdOutChar 1-*
@@ -57,25 +59,28 @@
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
-%imacro StdOutCRLF 0-1	1
+%imacro StdOutCRLF_INTERNAL 0
 
 [section .procs]
 
-%ifndef StdOutCRLF_PROC_DEFINED
-	%define StdOutCRLF_PROC_DEFINED
-
-	StdOutCRLF_PROC:
-		pushm		dx, ax
-		mov		ah, 0x02
-		mov		dl, 13
-		int		0x21
-		mov		dl, 10
-		int		0x21
-		popm		dx, ax
-		ret
-%endif
+StdOutCRLF_PROC:
+; CX = Count of CRLF to output
+	pushm			dx, ax
+	mov			ah, 0x02
+	mov			dl, 0x0d
+	int			0x21
+	mov			dl, 0x0a
+	int			0x21
+	popm			dx, ax
+	ret
 
 __?SECT?__
+
+%endmacro
+
+%imacro StdOutCRLF 0-1	1
+
+	PROC_REQUIRE StdOutCRLF
 
 	%ifnidni %1, 1
 		push		cx
@@ -87,6 +92,7 @@ __?SECT?__
 	%else
 		call		StdOutCRLF_PROC
 	%endif
+
 %endmacro
 ; -----------------------------------------------------------------------------
 ; Send ASCIIz string to standard output device
@@ -94,53 +100,58 @@ __?SECT?__
 ; INPUT:  ASCIIz string(s) sent to STDOUT (prefers si)
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
-%imacro StdOutStr_INTERNAL 1
-
+%imacro StdOutStr_INTERNAL 0
 
 [section .procs]
-; NASM will combine and place all .procs sections after the .text section
 
-%ifndef StdOutStr_PROC_DEFINED
-	%idefine StdOutStr_PROC_DEFINED
+StdOutStr_PROC:
+; DS:SI = Address of ASCIIz string
+	pushm			ax, dx
+	mov			ah, 0x02
+	cld
+%%DisplayMessage:
+	mov			dl, [si]
+	test			dl, dl
+	jz 			%%NoDisplayChar
+	inc			si
+	int			0x21
+	jmp			%%DisplayMessage
+%%NoDisplayChar:
+	popm			ax, dx
+	ret
 
-	StdOutStr_PROC:
-		pushm		ax, dx
-		mov		ah, 0x02
-		cld
-	%%DisplayMessage:
-		mov		dl, [si]
-		test		dl, dl
-		jnz 		%%DisplayChar
-		popm		ax, dx
-		ret
-	%%DisplayChar:
-		inc		si
-		int		0x21
-		jmp		%%DisplayMessage
-%endif
+__?SECT?__
+
+%endmacro
+
+%imacro StdOutStr_SUBMAC 1
+
+	PROC_REQUIRE StdOutStr
+
+[section .data]
 
 	%ifstr %1
-	[section .data]
 
-		%%str:
-			db	%1
-			db	0
+	%%str:
+		db		%1
+		db		0
 	%endif
 
-	__?SECT?__
+__?SECT?__
 
-		%ifstr %1
-			movndef	si, %%str
-		%else
-			mov	si, %1
-		%endif
-		call		StdOutStr_PROC
+	%ifstr %1
+		movndef		si, %%str
+	%else
+		mov		si, %1
+	%endif
+	call			StdOutStr_PROC
+
 %endmacro
 
 %imacro StdOutStr 1-*
 	%rep  %0
 		push		si
-		StdOutStr_INTERNAL %1
+		StdOutStr_SUBMAC %1
 		pop		si
 	%rotate 1
 	%endrep
@@ -151,40 +162,42 @@ __?SECT?__
 ; INPUT:  %1+ = byte to print (prefers al)
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
-%imacro StdOutHexByte 1-*
+%imacro StdOutHexByte_INTERNAL 0
 
 [section .procs]
 
-%ifndef StdOutHexByte_PROC_DEFINED
-	%define StdOutHexByte_PROC_DEFINED
+StdOutHexByte_PROC:
+	pushm			dx, cx, ax
 
-	StdOutHexByte_PROC:
-		pushm		dx, cx, ax
+	mov			cx, 0x0204	; ch = count, cl = bit rotate
+	mov			ah, ch		; mov ah, 0x02
+%%Loopy:
+	ror			al, cl		; rotate first to do high bits
+	mov			dl, al
+	and			dl, 0x0f
+	add			dl, 0x30	; make numbers ascii numbers
+	cmp			dl, 0x39
+	jbe			%%Display	; <= to asciii 9
+	add			dl, 0x27	; make value ascii letter
 
-		mov		cx, 0x0204	; ch = count, cl = bit rotate
-		mov		ah, ch		; mov ah, 0x02
-	%%Loopy:
-		ror		al, cl		; rotate first to do high bits
-		mov		dl, al
-		and		dl, 0x0f
-		add		dl, 0x30	; make numbers ascii numbers
-		cmp		dl, 0x39
-		jbe		%%Display	; <= to asciii 9
-		add		dl, 0x27	; make value ascii letter
+%%Display:
+	push			ax
+	int			0x21
+	pop			ax
+	dec			ch
+	jnz			%%Loopy
 
-	%%Display:
-		push		ax
-		int		0x21
-		pop		ax
-		dec		ch
-		jnz		%%Loopy
+	popm			dx, cx, ax
 
-		popm		dx, cx, ax
-
-		ret
-%endif
+	ret
 
 __?SECT?__
+
+%endmacro
+
+%imacro StdOutHexByte 1-*
+
+	PROC_REQUIRE StdOutHexByte
 
 	%rep  %0
 		%ifnidni %1, al
@@ -219,3 +232,9 @@ __?SECT?__
 	%rotate 1
 	%endrep
 %endmacro
+; -----------------------------------------------------------------------------
+%else
+	PROC_PROVIDE StdOutCRLF
+	PROC_PROVIDE StdOutStr
+	PROC_PROVIDE StdOutHexByte
+%endif

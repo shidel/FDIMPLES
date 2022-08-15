@@ -32,11 +32,9 @@
 
 ; NASM 2.15.05, or later
 
-%ifndef DOSSYS_INC_DEFINED
-%define DOSSYS_INC_DEFINED
-
-%include "NASMEXT.INC"
+; -----------------------------------------------------------------------------
 %include "FEATURES.INC"
+%include "NASMEXT.INC"
 ; -----------------------------------------------------------------------------
 ; List of macros and functions provided by this file.
 ; Note: Macros often have have preferred register to use when passing when
@@ -77,5 +75,3 @@
 ; OUTPUT:
 ; 	None: Does not return
 %include "DOSSYS/TERMINAT.INC"
-; -----------------------------------------------------------------------------
-%endif

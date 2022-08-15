@@ -41,7 +41,7 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES for library options
 
-; %idefine Preserve_Registers	; Macros preserve all registers when possible
+%idefine Preserve_Registers	; Macros preserve all registers when possible
 ; %undef Preserve_Registers	; Macros preserve all registers when possible
 %undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
 %undef Support_BIOS_Timer	; Use high precision int15 timer if possible
@@ -51,36 +51,42 @@ SECTION .text
 %undef Video_VGA		; Check for VGA support
 %undef Video_VESA		; Check for SuperVGA support
 
-%include "DOSLIBS.INC"		; One INC to include them all. Could possibly
-				; decrease compiled size by only including
-				; those INCs actually needed.
+%include "DOSLIBS.INC"		; One INC to include them all.
 
-	TextMode		0x03
-	jnc			DisplayStuff
+	; TextMode		0x37
+	; jnc			DisplayStuff
 	; WriteLn			'Text mode change error'
-	Terminate		1
+	; Terminate		1
 
-DisplayStuff:
-	ClrScr
-	mov			[Video_WindMaxX], byte 0x10
-	mov			[Video_Attr], byte 0x1f
-	ClrScr
-	mov			cx, 20
-PrintNext:
-	push			cx
-PrintChars:
-	push			cx
-	WriteChar		'A'
-	pop			cx
-	loop			PrintChars
-	WriteChar		0x09, 'B', 0x0d, 0x0a
-	Delay			50
-	pop			cx
-	loop			PrintNext
-	WriteChar		0x09, 'B', 0x0d, 0x0a
+; DisplayStuff:
+;	ClrScr
+;	mov			[Video_WindMaxX], byte 0x10
+;	mov			[Video_Attr], byte 0x1f
+;	ClrScr
+;	mov			cx, 20
+;.PrintNext:
+;	push			cx
+;.PrintChars:
+;	push			cx
+;	WriteChar		'A'
+;	pop			cx
+;	loop			.PrintChars
+;	WriteChar		0x09, 'B', 0x0d, 0x0a
+;	Delay			50
+;	pop			cx
+;	loop			.PrintNext
+;	WriteChar		0x09, 'B', 0x0d, 0x0a
+
+	StdOutStr		'Hello there.'
+	StdOutCRLF
+	StdOutStr		'My good friend.'
+	StdOutCRLF
+	StdOutHexWord		0x1234
+	StdOutCRLF
 
 Finished:
 	Terminate		0
+	ret
 
-;	Include_LIB_Functions	; Include functions called by macros
+	Include_LIB_Functions	; Include functions called by macros
 ;	Include_LIB_Functions	; Include functions called by macros

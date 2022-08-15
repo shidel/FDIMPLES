@@ -38,7 +38,7 @@
 		%include "NASMEXT.INC"
 		%include "FEATURES.INC"
 		%include "DOSSYS.INC"
-		%include "DOSCRT.INC"
+		; %include "DOSCRT.INC"
 	%endmacro
 
 	%imacro Include_LIB_Functions 0

@@ -35,6 +35,7 @@
 %define NASMEXT_INC_DEFINED
 
 %include "FEATURES.INC"
+; -----------------------------------------------------------------------------
 
 %imacro movip 1
 ; mov	ip (+3 bytes) into register.
@@ -235,4 +236,19 @@
 	%endif
 %endmacro
 
+%imacro PROC_REQUIRE 1
+	%ifndef %1_REQUIRED
+		%define %1_REQUIRED 0
+	%endif
+%endmacro
+
+%imacro PROC_PROVIDE 1
+	%ifidni %1_REQUIRED, 0
+		%define %1_REQUIRED 1
+		%1_INTERNAL
+	%endif
+%endmacro
+; -----------------------------------------------------------------------------
+
 %endif
+
