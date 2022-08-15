@@ -29,14 +29,14 @@
 
 ; NASM 2.15.05, or later
 
-%imacro WriteProcs 0
+%imacro WriteChar_INTERNAL 0
 
-%ifndef WriteInternal_PROC_DEFINED
-	%idefine WriteInternal_PROC_DEFINED
+%ifndef WriteChar_INTERNAL_DEFINED
+	%idefine WriteChar_INTERNAL_DEFINED
 
 [section .procs]
 
-WriteCharInternal_PROC:
+WriteChar_PROC:
 	RegsPreserve		bx, cx, dx
 	; push ax,  see - https://fd.lod.bz/rbil/interrup/video/1003.html
 	push			ax			; Some BIOS clear AX
@@ -166,9 +166,9 @@ __?SECT?__
 	RegsPreserve		ax
 	%rep  %0
 		movndef		al, %1
-		call 		WriteCharInternal_PROC
+		call 		WriteChar_PROC
 	%rotate 1
 	%endrep
 	RegsRestore		ax
 %endmacro
-; -----------------------------------------------------------------------------
+

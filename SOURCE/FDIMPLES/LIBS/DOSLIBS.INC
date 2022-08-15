@@ -1,4 +1,5 @@
-; FreeDOS Installer (FDI) - My Package List Editor Software
+; Features for DOS v1.0
+; Similar (but a little different) to a Pascal CRT unit.
 
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
@@ -30,57 +31,23 @@
 ; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ; NASM 2.15.05, or later
+%ifndef DOSLIBS_INC_DEFINED
+%define DOSLIBS_INC_DEFINED
 
-use16
+	%macro DOSLIBS_INCLUDE_ALL 0
+		%include "NASMEXT.INC"
+		%include "FEATURES.INC"
+		%include "DOSSYS.INC"
+		%include "DOSCRT.INC"
+	%endmacro
 
-cpu 8086
+	%imacro Include_LIB_Functions 0
+		DOSLIBS_INCLUDE_ALL
+	%endmacro
 
-org 0x100
+%endif
 
-SECTION .text
-
-%include "FEATURES.INC"		; Default DEFINES for library options
-
-; %idefine Preserve_Registers	; Macros preserve all registers when possible
-; %undef Preserve_Registers	; Macros preserve all registers when possible
-%undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
-%undef Support_BIOS_Timer	; Use high precision int15 timer if possible
-%undef Support_Direct_Video	; Direct video addressing
-; %undef Support_Mouse		; Mouse support
-%undef Video_MCGA		; Check for MCGA support
-%undef Video_VGA		; Check for VGA support
-%undef Video_VESA		; Check for SuperVGA support
-
-%include "DOSLIBS.INC"		; One INC to include them all. Could possibly
-				; decrease compiled size by only including
-				; those INCs actually needed.
-
-	TextMode		0x03
-	jnc			DisplayStuff
-	; WriteLn			'Text mode change error'
-	Terminate		1
-
-DisplayStuff:
-	ClrScr
-	mov			[Video_WindMaxX], byte 0x10
-	mov			[Video_Attr], byte 0x1f
-	ClrScr
-	mov			cx, 20
-PrintNext:
-	push			cx
-PrintChars:
-	push			cx
-	WriteChar		'A'
-	pop			cx
-	loop			PrintChars
-	WriteChar		0x09, 'B', 0x0d, 0x0a
-	Delay			50
-	pop			cx
-	loop			PrintNext
-	WriteChar		0x09, 'B', 0x0d, 0x0a
-
-Finished:
-	Terminate		0
-
-;	Include_LIB_Functions	; Include functions called by macros
-;	Include_LIB_Functions	; Include functions called by macros
+%ifndef DOSLIBS_INCLUDED_DEFINED
+	DOSLIBS_INCLUDE_ALL
+	%define DOSLIBS_INCLUDED_DEFINED
+%endif

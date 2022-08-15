@@ -222,16 +222,17 @@
 
 ; -----------------------------------------------------------------------------
 ; Automatically initialize video display and other settings
-
 mov [Video_Options], byte vcbDirect + vcbScroll ; + vcbControls
 mov [Video_Tab], word 0x0408
 ProbeVideoCard
 WindowMax
 InitialVideoSettings
 ScrollWindowProcs
-WriteProcs
+WriteChar_INTERNAL
 %ifdef Support_Mouse
 	MouseWriteProcs
 %endif
 ; -----------------------------------------------------------------------------
 %endif
+
+
