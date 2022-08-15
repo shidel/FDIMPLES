@@ -39,9 +39,9 @@ org 0x100
 
 SECTION .text
 
-%include "FEATURES.INC"		; Default DEFINES for library options
+%include "FEATURES.INC"		; Default DEFINES for library and options
 
-; %idefine Preserve_Registers	; Macros preserve all registers when possible
+%idefine Preserve_Registers	; Macros preserve all registers when possible
 ; %undef Preserve_Registers	; Macros preserve all registers when possible
 %undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
 %undef Support_BIOS_Timer	; Use high precision int15 timer if possible
@@ -53,12 +53,12 @@ SECTION .text
 
 %include "DOSLIBS.INC"		; One INC to include them all.
 
-	; TextMode		0x3
-	; jnc			DisplayStuff
+	TextMode		0x54
+	jnc			DisplayStuff
 	; WriteLn			'Text mode change error'
-	; Terminate		1
+	Terminate		1
 
-DisplayStuff:
+ DisplayStuff:
 	ClrScr
 	mov			[Video_WindMaxX], byte 0x10
 	TextAttr 		0x1f
@@ -67,10 +67,10 @@ DisplayStuff:
 .PrintNext:
 	push			cx
 .PrintChars:
-	push			cx
+	; push			cx
 	TextAttr 		0x1f
 	WriteChar		'A'
-	pop			cx
+	; pop			cx
 	loop			.PrintChars
 	TextAttr 		0x1e
 	WriteChar		0x09, 'B', 0x0d, 0x0a
@@ -80,7 +80,6 @@ DisplayStuff:
 	WriteChar		0x09, 'B', 0x0d, 0x0a
 
 Finished:
-	Terminate		0
+	Terminate		0 ; Automatically includes used LIB functions
 
-	Include_LIB_Functions	; Include functions called by macros
-;	Include_LIB_Functions	; Include functions called by macros
+; 	Include_LIB_Functions	; Include any addditional LIB functions

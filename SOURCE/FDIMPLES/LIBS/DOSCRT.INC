@@ -219,10 +219,13 @@
 
 ; -----------------------------------------------------------------------------
 ; Automatically initialize video display and other settings
-mov [Video_Options], byte vcbDirect + vcbScroll ; + vcbControls
-mov [Video_Tab], word 0x0408
-ProbeVideoCard
-WindowMax
-InitialVideoSettings
+%ifndef DOSCRT_INIT_CODE
+%define DOSCRT_INIT_CODE
+	mov [Video_Options], byte vcbDirect + vcbScroll ; + vcbControls
+	mov [Video_Tab], word 0x0408
+	ProbeVideoCard
+	WindowMax
+	InitialVideoSettings
+%endif
 ; -----------------------------------------------------------------------------
 

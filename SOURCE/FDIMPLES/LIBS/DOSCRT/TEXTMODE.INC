@@ -41,10 +41,7 @@
 ; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
 ; -----------------------------------------------------------------------------
-%imacro ProbeVideoCard 0
-
-%ifndef ProbeVideoCard_PROC_DEFINED
-	%idefine ProbeVideoCard_PROC_DEFINED
+%imacro ProbeVideoCard_INTERNAL 0
 
 [section .procs]
 
@@ -192,10 +189,13 @@ Video_Mode:		resb		1
 	TempBuffer 256
 %endif
 
-%endif
-
 __?SECT?__
 
+%endmacro
+
+%imacro ProbeVideoCard 0
+
+	PROC_REQUIRE		ProbeVideoCard
 	call 			ProbeVideoCard_PROC
 
 %endmacro
@@ -208,10 +208,7 @@ __?SECT?__
 ; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
 ; -----------------------------------------------------------------------------
-%imacro InitialVideoSettings 0
-
-%ifndef InitialVideoSettings_PROC_DEFINED
-	%idefine InitialVideoSettings_PROC_DEFINED
+%imacro InitialVideoSettings_INTERNAL 0
 
 [section .procs]
 
@@ -237,9 +234,13 @@ Initial_Video_Attr:	resb		1
 Initial_Video_Page:	resb		1
 Initial_Video_Mode:	resb		1
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro InitialVideoSettings 0
+
+	PROC_REQUIRE		InitialVideoSettings
 
 	call 			InitialVideoSettings_PROC
 
@@ -252,10 +253,7 @@ __?SECT?__
 ; INPUT:  %1 = video mode (prefers al), original returns it to Initial Setting
 ; OUTPUT: Carry Flag set if error occurred.
 ; -----------------------------------------------------------------------------
-%imacro TextMode 1
-
-%ifndef TextMode_PROC_DEFINED
-	%idefine TextMode_PROC_DEFINED
+%imacro TextMode_INTERNAL 0
 
 [section .procs]
 
@@ -286,9 +284,13 @@ TextMode_PROC:
 	PostWriteMouse
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro TextMode 1
+
+	PROC_REQUIRE 		TextMode
 
 	%ifidni %1, original
 		mov		al, [Initial_Video_Mode]
@@ -306,10 +308,7 @@ __?SECT?__
 ; INPUT:  none
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
-%imacro ResetVideoSettings 0
-
-%ifndef ResetVideoSettings_PROC_DEFINED
-	%idefine ResetVideoSettings_PROC_DEFINED
+%imacro ResetVideoSettings_INTERNAL 0
 
 [section .procs]
 
@@ -338,13 +337,22 @@ ResetVideoSettings_PROC:
 	call			ProbeVideoCard_PROC
 	ret
 
-%endif
-
 __?SECT?__
+
+%endmacro
+
+%imacro ResetVideoSettings 0
+
+	PROC_REQUIRE		InitialVideoSettings
+	PROC_REQUIRE 		ResetVideoSettings
 
 	call 			ResetVideoSettings_PROC
 
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE		ProbeVideoCard
+	PROC_PROVIDE		InitialVideoSettings
+	PROC_PROVIDE 		ResetVideoSettings
+	PROC_PROVIDE 		TextMode
 %endif

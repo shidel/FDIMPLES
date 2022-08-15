@@ -59,11 +59,8 @@
 %endif
 	int			0x21
 
-%ifndef DOSLIBS_INC_DEFINED
-	%define DOSLIBS_INCLUDED_DEFINED
 	%include 'DOSLIBS.INC'
 	Include_LIB_Functions
-%endif
 
 %endmacro
 ; -----------------------------------------------------------------------------
