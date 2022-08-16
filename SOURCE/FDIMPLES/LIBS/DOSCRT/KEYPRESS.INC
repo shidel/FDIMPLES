@@ -40,7 +40,7 @@
 ; -----------------------------------------------------------------------------
 %imacro KeyPressed_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 KeyPressed_PROC:
 	RegsPreserve		ax
@@ -93,7 +93,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro ReadKey_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 ReadKey_PROC:
 	mov  			ah, 0x00

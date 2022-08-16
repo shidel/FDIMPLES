@@ -40,7 +40,7 @@
 ; -----------------------------------------------------------------------------
 %imacro Sound_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 Sound_PROC:
 	RegsPreserve		ax, cx ,dx
@@ -97,7 +97,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro NoSound_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 NoSound_PROC:
 	RegsPreserve		ax, dx

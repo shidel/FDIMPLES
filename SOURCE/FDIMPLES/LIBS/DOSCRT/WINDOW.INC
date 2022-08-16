@@ -38,7 +38,7 @@
 ; -----------------------------------------------------------------------------
 %imacro WindowMax_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 WindowMax_PROC:
 	RegsPreserve		ax
@@ -70,7 +70,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro Window_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 Window_PROC:
 	%ifdef DOSCRT_Range_Check
@@ -134,7 +134,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro GotoXY_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 GotoXY_PROC:
 	RegsPreserve		ax, bx, dx
@@ -184,7 +184,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro WhereXY_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 WhereXY_PROC:
 	RegsPreserve		ax, bx, cx
@@ -242,7 +242,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro WhereX_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 WhereX_PROC:
 	RegsPreserve		ax
@@ -281,7 +281,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro WhereY_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 WhereY_PROC:
 	RegsPreserve		ax

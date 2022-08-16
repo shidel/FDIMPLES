@@ -34,7 +34,7 @@
 ; -----------------------------------------------------------------------------
 %imacro PreWriteMouse_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 PreWriteMouse_PROC:
 	nop
@@ -47,7 +47,7 @@ __?SECT?__
 
 %imacro PostWriteMouse_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 PostWriteMouse_PROC:
 	nop

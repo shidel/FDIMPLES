@@ -58,8 +58,8 @@ SECTION .text
 				; including only the required LIBS directly.
 
 Main:
-	WriteStr		'Hello world!'
-	WriteCRLF
+ 	WriteStr		'Hello world!'
+ 	WriteCRLF
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions

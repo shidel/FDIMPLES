@@ -39,7 +39,7 @@
 ; -----------------------------------------------------------------------------
 %imacro GetCursor_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 GetCursor_PROC:
 	RegsPreserve		ax, bx, dx
@@ -75,7 +75,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro SetCursor_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 SetCursor_PROC:
 	RegsPreserve		ax
@@ -90,7 +90,7 @@ __?SECT?__
 
 %imacro SetCursorSmall_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 SetCursorSmall_PROC:
 	RegsPreserve		ax
@@ -111,7 +111,7 @@ __?SECT?__
 
 %imacro SetCursorHalf_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 SetCursorHalf_PROC:
 	RegsPreserve		ax
@@ -133,7 +133,7 @@ __?SECT?__
 
 %imacro SetCursorFull_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 SetCursorFull_PROC:
 	RegsPreserve		ax

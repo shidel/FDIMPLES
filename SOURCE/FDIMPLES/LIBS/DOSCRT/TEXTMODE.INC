@@ -43,7 +43,7 @@
 ; -----------------------------------------------------------------------------
 %imacro ProbeVideoCard_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 ProbeVideoCard_PROC:
 ; Assume at least monochrome MDA
@@ -149,7 +149,7 @@ ProbeVideoCard_PROC:
 	ret
 
 
-[section .bss]
+SECTION_BSS
 
 Video_Card:	resb		1
 Video_Options:	resb 		1
@@ -207,7 +207,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro InitialVideoSettings_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 InitialVideoSettings_PROC:
 	mov			ax, 0x0040
@@ -224,7 +224,7 @@ InitialVideoSettings_PROC:
 	mov			[Initial_Video_Attr], ah
 	ret
 
-[section .bss]
+SECTION_BSS
 
 Initial_Video_Cursor:	resw		1
 Initial_Video_Attr:	resb		1
@@ -252,7 +252,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro TextMode_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 TextMode_PROC:
 	PreWriteMouse
@@ -307,7 +307,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro ResetVideoSettings_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 ResetVideoSettings_PROC:
 	TextMode		original

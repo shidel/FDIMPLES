@@ -61,7 +61,7 @@
 ; -----------------------------------------------------------------------------
 %imacro StdOutCRLF_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 StdOutCRLF_PROC:
 	pushm			dx, ax
@@ -101,7 +101,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro StdOutStr_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 StdOutStr_PROC:
 ; DS:SI = Address of ASCIIz string
@@ -127,7 +127,7 @@ __?SECT?__
 
 	PROC_REQUIRE StdOutStr
 
-[section .data]
+SECTION_DATA
 
 	%ifstr %1
 
@@ -163,7 +163,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro StdOutHexByte_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 StdOutHexByte_PROC:
 	pushm			dx, cx, ax

@@ -34,7 +34,7 @@
 ; -----------------------------------------------------------------------------
 %imacro WriteChar_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 WriteChar_PROC:
 ; al = character to display
@@ -183,7 +183,7 @@ __?SECT?__
 
 	PROC_REQUIRE WriteChar
 
-[section .procs]
+SECTION_PROC
 
 WriteCRLF_PROC:
 	RegsPreserve		ax
@@ -226,7 +226,7 @@ __?SECT?__
 
 	PROC_REQUIRE WriteChar
 
-[section .procs]
+SECTION_PROC
 
 WriteStr_PROC:
 ; DS:SI = Address of ASCIIz string
@@ -251,7 +251,7 @@ __?SECT?__
 	PROC_REQUIRE WriteChar
 	PROC_REQUIRE WriteStr
 
-[section .data]
+SECTION_DATA
 
 	%ifstr %1
 
@@ -290,7 +290,7 @@ __?SECT?__
 
 	PROC_REQUIRE WriteChar
 
-[section .procs]
+SECTION_PROC
 
 WriteHexByte_PROC:
 	RegsPreserve		dx, cx

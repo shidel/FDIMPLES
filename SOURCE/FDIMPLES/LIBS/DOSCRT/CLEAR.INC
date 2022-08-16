@@ -38,7 +38,7 @@
 ; -----------------------------------------------------------------------------
 %imacro ClrScr_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 ClrScr_PROC:
 	RegsPreserve		ax, bx, cx, dx
@@ -81,7 +81,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro ClrEOL_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 ClrEOL_PROC:
 	RegsPreserve		ax, bx, cx, dx

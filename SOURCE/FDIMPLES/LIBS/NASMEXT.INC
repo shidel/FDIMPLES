@@ -40,6 +40,11 @@
 %idefine LF 0x0a
 %idefine CRLF CR,LF
 ; -----------------------------------------------------------------------------
+%define SECTION_CODE [section .text]
+%define SECTION_PROC [section .proc]
+%define SECTION_DATA [section .data]
+%define SECTION_BSS  [section .bss]
+; -----------------------------------------------------------------------------
 %imacro movip 1
 ; mov	ip (+3 bytes) into register.
 	call %%ShortCall
@@ -199,7 +204,7 @@
 	%ifndef TEMP_BUFFER_%1_DEFINED
 		%idefine TEMP_BUFFER_%1_DEFINED
 
-		[section .bss]
+		SECTION_BSS
 
 		TEMP_BUFFER_%1:
 			resb	%1

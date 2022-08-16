@@ -42,7 +42,7 @@
 ; -----------------------------------------------------------------------------
 %imacro Delay_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 Delay_PROC:
 	RegsPreserve		cx, dx

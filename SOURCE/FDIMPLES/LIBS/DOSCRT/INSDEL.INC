@@ -41,7 +41,7 @@
 ; -----------------------------------------------------------------------------
 %imacro ScrollWindowUpDown_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 ScrollWindowUpDown_PROC:
 	RegsPreserve		bx, cx, dx
@@ -90,7 +90,7 @@ __?SECT?__
 
 	PROC_REQUIRE 		ScrollWindowUpDown
 
-[section .procs]
+SECTION_PROC
 
 DelLine_PROC:
 	RegsPreserve		ax
@@ -119,7 +119,7 @@ __?SECT?__
 
 	PROC_REQUIRE 		ScrollWindowUpDown
 
-[section .procs]
+SECTION_PROC
 
 InsLine_PROC:
 	RegsPreserve		ax
@@ -148,7 +148,7 @@ __?SECT?__
 
 	PROC_REQUIRE 		ScrollWindowUpDown
 
-[section .procs]
+SECTION_PROC
 
 WindowScrollUp_PROC:
 	RegsPreserve		ax
@@ -177,7 +177,7 @@ __?SECT?__
 
 	PROC_REQUIRE 		ScrollWindowUpDown
 
-[section .procs]
+SECTION_PROC
 
 WindowScrollDown_PROC:
 	RegsPreserve		ax

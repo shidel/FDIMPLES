@@ -40,7 +40,7 @@
 ; -----------------------------------------------------------------------------
 %imacro TextColor_RESET_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 TextColor_RESET_PROC:
 	RegsPreserve		ax
@@ -57,7 +57,7 @@ __?SECT?__
 
 %imacro TextColor_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 TextColor_PROC:
 	RegsPreserve		ax
@@ -100,7 +100,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro TextBackground_RESET_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 TextBackground_RESET_PROC:
 	RegsPreserve		ax
@@ -117,7 +117,7 @@ __?SECT?__
 
 %imacro TextBackground_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 TextBackground_PROC:
 	RegsPreserve		ax, cx
@@ -163,7 +163,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro TextAttr_RESET_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 TextAttr_RESET_PROC:
 	RegsPreserve		ax
@@ -221,7 +221,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro NormVideo_INTERNAL 0
 
-[section .procs]
+SECTION_PROC
 
 NormVideo_PROC:
 	push			ax
