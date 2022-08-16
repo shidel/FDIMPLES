@@ -23,7 +23,6 @@ Requirements:
 Minimum Build Requirements:
 
 	NASM 2.15.05 for DOS, or later
-	V8Power Tools 2022-01-10 for DOS, or later
 	UPX 3.96 for DOS, or later
 
 # Contributing
