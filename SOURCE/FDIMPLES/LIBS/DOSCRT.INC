@@ -156,6 +156,21 @@
 ; INPUT: %1 - XY (prefers ax)
 ; REGS:  ax, bx, dx
 
+; Return the cursor position within window
+; MACRO: WhereXY 1
+; OUTPUT: %1 - XY (prefers dx)
+; REGS:  ax, bx, cx, dx
+
+; Return the cursor column position within window
+; MACRO: WhereX 1
+; OUTPUT: %1 - X (prefers dl)
+; REGS:  ax, bx, cx, dl
+
+; Return the cursor row position within window
+; MACRO: WhereY 1
+; OUTPUT: %1 - Y (prefers dh)
+; REGS:  ax, bx, cx, dh
+
 %include "DOSCRT/WINDOW.INC"
 
 ; Clear the remaining portion of the current line

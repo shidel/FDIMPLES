@@ -176,9 +176,148 @@ __?SECT?__
 	%endif
 
 %endmacro
+; -----------------------------------------------------------------------------
+; Return the cursor position within window
+; MACRO: WhereXY 1
+; OUTPUT: %1 - XY (prefers dx)
+; REGS:  ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro WhereXY_INTERNAL 0
+
+[section .procs]
+
+WhereXY_PROC:
+	RegsPreserve		ax, bx, cx
+	mov			bh, [Video_Page]
+	mov			ah, 0x03
+	mov			ax, [Video_WindMin]
+	; check if somehow cursor is outside of window
+	%ifdef DOSCRT_Range_Check
+		cmp		dl, al
+		jnb		%%NotLessX
+		mov		dl, al
+	%%NotLessX:
+		cmp		dh, ah
+		jnb		%%NotLessY
+		mov		dh, ah
+	%%NotLessY:
+		mov		cx, [Video_WindMax]
+		cmp		dl, cl
+		jna		%%NotMoreX
+		mov		dl, cl
+	%%NotMoreX:
+		cmp		dh, ch
+		jna		%%NotMoreY
+		mov		dh, ch
+	%%NotMoreY:
+	%endif
+	sub			dx, ax
+	int			0x10
+	RegsRestore		ax, bx, cx
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro WhereXY 1
+
+	PROC_REQUIRE WhereXY
+
+	%ifnidni %1, dx
+		RegsPreserve	dx
+	%endif
+	call 			WhereXY_PROC
+	movndef			%1, dx
+	%ifnidni %1, ax
+		RegsRestore	dx
+	%endif
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Return the cursor column position within window
+; MACRO: WhereX 1
+; OUTPUT: %1 - X (prefers dl)
+; REGS:  ax, bx, cx, dl
+; -----------------------------------------------------------------------------
+%imacro WhereX_INTERNAL 0
+
+[section .procs]
+
+WhereX_PROC:
+	RegsPreserve		ax
+	push			dx
+	call			WhereXY
+	mov			al, dl
+	pop			dx
+	mov			dl, al
+	RegsRestore		ax
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro WhereX 1
+
+	PROC_REQUIRE WhereX
+	PROC_REQUIRE WhereXY
+
+	%ifnidni %1, dx
+		RegsPreserve	dx
+	%endif
+	call 			WhereX_PROC
+	movndef			%1, dl
+	%ifnidni %1, ax
+		RegsRestore	dx
+	%endif
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Return the cursor row position within window
+; MACRO: WhereY 1
+; OUTPUT: %1 - Y (prefers dh)
+; REGS:  ax, bx, cx, dh
+; -----------------------------------------------------------------------------
+%imacro WhereY_INTERNAL 0
+
+[section .procs]
+
+WhereY_PROC:
+	RegsPreserve		ax
+	push			dx
+	call			WhereXY
+	mov			al, dh
+	pop			dx
+	mov			dh, al
+	RegsRestore		ax
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro WhereY 1
+
+	PROC_REQUIRE WhereY
+	PROC_REQUIRE WhereXY
+
+	%ifnidni %1, dx
+		RegsPreserve	dx
+	%endif
+	call 			WhereY_PROC
+	movndef			%1, dh
+	%ifnidni %1, ax
+		RegsRestore	dx
+	%endif
+
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE WindowMax
 	PROC_PROVIDE Window
 	PROC_PROVIDE GotoXY
+	PROC_PROVIDE WhereXY
+	PROC_PROVIDE WhereX
+	PROC_PROVIDE WhereY
 %endif

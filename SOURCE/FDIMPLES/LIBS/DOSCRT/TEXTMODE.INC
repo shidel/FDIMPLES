@@ -67,8 +67,6 @@ ProbeVideoCard_PROC:
 		mov		ax, [es:0x004e]
 		mov		[Video_Offset], ax
 	%endif
-	mov			ax, [es:0x0060]
-	mov			[Video_Cursor], ax
 
 	mov			al, [es:0x0049]
 	mov			[Video_Mode], al
@@ -179,7 +177,6 @@ Video_HTab:		resb		1
 Video_VTab:		resb		1
 
 ; Initial state of these variables are created by InitialVideoSettings
-Video_Cursor:		resw		1
 Video_PageAttr:
 Video_Attr:		resb		1
 Video_Page:		resb		1
