@@ -116,14 +116,24 @@ __?SECT?__
 
 %endmacro
 
-%imacro Window 2
+%imacro Window 1-2
 
-	PROC_REQUIRE Window
+	%if %0 = 1
+		%ifidni %1, maximum
+			WindowMax
+		%elifidni %1, max
+			WindowMax
+		%else
+			%error Invalid window dimension or option parameter
+		%endif
+	%else
+		PROC_REQUIRE Window
 
-	RegsPreserve 		ax, dx
-	movndef	     		ax, %1, dx, %2
-	call			Window_PROC
-	RegsRestore  		ax, dx
+		RegsPreserve 		ax, dx
+		movndef	     		ax, %1, dx, %2
+		call			Window_PROC
+		RegsRestore  		ax, dx
+	%endif
 
 %endmacro
 ; -----------------------------------------------------------------------------

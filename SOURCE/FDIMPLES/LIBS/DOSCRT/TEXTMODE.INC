@@ -49,8 +49,10 @@ ProbeVideoCard_PROC:
 ; Assume at least monochrome MDA
 	%ifdef Support_Direct_Video
 		mov		[Video_Segment], word 0xb000
+		mov		[Video_Offset], word 0x0000
 	%endif
 	mov			[Video_Card], byte Video_MDA
+	mov			[Video_Cursor_State], word 0x0000
 
 ; If color assume at least CGA
 	mov			ax, 0x0040
@@ -68,6 +70,8 @@ ProbeVideoCard_PROC:
 		mov		[Video_Offset], ax
 	%endif
 
+	mov			ax, [es:0x0060]
+	mov			[Video_Cursor], ax
 	mov			al, [es:0x0049]
 	mov			[Video_Mode], al
 	mov			bh, [es:0x0062]
@@ -175,6 +179,9 @@ Video_WindMaxY:		resb		1
 Video_Tab:
 Video_HTab:		resb		1
 Video_VTab:		resb		1
+
+Video_Cursor:		resw		1
+Video_Cursor_State:	resw		1
 
 ; Initial state of these variables are created by InitialVideoSettings
 Video_PageAttr:

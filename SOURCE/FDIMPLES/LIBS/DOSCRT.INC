@@ -234,7 +234,9 @@
 
 ; Set the current cursor shape
 ; MACRO:  SetCursor 1
-; INPUT: %1 = Cursor Shape (prefers cx) (accepts: original, small, half, full)
+; INPUT:  %1 = Cursor Shape (prefers cx) (accepts: original, small, half, full)
+;	  Also, it uses HIDE, SHOW with counters. 2 hides will need 2 shows.
+;	  Like the cursor itself, the counters are reset on mode changes.
 ; REGS:   ax, cx
 
 %include "DOSCRT/CURSOR.INC"

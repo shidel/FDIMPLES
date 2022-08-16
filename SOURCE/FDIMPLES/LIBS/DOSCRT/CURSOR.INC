@@ -70,7 +70,9 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 ; Set the current cursor shape
 ; MACRO:  SetCursor 1
-; INPUT: %1 = Cursor Shape (prefers cx) (accepts: original, small, half, full)
+; INPUT:  %1 = Cursor Shape (prefers cx) (accepts: original, small, half, full)
+;	  Also, it uses HIDE, SHOW with counters. 2 hides will need 2 shows.
+;	  Like the cursor itself, the counters are reset on mode changes.
 ; REGS:   ax, cx
 ; -----------------------------------------------------------------------------
 %imacro SetCursor_INTERNAL 0
@@ -79,10 +81,48 @@ SECTION_PROC
 
 SetCursor_PROC:
 	RegsPreserve		ax
+SetCursor_PROC1:
+	mov			[Video_Cursor], cx
+	cmp			[Video_Cursor_State], word 0x0000
+	jl			SetCursor_PROC3
+SetCursor_PROC2:
 	mov			ah, 0x01		; Set cursor shape
 	int			0x10
+SetCursor_PROC3:
 	RegsRestore		ax
 	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro SetCursorShow_INTERNAL 0
+
+SECTION_PROC
+
+SetCursorShow_PROC:
+	RegsPreserve  		ax
+	inc			word [Video_Cursor_State]
+	cmp			[Video_Cursor_State], word 0x0000
+	jne			SetCursor_PROC3
+	mov			cx, [Video_Cursor]
+	jmp			SetCursor_PROC2
+
+__?SECT?__
+
+%endmacro
+
+%imacro SetCursorHide_INTERNAL 0
+
+SECTION_PROC
+
+SetCursorHide_PROC:
+	RegsPreserve  		ax
+	dec			word [Video_Cursor_State]
+	cmp			[Video_Cursor_State], word -1
+	jne			SetCursor_PROC3
+	mov			cx, 0x2000
+	jmp			SetCursor_PROC2
 
 __?SECT?__
 
@@ -102,8 +142,9 @@ SetCursorSmall_PROC:
 	pop			es
 	mov			ch, cl
 	sub			ch, 2
-	RegsRestore		ax
-	ret
+	jmp			SetCursor_PROC1
+	; RegsRestore		ax
+	; ret
 
 __?SECT?__
 
@@ -124,8 +165,9 @@ SetCursorHalf_PROC:
 	mov			ah, al
 	shr			ah, 1
 	mov			cx, ax
-	RegsRestore		ax
-	ret
+	jmp			SetCursor_PROC1
+	; RegsRestore		ax
+	; ret
 
 __?SECT?__
 
@@ -144,8 +186,9 @@ SetCursorFull_PROC:
 	mov			cx, [es:0x0085]
 	pop			es
 	xor			ch, ch
-	RegsRestore		ax
-	ret
+	jmp			SetCursor_PROC1
+	; RegsRestore		ax
+	; ret
 
 __?SECT?__
 
@@ -159,8 +202,10 @@ __?SECT?__
 		RegsPreserve 	cx
 		%ifidni %1, original
 			mov		cx, [Initial_Video_Cursor]
+			call 		SetCursor_PROC
 		%elifidni %1, invisible
 			mov		cx, 0x2000
+			call 		SetCursor_PROC
 		%elifidni %1, small
 			PROC_REQUIRE 	SetCursorSmall
 			call		SetCursorSmall_PROC
@@ -170,13 +215,19 @@ __?SECT?__
 		%elifidni %1, full
 			PROC_REQUIRE 	SetCursorFull
 			call		SetCursorFull_PROC
+		%elifidni %1, hide
+			PROC_REQUIRE 	SetCursorHide
+			call		SetCursorHide_PROC
+		%elifidni %1, show
+			PROC_REQUIRE 	SetCursorShow
+			call		SetCursorShow_PROC
 		%else
-			movndef		cx, %1
+			movndef	cx, 	%1
+			call 		SetCursor_PROC
 		%endif
-	%endif
-	call 			SetCursor_PROC
-	%ifnidni %1, cx
 		RegsRestore 	cx
+	%else
+		call 		SetCursor_PROC
 	%endif
 
 %endmacro
@@ -187,4 +238,6 @@ __?SECT?__
 	PROC_PROVIDE SetCursorSmall
 	PROC_PROVIDE SetCursorHalf
 	PROC_PROVIDE SetCursorFull
+	PROC_PROVIDE SetCursorShow
+	PROC_PROVIDE SetCursorHide
 %endif

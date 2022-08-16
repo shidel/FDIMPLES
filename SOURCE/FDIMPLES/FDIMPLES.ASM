@@ -57,11 +57,56 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
+	Window			max
+	SetCursor		small
 Main:
+	TextColor		clYellow
  	WriteStr		'Hello world!'
+	TextColor		original
  	WriteCRLF
+KeyLoop:
+	ReadKey			ax
+	push			ax
+	WriteChar		al
+	pop			ax
+	cmp			al, 27
+	je			Finished
+	cmp			al, '+'
+	je			PlusKey
+	cmp			al, '-'
+	je			MinusKey
+	cmp			al, 'a'
+	je			AKey
+	cmp			al, 'b'
+	je			BKey
+	cmp			al, 'c'
+	je			CKey
+	jmp			KeyLoop
+AKey:
+	SetCursor		small
+	jmp			State
+BKey:
+	SetCursor		half
+	jmp			State
+CKey:
+	SetCursor		full
+	jmp			State
+PlusKey:
+	SetCursor		show
+	jmp			State
+MinusKey:
+	SetCursor		hide
+State:
+	WriteChar		'>'
+	WriteHexWord		[Video_Cursor_State]
+	WriteChar		':'
+	WriteHexWord		[Video_Cursor]
+	WriteCRLF
+
+	jmp			KeyLoop
 
 Finished:
+	ResetVideoSettings
 	Terminate		0 ; Automatically includes used LIB functions
 
 ; 	Include_LIB_Functions	; Include any additional LIB functions
