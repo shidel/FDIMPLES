@@ -227,6 +227,18 @@
 ; REGS:   ax, bx, cx, dx
 %include "DOSCRT/WRITE.INC"
 
+; Return the current cursor shape
+; MACRO:  GetCursor 1
+; OUTPUT: %1 = Cursor Shape (prefers cx)
+; REGS:   ax, bx, cx, dx
+
+; Set the current cursor shape
+; MACRO:  SetCursor 1
+; INPUT: %1 = Cursor Shape (prefers cx) (accepts: original, small, half, full)
+; REGS:   ax, cx
+
+%include "DOSCRT/CURSOR.INC"
+
 %include "DOSCRT/MOUSE.INC"
 ; -----------------------------------------------------------------------------
 ; Standard text video display mode constants

@@ -189,7 +189,8 @@ __?SECT?__
 WhereXY_PROC:
 	RegsPreserve		ax, bx, cx
 	mov			bh, [Video_Page]
-	mov			ah, 0x03
+	mov			ah, 0x03		; Get cursor shape/pos
+	int			0x10
 	mov			ax, [Video_WindMin]
 	; check if somehow cursor is outside of window
 	%ifdef DOSCRT_Range_Check
@@ -212,7 +213,6 @@ WhereXY_PROC:
 	%%NotMoreY:
 	%endif
 	sub			dx, ax
-	int			0x10
 	RegsRestore		ax, bx, cx
 	ret
 
@@ -247,7 +247,7 @@ __?SECT?__
 WhereX_PROC:
 	RegsPreserve		ax
 	push			dx
-	call			WhereXY
+	call			WhereXY_PROC
 	mov			al, dl
 	pop			dx
 	mov			dl, al
@@ -286,7 +286,7 @@ __?SECT?__
 WhereY_PROC:
 	RegsPreserve		ax
 	push			dx
-	call			WhereXY
+	call			WhereXY_PROC
 	mov			al, dh
 	pop			dx
 	mov			dh, al

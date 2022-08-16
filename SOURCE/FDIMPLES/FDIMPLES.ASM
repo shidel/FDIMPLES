@@ -59,6 +59,7 @@ SECTION .text
 
 Main:
 	WriteStr		'Hello world!'
+	WriteCRLF
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions
