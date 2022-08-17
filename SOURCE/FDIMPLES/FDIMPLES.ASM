@@ -57,6 +57,7 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
+%if 0 = 1
 	Window			max
 	SetCursor		small
 	mov			ax, [Mouse_Button_Count]
@@ -115,9 +116,10 @@ State:
 	WriteCRLF
 
 	jmp			KeyLoop
+%endif
 
 Finished:
-	VideoResetSettings
+;	VideoResetSettings
 	Terminate		0 ; Automatically includes used LIB functions
 
 ; 	Include_LIB_Functions	; Include any additional LIB functions

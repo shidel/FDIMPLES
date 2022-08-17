@@ -49,17 +49,39 @@ MouseInitialize_PROC:
 	cmp			bx, ax
 	jbe			%%SetMouseStatus
 	inc			ax
-	cmp			bx, 0xffff			; sometimes two buttons
+	cmp			bx, 0xffff		; sometimes two buttons
 	je			%%SetMouseStatus
 	mov			ax, bx
 %%SetMouseStatus:
 	mov			[Mouse_Button_Count], ax
+	test			ax, ax
+	jz			%%CheckDone			; No mouse found
+	RegsPreserve		cx, dx, es
+	mov			cx, 0xffff
+	push			cs
+	pop			es
+	mov			dx, MouseHandler_INTERRUPT
+	mov			ax, 0x0014
+	int			0x33
+	mov			[Mouse_Original_Mask], cx
+	mov			[Mouse_Original_Handler], dx
+	mov			[Mouse_Original_Handler + 2], es
+	RegsRestore		cx, dx, es
+%%CheckDone:
+
 	RegsRestore		bx
 	ret
+
+MouseHandler_INTERRUPT:
+	iret
+
 
 SECTION_BSS
 
 Mouse_Button_Count:		resw 1
+Mouse_Original_Mask:		resw 1
+Mouse_Original_Handler:		resw 2
+
 
 __?SECT?__
 
@@ -76,7 +98,46 @@ __?SECT?__
 %endif
 
 %endmacro
+; -----------------------------------------------------------------------------
+%imacro MouseFinalize_INTERNAL 0
 
+SECTION_PROC
+
+MouseFinalize_PROC:
+	mov	dl, '-'
+	cmp     [Mouse_Button_Count], word 0x0000
+	je	%%Done
+
+	RegsPreserve		cx, dx, es
+	mov			cx, [Mouse_Original_Mask]
+	mov			dx, [Mouse_Original_Handler]
+	mov			es, [Mouse_Original_Handler + 2]
+	mov			ax, 0x0014
+	int			0x33
+	RegsRestore		cx, dx, es
+
+	mov	dl, 'X'
+
+%%Done:
+	mov	ah, 0x02
+	int	0x21
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro MouseFinalize 0
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseFinalize
+
+	call 			MouseFinalize_PROC
+
+%endif
+
+%endmacro
 ; -----------------------------------------------------------------------------
 %imacro PreWriteMouse_INTERNAL 0
 

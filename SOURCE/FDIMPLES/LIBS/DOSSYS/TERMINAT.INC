@@ -42,13 +42,22 @@
 %imacro Terminate 1-*
 
 %if %0 > 1
+	regpush			ax
 	%rep  %0 - 1
 	%rotate 1
 		push		si
-		StdOutStr_INTERNAL %1
+		StdOutStr_SUBMAC %1
 		pop		si
 	%endrep
 	%rotate 1
+	regpop			ax
+%endif
+
+%ifdef MouseInitialize_REQUIRED
+
+	push			ax
+	MouseFinalize
+	pop			ax
 %endif
 
 %ifnum %1
