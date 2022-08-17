@@ -37,15 +37,15 @@
 ; For example, after mode changes. Warning: If VESA is enabled, the macro will
 ; use a shared temporary buffer in the BSS.
 ; Registers AX, BX, CX, DX, ES, DI are not preserved.
-; MACRO:  ProbeVideoCard 0
+; MACRO:  VideoInitializeState 0
 ; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
 ; -----------------------------------------------------------------------------
-%imacro ProbeVideoCard_INTERNAL 0
+%imacro VideoInitializeState_INTERNAL 0
 
 SECTION_PROC
 
-ProbeVideoCard_PROC:
+VideoInitializeState_PROC:
 ; Assume at least monochrome MDA
 	%ifdef Support_Direct_Video
 		mov		[Video_Segment], word 0xb000
@@ -197,26 +197,25 @@ __?SECT?__
 
 %endmacro
 
-%imacro ProbeVideoCard 0
+%imacro VideoInitializeState 0
 
-	PROC_REQUIRE		ProbeVideoCard
-	call 			ProbeVideoCard_PROC
+	PROC_REQUIRE		VideoInitializeState
+	call 			VideoInitializeState_PROC
 
 %endmacro
 ; -----------------------------------------------------------------------------
 ; Probes for current video settings. It needs called prior to any other DOSCRT
-; macros. It should really be called only once at startup. That is normally
-; handled by DOSCRT.INC.
-; Registers AX, BX, CX, DX, ES, DI are not preserved.
-; MACRO:  InitialVideoSettings 0
-; INPUT:  none
+; macros. It probably should only be called only once at startup. It is called
+; automatically. But if for some reason you need to call it again, its there.
+; MACRO:  VideoInitializeOriginals 0
 ; OUTPUT: undefined, sets data in BSS.
+; REGS:	  AX, BX, ES (NEVER preserved)
 ; -----------------------------------------------------------------------------
-%imacro InitialVideoSettings_INTERNAL 0
+%imacro VideoInitializeOriginals_INTERNAL 0
 
 SECTION_PROC
 
-InitialVideoSettings_PROC:
+VideoInitializeOriginals_PROC:
 	mov			ax, 0x0040
 	push 			ax
 	pop			es
@@ -242,11 +241,11 @@ __?SECT?__
 
 %endmacro
 
-%imacro InitialVideoSettings 0
+%imacro VideoInitializeOriginals 0
 
-	PROC_REQUIRE		InitialVideoSettings
+	PROC_REQUIRE		VideoInitializeOriginals
 
-	call 			InitialVideoSettings_PROC
+	call 			VideoInitializeOriginals_PROC
 
 %endmacro
 ; -----------------------------------------------------------------------------
@@ -274,7 +273,7 @@ TextMode_PROC:
 	int			0x10
 	; Must call directly, otherwise NASM may embed the macro's code here
 	; Instead of later (where we want it)
-	call			ProbeVideoCard_PROC
+	call			VideoInitializeState_PROC
 	call			WindowMax_PROC
 	popm			ax, bx
 	mov			bh, [es:0x0049]
@@ -308,15 +307,15 @@ __?SECT?__
 ; Restores video settings, to original mode, page, and cursor if needed.
 ; Registers are not preserved. Should probably call before exit. Automatically,
 ; calls ProbeVideoSettings to update data.
-; MACRO:  ResetVideoSettings 0
+; MACRO:  VideoResetSettings 0
 ; INPUT:  none
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
-%imacro ResetVideoSettings_INTERNAL 0
+%imacro VideoResetSettings_INTERNAL 0
 
 SECTION_PROC
 
-ResetVideoSettings_PROC:
+VideoResetSettings_PROC:
 	TextMode		original
 	mov			ah, [es:0x0062]
 	mov			al, [Initial_Video_Page]
@@ -338,25 +337,25 @@ ResetVideoSettings_PROC:
 	mov			[Video_Attr], al
 	; Must call directly, otherwise NASM may embed the macro's code here
 	; Instead of later (where we want it)
-	call			ProbeVideoCard_PROC
+	call			VideoInitializeState_PROC
 	ret
 
 __?SECT?__
 
 %endmacro
 
-%imacro ResetVideoSettings 0
+%imacro VideoResetSettings 0
 
-	PROC_REQUIRE		InitialVideoSettings
-	PROC_REQUIRE 		ResetVideoSettings
+	PROC_REQUIRE		VideoInitializeOriginals
+	PROC_REQUIRE 		VideoResetSettings
 
-	call 			ResetVideoSettings_PROC
+	call 			VideoResetSettings_PROC
 
 %endmacro
 ; *****************************************************************************
 %else
-	PROC_PROVIDE		ProbeVideoCard
-	PROC_PROVIDE		InitialVideoSettings
-	PROC_PROVIDE 		ResetVideoSettings
+	PROC_PROVIDE		VideoInitializeState
+	PROC_PROVIDE		VideoInitializeOriginals
+	PROC_PROVIDE 		VideoResetSettings
 	PROC_PROVIDE 		TextMode
 %endif

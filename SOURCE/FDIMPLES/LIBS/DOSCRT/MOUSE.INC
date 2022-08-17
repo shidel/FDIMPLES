@@ -32,6 +32,52 @@
 %ifndef MOUSE_INC_DEFINED
 %define MOUSE_INC_DEFINED
 ; -----------------------------------------------------------------------------
+%imacro MouseInitialize_INTERNAL 0
+
+SECTION_PROC
+
+MouseInitialize_PROC:
+	RegsPreserve		bx
+	%ifdef DOS_BUG_FIXES
+		; See -- https://fd.lod.bz/rbil/interrup/io_mouse/330000.html
+	%endif
+	xor			ax, ax
+	int			0x33
+	test			ax, ax
+	jz			%%SetMouseStatus
+	mov			ax, 0x0001		; other than two btns
+	cmp			bx, ax
+	jbe			%%SetMouseStatus
+	inc			ax
+	cmp			bx, 0xffff			; sometimes two buttons
+	je			%%SetMouseStatus
+	mov			ax, bx
+%%SetMouseStatus:
+	mov			[Mouse_Button_Count], ax
+	RegsRestore		bx
+	ret
+
+SECTION_BSS
+
+Mouse_Button_Count:		resw 1
+
+__?SECT?__
+
+%endmacro
+
+%imacro MouseInitialize 0
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseInitialize
+
+	call 			MouseInitialize_PROC
+
+%endif
+
+%endmacro
+
+; -----------------------------------------------------------------------------
 %imacro PreWriteMouse_INTERNAL 0
 
 SECTION_PROC
@@ -45,17 +91,6 @@ __?SECT?__
 
 %endmacro
 
-%imacro PostWriteMouse_INTERNAL 0
-
-SECTION_PROC
-
-PostWriteMouse_PROC:
-	nop
-	ret
-
-__?SECT?__
-
-%endmacro
 ; -----------------------------------------------------------------------------
 %imacro PreWriteMouse 0-2
 
@@ -68,6 +103,18 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
+%imacro PostWriteMouse_INTERNAL 0
+
+SECTION_PROC
+
+PostWriteMouse_PROC:
+	nop
+	ret
+
+__?SECT?__
+
+%endmacro
+
 %imacro PostWriteMouse 0
 
 %ifdef Support_Mouse
@@ -80,6 +127,9 @@ __?SECT?__
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE		MouseInitialize
+	PROC_PROVIDE		MouseFinalize
+
 	PROC_PROVIDE		PreWriteMouse
 	PROC_PROVIDE		PostWriteMouse
 %endif

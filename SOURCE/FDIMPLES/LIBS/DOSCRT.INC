@@ -45,13 +45,21 @@
 ; prior to any other DOSCRT macros. However, it can be called multiple times.
 ; For example, after mode changes. Warning: If VESA is enabled, the macro will
 ; use a shared temporary buffer in the BSS.
-; MACRO:  ProbeVideoCard 0
+; MACRO:  VideoInitializeState 0
 ; OUTPUT: undefined, sets data in BSS.
 ; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
 
 ; Probes for current video settings. It needs called prior to any other DOSCRT
-; macros. It should really be called only once at startup.
-; MACRO:  InitialVideoSettings 0
+; macros. It probably should only be called only once at startup. It is called
+; automatically. But if for some reason you need to call it again, its there.
+; MACRO:  VideoInitializeOriginals 0
+; OUTPUT: undefined, sets data in BSS.
+; REGS:	  AX, BX, ES (NEVER preserved)
+
+; Restores video settings, to original mode, page, and cursor if needed.
+; Requires using InitialVideoSettings macro during startup. Should probably
+; call before exit. Automatically, calls ProbeVideoSettings to update data.
+; MACRO:  VideoResetSettings 0
 ; OUTPUT: undefined, sets data in BSS.
 ; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
 
@@ -60,13 +68,6 @@
 ; MACRO:  TextMode 1
 ; INPUT:  %1 = video mode (prefers al), original returns it to Initial Setting
 ; OUTPUT: Carry Flag set if error occurred.
-; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
-
-; Restores video settings, to original mode, page, and cursor if needed.
-; Requires using InitialVideoSettings macro during startup. Should probably
-; call before exit. Automatically, calls ProbeVideoSettings to update data.
-; MACRO:  ResetVideoSettings 0
-; OUTPUT: undefined, sets data in BSS.
 ; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
 
 %include "DOSCRT/TEXTMODE.INC"
@@ -225,6 +226,7 @@
 ; MACRO:  WriteHexWord 1-*
 ; INPUT:  %1+ = word to display (prefers ax)
 ; REGS:   ax, bx, cx, dx
+
 %include "DOSCRT/WRITE.INC"
 
 ; Return the current cursor shape
@@ -277,9 +279,10 @@
 	%define DOSCRT_INIT_CODE
 		mov [Video_Options], byte vcbDirect + vcbScroll ; + vcbControls
 		mov [Video_Tab], word 0x0408
-		ProbeVideoCard
+		VideoInitializeState
 		WindowMax
-		InitialVideoSettings
+		VideoInitializeOriginals
+		MouseInitialize
 	%endif
 %endif
 ; -----------------------------------------------------------------------------

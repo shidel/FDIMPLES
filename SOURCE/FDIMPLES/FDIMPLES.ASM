@@ -45,7 +45,7 @@ SECTION .text
 %undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
 %undef Support_BIOS_Timer	; Use high precision int15 timer if possible
 %undef Support_Direct_Video	; Direct video addressing
-%undef Support_Mouse		; Include Mouse support
+; %undef Support_Mouse		; Include Mouse support
 %undef Video_MCGA		; Check for MCGA support
 %undef Video_VGA		; Check for VGA support
 %undef Video_VESA		; Check for SuperVGA support
@@ -59,6 +59,17 @@ SECTION .text
 
 	Window			max
 	SetCursor		small
+	mov			ax, [Mouse_Button_Count]
+	test			ax, ax
+	jnz			MouseFound
+ 	WriteStr		'Mouse not present!'
+ 	WriteCRLF
+	jmp			Main
+MouseFound:
+	WriteHexByte		al
+ 	WriteStr		' button mouse present!'
+ 	WriteCRLF
+
 Main:
 	TextColor		clYellow
  	WriteStr		'Hello world!'
@@ -106,7 +117,7 @@ State:
 	jmp			KeyLoop
 
 Finished:
-	ResetVideoSettings
+	VideoResetSettings
 	Terminate		0 ; Automatically includes used LIB functions
 
 ; 	Include_LIB_Functions	; Include any additional LIB functions
