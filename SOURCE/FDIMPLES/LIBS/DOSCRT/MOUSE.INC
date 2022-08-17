@@ -185,17 +185,17 @@ MouseHandler_INTERRUPT:
 	pop			ds
 
 	; Scale X movement
-	xor			dx, dx
-	mov			ax, si
 	mov			cx, [Mouse_DivX]
-	div			cx
+	mov			ax, si
+	cwd
+	idiv			cx
 	mov			si, ax
 
 	; Scale Y movement
-	xor			dx, dx
+	mov			cx, [Mouse_DivY]
 	mov			ax, di
-	mov			cx, [Mouse_DivX]
-	div			cx
+	cwd
+	idiv			cx
 	mov			di, ax
 
 	; Validate New Mouse X position
@@ -204,7 +204,6 @@ MouseHandler_INTERRUPT:
 	cmp			cx, [Mouse_MinX]
 	jge			%%NotLowX
 	mov			cx, [Mouse_MinX]
-	jmp			%%NotHighX
 %%NotLowX:
 	cmp			cx, [Mouse_MaxX]
 	jle			%%NotHighX
@@ -217,7 +216,6 @@ MouseHandler_INTERRUPT:
 	cmp			dx, [Mouse_MinY]
 	jge			%%NotLowY
 	mov			dx, [Mouse_MinY]
-	jmp			%%NotHighY
 %%NotLowY:
 	cmp			dx, [Mouse_MaxY]
 	jle			%%NotHighY
@@ -230,7 +228,8 @@ MouseHandler_INTERRUPT:
 	cmp			dx, [Mouse_Position_Y]
 	je			%%MouseNotMoved
 %%MouseMoved:
-
+	mov			[Mouse_Position_X], cx
+	mov			[Mouse_Position_Y], dx
 
 %%MouseNotMoved:
 	mov			[Mouse_Button_State], bx

@@ -76,10 +76,16 @@ Main:
  	WriteStr		'Hello world!'
 	TextColor		original
  	WriteCRLF
+ 	WriteHexWord		[Mouse_DivX]
+ 	WriteCRLF
+ 	WriteHexWord		[Mouse_DivY]
+ 	WriteCRLF
 WaitKeyPress:
-	mov			al, [Mouse_Position_X]
-	mov			ah, [Mouse_Position_Y]
-	GotoXY			ax
+	GotoXY			0x0101
+	WriteHexWord 		[Mouse_Position_X]
+	WriteChar		'/'
+	WriteHexWord		[Mouse_Position_Y]
+	WriteChar		':'
 	mov			al, [Mouse_Button_State]
 	add			al, 'A'
 	WriteChar		al
@@ -92,4 +98,4 @@ Finished:
 ;	VideoResetSettings
 	Terminate		0 ; Automatically includes used LIB functions
 
- 	Include_LIB_Functions	; Include any additional LIB functions
+; 	Include_LIB_Functions	; Include any additional LIB functions
