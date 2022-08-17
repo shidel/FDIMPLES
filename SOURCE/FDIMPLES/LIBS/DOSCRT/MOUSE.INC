@@ -49,34 +49,35 @@ MouseDataReset_PROC:
 	mov			[Mouse_MinY], ax
 	mov			al, [Video_MaxX]   ; Max number of Columns - 1
 	mov			[Mouse_MaxX], ax
-	mov			bl, 0x03
+	xor			bh, bh
+	mov			bl, 0x04
 	cmp			al, 0x28
 	jb			%%SetShrX
-	mov			bl, 0x02
+	mov			bl, 0x03
 	cmp			al, 0x50
 	jb			%%SetShrX
-	mov			bl, 0x01
+	mov			bl, 0x02
 	cmp			al, 0x84
 	jb			%%SetShrX	   ; Probably never set
-	mov			bl, 0x00
+	mov			bl, 0x01
 %%SetShrX:
-	mov			[Mouse_ShrX], bl
+	mov			[Mouse_DivX], bx
 	shr			ax, cl
 	mov			[Mouse_Position_X], ax
 	mov			al, [Video_MaxY]   ; Max number of Rows - 1
 	mov			[Mouse_MaxY], ax
-	mov			bl, 0x03
+	mov			bl, 0x04
 	cmp			al, 0x19
 	jb			%%SetShrY
-	mov			bl, 0x02
+	mov			bl, 0x03
 	cmp			al, 0x2b
 	jb			%%SetShrY
-	mov			bl, 0x01
+	mov			bl, 0x02
 	cmp			al, 0x32
 	jb			%%SetShrY
-	mov			bl, 0x00	   ; Probably never set
+	mov			bl, 0x01	   ; Probably never set
 %%SetShrY:
-	mov			[Mouse_ShrY], bl
+	mov			[Mouse_DivY], bx
 	shr			ax, cl
 	mov			[Mouse_Position_Y], ax
 
@@ -89,8 +90,8 @@ Mouse_Button_Count:		resw 1
 Mouse_Original_Mask:		resw 1
 Mouse_Original_Handler:		resw 2
 
-Mouse_ShrX:			resb 1
-Mouse_ShrY:			resb 1
+Mouse_DivX:			resw 1
+Mouse_DivY:			resw 1
 
 Mouse_MinX:			resw 1
 Mouse_MinY:			resw 1
@@ -167,7 +168,79 @@ MouseInitialize_PROC:
 	ret
 
 MouseHandler_INTERRUPT:
-	iret
+; On call
+;        AX = Event Flag
+;        BX = Button State
+;        CX = X coor - ignored
+;        DX = Y Coor - ignored
+;        SI = X Movement
+;        DI = Y Movement
+
+	pushf
+	cli
+	pushm			ds, ax, cx, dx, si, di
+
+	; Set our data segment
+	push			cs
+	pop			ds
+
+	; Scale X movement
+	xor			dx, dx
+	mov			ax, si
+	mov			cx, [Mouse_DivX]
+	div			cx
+	mov			si, ax
+
+	; Scale Y movement
+	xor			dx, dx
+	mov			ax, di
+	mov			cx, [Mouse_DivX]
+	div			cx
+	mov			di, ax
+
+	; Validate New Mouse X position
+	mov			cx, [Mouse_Position_X]
+	add			cx, si
+	cmp			cx, [Mouse_MinX]
+	jge			%%NotLowX
+	mov			cx, [Mouse_MinX]
+	jmp			%%NotHighX
+%%NotLowX:
+	cmp			cx, [Mouse_MaxX]
+	jle			%%NotHighX
+	mov			cx, [Mouse_MaxX]
+%%NotHighX:
+
+	; Validate New Mouse Y position
+	mov			dx, [Mouse_Position_Y]
+	add			dx, di
+	cmp			dx, [Mouse_MinY]
+	jge			%%NotLowY
+	mov			dx, [Mouse_MinY]
+	jmp			%%NotHighY
+%%NotLowY:
+	cmp			dx, [Mouse_MaxY]
+	jle			%%NotHighY
+	mov			dx, [Mouse_MaxY]
+%%NotHighY:
+
+	; Test if mouse moved
+	cmp			cx, [Mouse_Position_X]
+	jne			%%MouseMoved
+	cmp			dx, [Mouse_Position_Y]
+	je			%%MouseNotMoved
+%%MouseMoved:
+
+
+%%MouseNotMoved:
+	mov			[Mouse_Button_State], bx
+
+	; reset movement counters
+	mov			ax, 0x0b
+	int			0x33
+	popm			ds, ax, cx, dx, si, di
+	popf
+	retf
 
 __?SECT?__
 
