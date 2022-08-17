@@ -32,6 +32,100 @@
 %ifndef MOUSE_INC_DEFINED
 %define MOUSE_INC_DEFINED
 ; -----------------------------------------------------------------------------
+%imacro MouseDataReset_INTERNAL 0
+
+SECTION_PROC
+
+MouseDataReset_PROC:
+	RegsPreserve		ax, bx, cx
+	mov			[Mouse_Cursor_State], word -1
+	mov			ax, Mouse_Buffer_Start
+	mov			[Mouse_Buffer_Head], ax
+	mov			[Mouse_Buffer_Tail], ax
+	xor			ax, ax
+	mov			[Mouse_Button_State], ax
+	mov			cl, 1
+	mov			[Mouse_MinX], ax
+	mov			[Mouse_MinY], ax
+	mov			al, [Video_MaxX]   ; Max number of Columns - 1
+	mov			[Mouse_MaxX], ax
+	mov			bl, 0x03
+	cmp			al, 0x28
+	jb			%%SetShrX
+	mov			bl, 0x02
+	cmp			al, 0x50
+	jb			%%SetShrX
+	mov			bl, 0x01
+	cmp			al, 0x84
+	jb			%%SetShrX	   ; Probably never set
+	mov			bl, 0x00
+%%SetShrX:
+	mov			[Mouse_ShrX], bl
+	shr			ax, cl
+	mov			[Mouse_Position_X], ax
+	mov			al, [Video_MaxY]   ; Max number of Rows - 1
+	mov			[Mouse_MaxY], ax
+	mov			bl, 0x03
+	cmp			al, 0x19
+	jb			%%SetShrY
+	mov			bl, 0x02
+	cmp			al, 0x2b
+	jb			%%SetShrY
+	mov			bl, 0x01
+	cmp			al, 0x32
+	jb			%%SetShrY
+	mov			bl, 0x00	   ; Probably never set
+%%SetShrY:
+	mov			[Mouse_ShrY], bl
+	shr			ax, cl
+	mov			[Mouse_Position_Y], ax
+
+	RegsRestore		ax, bx, cx
+	ret
+
+SECTION_BSS
+
+Mouse_Button_Count:		resw 1
+Mouse_Original_Mask:		resw 1
+Mouse_Original_Handler:		resw 2
+
+Mouse_ShrX:			resb 1
+Mouse_ShrY:			resb 1
+
+Mouse_MinX:			resw 1
+Mouse_MinY:			resw 1
+
+Mouse_MaxX:			resw 1
+Mouse_MaxY:			resw 1
+
+Mouse_Cursor_State:		resw 1
+Mouse_CharAttr:			resw 1
+Mouse_Button_State:		resw 1
+Mouse_Position_X:		resw 1
+Mouse_Position_Y:		resw 1
+
+Mouse_Buffer_Head:		resw 1
+Mouse_Buffer_Tail:		resw 1
+Mouse_Buffer_Start:		resd 16
+Mouse_Buffer_End:
+
+__?SECT?__
+
+%endmacro
+
+%imacro MouseDataReset 0
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseDataReset
+
+	call 			MouseDataReset_PROC
+
+%endif
+
+%endmacro
+
+; -----------------------------------------------------------------------------
 %imacro MouseInitialize_INTERNAL 0
 
 SECTION_PROC
@@ -56,6 +150,7 @@ MouseInitialize_PROC:
 	mov			[Mouse_Button_Count], ax
 	test			ax, ax
 	jz			%%CheckDone			; No mouse found
+	; If mouse is present swap out original mouse handler
 	RegsPreserve		cx, dx, es
 	mov			cx, 0xffff
 	push			cs
@@ -68,20 +163,11 @@ MouseInitialize_PROC:
 	mov			[Mouse_Original_Handler + 2], es
 	RegsRestore		cx, dx, es
 %%CheckDone:
-
 	RegsRestore		bx
 	ret
 
 MouseHandler_INTERRUPT:
 	iret
-
-
-SECTION_BSS
-
-Mouse_Button_Count:		resw 1
-Mouse_Original_Mask:		resw 1
-Mouse_Original_Handler:		resw 2
-
 
 __?SECT?__
 
@@ -104,10 +190,9 @@ __?SECT?__
 SECTION_PROC
 
 MouseFinalize_PROC:
-	mov	dl, '-'
 	cmp     [Mouse_Button_Count], word 0x0000
 	je	%%Done
-
+	; If mouse is present then restore original mouse
 	RegsPreserve		cx, dx, es
 	mov			cx, [Mouse_Original_Mask]
 	mov			dx, [Mouse_Original_Handler]
@@ -115,12 +200,7 @@ MouseFinalize_PROC:
 	mov			ax, 0x0014
 	int			0x33
 	RegsRestore		cx, dx, es
-
-	mov	dl, 'X'
-
 %%Done:
-	mov	ah, 0x02
-	int	0x21
 	ret
 
 __?SECT?__
@@ -152,7 +232,6 @@ __?SECT?__
 
 %endmacro
 
-; -----------------------------------------------------------------------------
 %imacro PreWriteMouse 0-2
 
 %ifdef Support_Mouse
@@ -188,6 +267,7 @@ __?SECT?__
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE		MouseDataReset
 	PROC_PROVIDE		MouseInitialize
 	PROC_PROVIDE		MouseFinalize
 

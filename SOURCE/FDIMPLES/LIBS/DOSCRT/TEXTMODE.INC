@@ -46,6 +46,7 @@
 SECTION_PROC
 
 VideoInitializeState_PROC:
+
 ; Assume at least monochrome MDA
 	%ifdef Support_Direct_Video
 		mov		[Video_Segment], word 0xb000
@@ -150,6 +151,10 @@ VideoInitializeState_PROC:
 	mov			[Video_Card], dl
 
 %%Done:
+	%ifdef Support_Mouse
+		PROC_REQUIRE	MouseDataReset
+		MouseDataReset
+	%endif
 	ret
 
 

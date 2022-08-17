@@ -57,7 +57,7 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-%if 0 = 1
+
 	Window			max
 	SetCursor		small
 	mov			ax, [Mouse_Button_Count]
@@ -65,10 +65,10 @@ SECTION .text
 	jnz			MouseFound
  	WriteStr		'Mouse not present!'
  	WriteCRLF
-	jmp			Main
+	jmp			Finished
 MouseFound:
 	WriteHexByte		al
- 	WriteStr		' button mouse present!'
+ 	WriteStr		' button mouse found!'
  	WriteCRLF
 
 Main:
@@ -76,50 +76,20 @@ Main:
  	WriteStr		'Hello world!'
 	TextColor		original
  	WriteCRLF
-KeyLoop:
-	ReadKey			ax
-	push			ax
+WaitKeyPress:
+	mov			al, [Mouse_Position_X]
+	mov			ah, [Mouse_Position_Y]
+	GotoXY			ax
+	mov			al, [Mouse_Button_State]
+	add			al, 'A'
 	WriteChar		al
-	pop			ax
-	cmp			al, 27
-	je			Finished
-	cmp			al, '+'
-	je			PlusKey
-	cmp			al, '-'
-	je			MinusKey
-	cmp			al, 'a'
-	je			AKey
-	cmp			al, 'b'
-	je			BKey
-	cmp			al, 'c'
-	je			CKey
-	jmp			KeyLoop
-AKey:
-	SetCursor		small
-	jmp			State
-BKey:
-	SetCursor		half
-	jmp			State
-CKey:
-	SetCursor		full
-	jmp			State
-PlusKey:
-	SetCursor		show
-	jmp			State
-MinusKey:
-	SetCursor		hide
-State:
-	WriteChar		'>'
-	WriteHexWord		[Video_Cursor_State]
-	WriteChar		':'
-	WriteHexWord		[Video_Cursor]
-	WriteCRLF
-
-	jmp			KeyLoop
-%endif
-
+	NotKeyPressed		WaitKeyPress
+PurgeKeyPress:
+	ReadKey			ax
+	KeyPressed		PurgeKeyPress
+	GotoXY			[Video_ScreenMax]
 Finished:
 ;	VideoResetSettings
 	Terminate		0 ; Automatically includes used LIB functions
 
-; 	Include_LIB_Functions	; Include any additional LIB functions
+ 	Include_LIB_Functions	; Include any additional LIB functions

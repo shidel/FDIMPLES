@@ -126,6 +126,6 @@ __?SECT?__
 %endmacro
 ; *****************************************************************************
 %else
-	PROC_PROVIDE 		Keypressed
+	PROC_PROVIDE 		KeyPressed
 	PROC_PROVIDE 		ReadKey
 %endif
