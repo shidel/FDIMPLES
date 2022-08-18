@@ -43,6 +43,7 @@ MouseDataReset_PROC:
 	mov			[Mouse_Buffer_Head], ax
 	mov			[Mouse_Buffer_Tail], ax
 	xor			ax, ax
+	mov			[Mouse_Move_Flag], al
 	mov			[Mouse_Button_State], ax
 	mov			cl, 1
 	mov			[Mouse_MinX], ax
@@ -118,7 +119,8 @@ Mouse_MaxY:			resw 1
 
 Mouse_Cursor_State:		resw 1
 Mouse_CharAttr:			resw 1
-Mouse_PrePostWrite:		resw 1
+Mouse_Redraw_Flag:		resb 1
+Mouse_Move_Flag:		resb 1
 Mouse_Button_State:		resw 1
 
 Mouse_Value_X:			resw 1
@@ -249,10 +251,33 @@ MouseHandler_INTERRUPT:
 	mov			[Mouse_Position_X], cx
 	mov			[Mouse_Position_Y], dx
 	call			MouseDraw_PROC
+	mov			[Mouse_Move_Flag], byte 0x01
 
 %%MouseNotMoved:
+	cmp			bx, [Mouse_Button_State]
+	je			%%NoButtonEvent
 	mov			[Mouse_Button_State], bx
 
+	; Button event add to buffer
+	mov			di, [Mouse_Buffer_Head]
+	add			di, 4
+	cmp			di, Mouse_Buffer_End
+	jb			%%BufferNoWrap
+	mov			di, Mouse_Buffer_Start
+%%BufferNoWrap:
+	cmp			di, [Mouse_Buffer_Tail]
+	je			%%BufferFull
+	mov			[di], bx
+	mov			[di + 2], cl
+	mov			[di + 3], dl
+
+	; jmp			%%DoneBufferAdd
+%%BufferFull:
+	; Could put something here to note buffer hit limit.
+
+%%DoneBufferAdd:
+
+%%NoButtonEvent:
 	; reset movement counters
 	mov			ax, 0x0b
 	int			0x33
@@ -434,12 +459,12 @@ PreWriteMouse_PROC:
 	cmp			ah, dh
 	ja			%%NoUndraw
 %%DoUndraw:
-	mov			[Mouse_PrePostWrite], byte 1
+	mov			[Mouse_Redraw_Flag], byte 1
 	call 			MouseUndraw_PROC
 	jmp			%%Done
 
 %%NoUndraw:
-	mov			[Mouse_PrePostWrite], byte 0
+	mov			[Mouse_Redraw_Flag], byte 0
 %%Done:
 	pop			ax
 	ret
@@ -476,7 +501,7 @@ __?SECT?__
 SECTION_PROC
 
 PostWriteMouse_PROC:
-	cmp			[Mouse_PrePostWrite], byte 0
+	cmp			[Mouse_Redraw_Flag], byte 0
 	je			%%Done
 	call 			MouseDraw_PROC
 %%Done:

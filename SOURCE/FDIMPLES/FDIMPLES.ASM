@@ -58,7 +58,7 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-%if 0 = 1
+%if 0 = 0
 ;	TextMode		tmCO80
 	ClrScr
 ;	Window			max
@@ -89,8 +89,7 @@ MainLoop:
 	WriteChar		':'
 	mov			al, [Mouse_Button_State]
 	add			al, '0'
-	WriteChar		al, '-'
-	WriteChar		[Mouse_CharAttr]
+	WriteChar		al
 	KeyPressed		CheckKeyPress
 	jmp			MainLoop
 
