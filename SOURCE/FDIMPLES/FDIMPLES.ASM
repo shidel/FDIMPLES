@@ -89,7 +89,8 @@ MainLoop:
 	WriteChar		':'
 	mov			al, [Mouse_Button_State]
 	add			al, '0'
-	WriteChar		al
+	WriteChar		al, '-'
+	WriteChar		[Mouse_CharAttr]
 	KeyPressed		CheckKeyPress
 	jmp			MainLoop
 

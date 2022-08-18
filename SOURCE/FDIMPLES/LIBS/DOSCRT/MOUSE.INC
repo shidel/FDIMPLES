@@ -239,9 +239,9 @@ MouseHandler_INTERRUPT:
 	pop			cx
 
 	; Test if mouse moved
-	cmp			cx, [Mouse_Value_X]
+	cmp			cx, [Mouse_Position_X]
 	jne			%%MouseMoved
-	cmp			dx, [Mouse_Value_Y]
+	cmp			dx, [Mouse_Position_X]
 	je			%%MouseNotMoved
 %%MouseMoved:
 	call			MouseUndraw_PROC
@@ -276,6 +276,8 @@ MouseDraw_PROC:
 
 %%MouseDrawing:
 	; AL = 0/1 for Undraw/Draw
+	; Basically save then move cursor to mouse position. Then ether
+	; read or write charattr. Then move cursor back to previous position.
 	pushm			bx, cx, dx
 	; Save current cursor position
 	%ifdef DOS_BUG_FIXES
@@ -293,18 +295,17 @@ MouseDraw_PROC:
 	; Move cursor to mouse position
 	mov			dl, [Mouse_Position_X]
 	mov			dh, [Mouse_Position_Y]
-	mov			bh, [Video_Page]
+	; mov			bh, [Video_Page]
 	mov			ah, 0x02
 	int			0x10
 	test 			al, al
-	jnz			%%DoUndraw
+	jz			%%DoUndraw
 %%DoDraw:
 	mov			ah, 0x08 ; fetch char/attr
 	; mov			bh, [Video_Page]
 	int			0x10
 	mov			[Mouse_CharAttr], ax
-	mov			ah, 0x1f
-	; mov			al, '+'
+	not			ah
 	jmp			%%SetCharAttr
 %%DoUndraw:
 	mov			ax, [Mouse_CharAttr]
@@ -315,8 +316,9 @@ MouseDraw_PROC:
 	; mov			bh, [Video_Page]
 	int			0x10
 	; all done, restore cursor position
+%%NoWrite:
 	pop			dx
-	mov			bh, [Video_Page]
+	; mov			bh, [Video_Page]
 	mov			ah, 0x02
 	int			0x10
 	popm			bx, cx, dx
