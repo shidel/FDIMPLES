@@ -204,9 +204,9 @@ MouseHandler_INTERRUPT:
 	mov			ax, [Mouse_MaxX]
 %%NotHighX:
 	mov			[Mouse_Value_X], ax
-	mov			bx, [Mouse_DivX]
+	mov			cx, [Mouse_DivX]
 	cwd
-	idiv			bx
+	idiv			cx
 	push			ax
 	; Adjust mouse Y position
 	mov			ax, [Mouse_Value_Y]
@@ -220,9 +220,9 @@ MouseHandler_INTERRUPT:
 	mov			ax, [Mouse_MaxY]
 %%NotHighY:
 	mov			[Mouse_Value_Y], ax
-	mov			bx, [Mouse_DivY]
+	mov			cx, [Mouse_DivY]
 	cwd
-	idiv			bx
+	idiv			cx
 	mov			dx, ax
 	pop			cx
 

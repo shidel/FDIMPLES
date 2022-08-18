@@ -58,7 +58,8 @@ SECTION .text
 				; including only the required LIBS directly.
 
 %if 0 = 0
-	TextMode		0x54
+	TextMode		tmCO40
+	ClrScr
 	Window			max
 	SetCursor		small
 	mov			ax, [Mouse_Button_Count]
@@ -82,7 +83,7 @@ Main:
  	WriteHexWord		[Mouse_DivY]
  	WriteCRLF
 WaitKeyPress:
-	GotoXY			0x0101
+	GotoXY			0x0200
 	WriteHexWord 		[Mouse_Value_X]
 	WriteChar		'/'
 	WriteHexWord		[Mouse_Value_Y]
