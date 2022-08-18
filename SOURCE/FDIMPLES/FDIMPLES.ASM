@@ -42,6 +42,7 @@ SECTION .text
 %include "FEATURES.INC"		; Default DEFINES for library and options
 
 %undef Preserve_Registers	; Macros preserve all registers when possible
+; %undef DOS_BUG_FIXES		; Include some fixes for various DOS and BIOS
 %undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
 %undef Support_BIOS_Timer	; Use high precision int15 timer if possible
 %undef Support_Direct_Video	; Direct video addressing
@@ -58,10 +59,10 @@ SECTION .text
 				; including only the required LIBS directly.
 
 %if 0 = 0
-	TextMode		tmCO40
+;	TextMode		tmCO80
 	ClrScr
-	Window			max
-	SetCursor		small
+;	Window			max
+;	SetCursor		small
 	mov			ax, [Mouse_Button_Count]
 	test			ax, ax
 	jnz			MouseFound
@@ -78,32 +79,24 @@ Main:
  	WriteStr		'Hello world!'
 	TextColor		original
  	WriteCRLF
- 	WriteHexWord		[Mouse_DivX]
- 	WriteCRLF
- 	WriteHexWord		[Mouse_DivY]
- 	WriteCRLF
 WaitKeyPress:
-	GotoXY			0x0200
-	WriteHexWord 		[Mouse_Value_X]
+	GotoXY			0x0300
+	WriteHexWord 		[Mouse_Position_X]
 	WriteChar		'/'
-	WriteHexWord		[Mouse_Value_Y]
+	WriteHexWord		[Mouse_Position_Y]
 	WriteChar		':'
 	mov			al, [Mouse_Button_State]
 	add			al, 'A'
 	WriteChar		al
-	WriteCRLF
-	WriteHexWord 		[Mouse_Position_X]
-	WriteChar		'/'
-	WriteHexWord		[Mouse_Position_Y]
 
 	NotKeyPressed		WaitKeyPress
 PurgeKeyPress:
 	ReadKey			ax
 	KeyPressed		PurgeKeyPress
-	GotoXY			[Video_ScreenMax]
+;	GotoXY			[Video_ScreenMax]
 %endif
 Finished:
-	VideoResetSettings
+;	VideoResetSettings
 	Terminate		0 ; Automatically includes used LIB functions
 
 ; 	Include_LIB_Functions	; Include any additional LIB functions

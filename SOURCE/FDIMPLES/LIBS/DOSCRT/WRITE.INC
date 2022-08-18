@@ -45,7 +45,7 @@ WriteChar_PROC:
 	mov			bx,[Video_PageAttr]
 	int			0x10
 	pop			ax
-	test			[Video_Options], byte vcbControls
+	test			[Video_Options], byte vcbCtrlChar
 	jnz			%%DisplayChar
 	cmp			al, 0x10
 	jae			%%DisplayChar

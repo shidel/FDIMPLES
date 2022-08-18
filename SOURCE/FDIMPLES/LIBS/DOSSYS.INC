@@ -1,4 +1,4 @@
-; System for DOS v1.0
+; Basic System Functions for DOS
 ; Similar (but a little different) to a Pascal DOS unit.
 
 ; BSD 3-Clause License

@@ -1,4 +1,4 @@
-; Features for DOS v1.0
+; LIB Features for DOS
 ; Similar (but a little different) to a Pascal CRT unit.
 
 ; BSD 3-Clause License
@@ -85,8 +85,8 @@
 ; Video control option bits
 ; default is vcbDirectVideo + vcbScroll
 %define vcbDirect	00000001b	; Use Direct Video if possible
-%define vcbScroll	00000010b	; Enable last line auto-scroll
-%define vcbControls 	00000100b	; Print, dont process control chars
+%define vcbScroll	00000010b	; Enable last line auto-scroll (normal)
+%define vcbCtrlChar 	00000100b	; Print, don't process control chars
 ; -----------------------------------------------------------------------------
 ; Internal defines to make coding macros simpler
 %undef BIOS_Direct_Video

@@ -1,4 +1,4 @@
-; CRT for DOS v1.0
+; Basic CRT for DOS
 ; Similar (but a little different) to a Pascal CRT unit.
 
 ; BSD 3-Clause License
@@ -277,7 +277,7 @@
 %ifndef DO_NOT_INITIALIZE_LIBS
 	%ifndef DOSCRT_INIT_CODE
 	%define DOSCRT_INIT_CODE
-		mov [Video_Options], byte vcbDirect + vcbScroll ; + vcbControls
+		mov [Video_Options], byte vcbDirect + vcbScroll ; + vcbCtrlChar
 		mov [Video_Tab], word 0x0408
 		VideoInitializeState
 		WindowMax

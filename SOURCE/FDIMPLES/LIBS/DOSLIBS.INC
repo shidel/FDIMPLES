@@ -1,4 +1,4 @@
-; Features for DOS v1.0
+; LIBS for DOS
 ; Similar (but a little different) to a Pascal CRT unit.
 
 ; BSD 3-Clause License
