@@ -79,12 +79,13 @@ MouseFound:
 	WriteHexByte		al
  	WriteStr		' button mouse found.'
  	WriteCRLF
+	MouseShow
 
 MainLoop:
 	GotoXY			0x0300
-	WriteHexWord 		[Mouse_Position_X]
+	WriteHexByte 		[Mouse_Position_X]
 	WriteChar		'/'
-	WriteHexWord		[Mouse_Position_Y]
+	WriteHexByte		[Mouse_Position_Y]
 	WriteChar		':'
 	mov			al, [Mouse_Button_State]
 	add			al, '0'
@@ -94,15 +95,16 @@ MainLoop:
 
 CheckKeyPress:
 	; Just purge and exit
-PurgeKeyPress:
 	ReadKey			ax
-	KeyPressed		PurgeKeyPress
+	KeyPressed		CheckKeyPress
+
 	WriteCRLF		2
 	TextColor		clCyan
 	WriteStr		'good bye.'
 	WriteCRLF
 
 %endif
+
 Finished:
 ;	VideoResetSettings
 	Terminate		0 ; Automatically includes used LIB functions

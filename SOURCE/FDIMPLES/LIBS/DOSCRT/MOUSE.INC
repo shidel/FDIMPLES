@@ -244,8 +244,11 @@ MouseHandler_INTERRUPT:
 	cmp			dx, [Mouse_Value_Y]
 	je			%%MouseNotMoved
 %%MouseMoved:
+	call			MouseUndraw_PROC
 	mov			[Mouse_Position_X], cx
 	mov			[Mouse_Position_Y], dx
+	mov			al, 1
+	call			MouseDraw_PROC
 
 %%MouseNotMoved:
 	mov			[Mouse_Button_State], bx
@@ -256,6 +259,83 @@ MouseHandler_INTERRUPT:
 	popm			ds, ax, cx, dx, si, di
 	popf
 	retf
+
+MouseUndraw_PROC:
+	push			ax
+	cmp			[Mouse_Cursor_State], word 0x0000
+	jl			%%DoneDrawing
+	xor			al, al
+	jmp			%%MouseDrawing
+
+MouseDraw_PROC:
+	push			ax
+	cmp			[Mouse_Cursor_State], word 0x0000
+	jl			%%DoneDrawing
+	mov			al, 0x01
+;	jmp			%%MouseDrawing
+
+%%MouseDrawing:
+	; AL = 0/1 for Undraw/Draw
+	pushm			bx, cx, dx
+	; Save current cursor position
+	%ifdef DOS_BUG_FIXES
+		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
+		push		ax
+	%endif
+	mov			bh, [Video_Page]
+	mov			ah, 0x03
+	int			0x10
+	%ifdef DOS_BUG_FIXES
+		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
+		pop		ax
+	%endif
+	push			dx
+	; Move cursor to mouse position
+	mov			dl, [Mouse_Position_X]
+	mov			dh, [Mouse_Position_Y]
+	mov			bh, [Video_Page]
+	mov			ah, 0x02
+	int			0x10
+	test 			al, al
+	jnz			%%DoUndraw
+%%DoDraw:
+	mov			ah, 0x08 ; fetch char/attr
+	; mov			bh, [Video_Page]
+	int			0x10
+	mov			[Mouse_CharAttr], ax
+	mov			ah, 0x1f
+	; mov			al, '+'
+	jmp			%%SetCharAttr
+%%DoUndraw:
+	mov			ax, [Mouse_CharAttr]
+%%SetCharAttr:
+	mov			bl, ah
+	mov			ah, 0x09
+	mov			cx, 0x0001
+	; mov			bh, [Video_Page]
+	int			0x10
+	; all done, restore cursor position
+	pop			dx
+	mov			bh, [Video_Page]
+	mov			ah, 0x02
+	int			0x10
+	popm			bx, cx, dx
+%%DoneDrawing:
+	pop			ax
+	ret
+
+MouseHide_PROC:
+	sub			[Mouse_Cursor_State], word 1
+	cmp			[Mouse_Cursor_State], word -1
+	jne			%%NoStateChange
+	jmp			MouseUndraw_PROC
+
+MouseShow_PROC:
+	add			[Mouse_Cursor_State], word 1
+	cmp			[Mouse_Cursor_State], word 0
+	je			MouseDraw_PROC
+%%NoStateChange:
+	ret
 
 __?SECT?__
 
@@ -272,16 +352,42 @@ __?SECT?__
 %endif
 
 %endmacro
+
+%imacro MouseShow 0
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseInitialize
+
+	call 			MouseShow_PROC
+
+%endif
+
+%endmacro
+
+%imacro MouseHide 0
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseInitialize
+
+	call 			MouseHide_PROC
+
+%endif
+
+%endmacro
+
 ; -----------------------------------------------------------------------------
 %imacro MouseFinalize_INTERNAL 0
 
 SECTION_PROC
 
 MouseFinalize_PROC:
-	cmp     [Mouse_Button_Count], word 0x0000
-	je	%%Done
-	; If mouse is present then restore original mouse
+	cmp     		[Mouse_Button_Count], word 0x0000
+	je			%%Done
+	; If mouse is present then hide it and restore original mouse
 	RegsPreserve		cx, dx, es
+	call			MouseUndraw_PROC
 	mov			cx, [Mouse_Original_Mask]
 	mov			dx, [Mouse_Original_Handler]
 	mov			es, [Mouse_Original_Handler + 2]
@@ -307,49 +413,28 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-%imacro PreWriteMouse_INTERNAL 0
-
-SECTION_PROC
-
-PreWriteMouse_PROC:
-	nop
-	nop
-	ret
-
-__?SECT?__
-
-%endmacro
 
 %imacro PreWriteMouse 0-2
 
 %ifdef Support_Mouse
 
-	PROC_REQUIRE		PreWriteMouse
+	PROC_REQUIRE		MouseInitialize
+	cli
+	call 			MouseUndraw_PROC
 
-	call 			PreWriteMouse_PROC
 %endif
 
 %endmacro
 ; -----------------------------------------------------------------------------
-%imacro PostWriteMouse_INTERNAL 0
-
-SECTION_PROC
-
-PostWriteMouse_PROC:
-	nop
-	ret
-
-__?SECT?__
-
-%endmacro
 
 %imacro PostWriteMouse 0
 
 %ifdef Support_Mouse
 
-	PROC_REQUIRE		PostWriteMouse
+	PROC_REQUIRE		MouseInitialize
+	call 			MouseDraw_PROC
+	sti
 
-	call 			PostWriteMouse_PROC
 %endif
 
 %endmacro
