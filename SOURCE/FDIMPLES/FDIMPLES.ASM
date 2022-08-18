@@ -57,7 +57,8 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-
+%if 0 = 0
+	TextMode		0x54
 	Window			max
 	SetCursor		small
 	mov			ax, [Mouse_Button_Count]
@@ -82,20 +83,26 @@ Main:
  	WriteCRLF
 WaitKeyPress:
 	GotoXY			0x0101
-	WriteHexWord 		[Mouse_Position_X]
+	WriteHexWord 		[Mouse_Value_X]
 	WriteChar		'/'
-	WriteHexWord		[Mouse_Position_Y]
+	WriteHexWord		[Mouse_Value_Y]
 	WriteChar		':'
 	mov			al, [Mouse_Button_State]
 	add			al, 'A'
 	WriteChar		al
+	WriteCRLF
+	WriteHexWord 		[Mouse_Position_X]
+	WriteChar		'/'
+	WriteHexWord		[Mouse_Position_Y]
+
 	NotKeyPressed		WaitKeyPress
 PurgeKeyPress:
 	ReadKey			ax
 	KeyPressed		PurgeKeyPress
 	GotoXY			[Video_ScreenMax]
+%endif
 Finished:
-;	VideoResetSettings
+	VideoResetSettings
 	Terminate		0 ; Automatically includes used LIB functions
 
 ; 	Include_LIB_Functions	; Include any additional LIB functions
