@@ -31,6 +31,11 @@
 
 %ifndef MOUSE_INC_DEFINED
 %define MOUSE_INC_DEFINED
+
+; -----------------------------------------------------------------------------
+; Most of the stuff in this file is overhead required to support the mouse and
+; does not need direct interaction by the end user (programmer/developer).
+; Look for the end-user section bellow.
 ; -----------------------------------------------------------------------------
 %imacro MouseDataReset_INTERNAL 0
 
@@ -524,11 +529,46 @@ __?SECT?__
 
 %endmacro
 ; *****************************************************************************
+; The end user bellow section. :-)
+; *****************************************************************************
+%imacro MouseMoved_INTERNAL 0
+
+SECTION_PROC
+
+MouseMoved_PROC:
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro MouseMoved 0
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseInitialize
+	PROC_REQUIRE		MouseMoved
+	call			PostWriteMouse_PROC
+
+%endif
+
+%endmacro
+
+; *****************************************************************************
 %else
 	PROC_PROVIDE		MouseDataReset
 	PROC_PROVIDE		MouseInitialize
 	PROC_PROVIDE		MouseFinalize
-
 	PROC_PROVIDE		PreWriteMouse
 	PROC_PROVIDE		PostWriteMouse
+
+	PROC_PROVIDE		MouseMoved
+	PROC_PROVIDE		NotMousewMoved
+	PROC_PROVIDE		ReadMouseMove
+
+	PROC_PROVIDE		MouseClicked
+	PROC_PROVIDE		NotMousewClicked
+	PROC_PROVIDE		ReadMouseClick
+
+
 %endif
