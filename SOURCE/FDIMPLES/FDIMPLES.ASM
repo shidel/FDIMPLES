@@ -39,17 +39,17 @@ org 0x100
 
 SECTION .text
 
-%include "FEATURES.INC"		; Default DEFINES for library and options
+%include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers	; Macros preserve all registers when possible
+%undef Preserve_Registers	; Preserve all registers in most macros
 ; %undef DOS_BUG_FIXES		; Include some fixes for various DOS and BIOS
 %undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
-%undef Support_BIOS_Timer	; Use high precision int15 timer if possible
-%undef Support_Direct_Video	; Direct video addressing
-; %undef Support_Mouse		; Include Mouse support
-%undef Video_MCGA		; Check for MCGA support
-%undef Video_VGA		; Check for VGA support
-%undef Video_VESA		; Check for SuperVGA support
+%undef Support_BIOS_Timer	; Try to use high precision int15 timer
+%undef Support_Direct_Video	; Direct video addressing support
+; %undef Support_Mouse		; Mouse support
+%undef Video_MCGA		; MCGA check/support
+%undef Video_VGA		; VGA check/support
+%undef Video_VESA		; SuperVGA check/support
 
 %include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
 				; initialization routines. Calls to those
