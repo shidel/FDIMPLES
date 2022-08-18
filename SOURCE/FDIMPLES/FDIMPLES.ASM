@@ -70,30 +70,38 @@ SECTION .text
  	WriteCRLF
 	jmp			Finished
 MouseFound:
-	WriteHexByte		al
- 	WriteStr		' button mouse found!'
- 	WriteCRLF
-
-Main:
+	push			ax
 	TextColor		clYellow
  	WriteStr		'Hello world!'
 	TextColor		original
  	WriteCRLF
-WaitKeyPress:
+ 	pop			ax
+	WriteHexByte		al
+ 	WriteStr		' button mouse found.'
+ 	WriteCRLF
+
+MainLoop:
 	GotoXY			0x0300
 	WriteHexWord 		[Mouse_Position_X]
 	WriteChar		'/'
 	WriteHexWord		[Mouse_Position_Y]
 	WriteChar		':'
 	mov			al, [Mouse_Button_State]
-	add			al, 'A'
+	add			al, '0'
 	WriteChar		al
+	KeyPressed		CheckKeyPress
+	jmp			MainLoop
 
-	NotKeyPressed		WaitKeyPress
+CheckKeyPress:
+	; Just purge and exit
 PurgeKeyPress:
 	ReadKey			ax
 	KeyPressed		PurgeKeyPress
-;	GotoXY			[Video_ScreenMax]
+	WriteCRLF		2
+	TextColor		clCyan
+	WriteStr		'good bye.'
+	WriteCRLF
+
 %endif
 Finished:
 ;	VideoResetSettings
