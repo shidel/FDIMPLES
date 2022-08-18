@@ -47,6 +47,8 @@ MouseDataReset_PROC:
 	mov			cl, 1
 	mov			[Mouse_MinX], ax
 	mov			[Mouse_MinY], ax
+
+	; Figure out X related values
 	xor			ah, ah
 	mov			bh, ah
 	mov			al, [Video_MaxX]   ; Max number of Columns - 1
@@ -61,13 +63,19 @@ MouseDataReset_PROC:
 	jb			%%SetShrX	   ; Probably never set
 	mov			bl, 0x02
 %%SetShrX:
+	push			ax
 	mov			[Mouse_DivX], bx
 	mul			bx
 	mov			[Mouse_MaxX], ax
 	shr			ax, cl
 	mov			[Mouse_Value_X], ax
-	xor			ah, ah
-	mov			bh, ah
+	pop			ax
+	shr			ax, cl
+	mov			[Mouse_Position_X], ax
+
+	; Figure out Y related values
+	; xor			ah, ah	 ; ah should still be 0
+	; mov			bh, ah	 ; bh should still be 0
 	mov			al, [Video_MaxY]   ; Max number of Rows - 1
 	mov			bl, 0x10
 	cmp			al, 0x19
@@ -80,11 +88,15 @@ MouseDataReset_PROC:
 	jb			%%SetShrY
 	mov			bl, 0x02	   ; Probably never set
 %%SetShrY:
+	push			ax
 	mov			[Mouse_DivY], bx
 	mul			bx
 	mov			[Mouse_MaxY], ax
 	shr			ax, cl
 	mov			[Mouse_Value_Y], ax
+	pop			ax
+	shr			ax, cl
+	mov			[Mouse_Position_Y], ax
 
 	RegsRestore		ax, bx, cx, dx
 	ret
