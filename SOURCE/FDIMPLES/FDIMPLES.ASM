@@ -58,7 +58,7 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-%if 0 = 0
+%if 0 = 1
 ;	TextMode		tmCO80
 	ClrScr
 ;	Window			max

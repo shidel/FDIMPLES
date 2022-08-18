@@ -118,6 +118,7 @@ Mouse_MaxY:			resw 1
 
 Mouse_Cursor_State:		resw 1
 Mouse_CharAttr:			resw 1
+Mouse_PrePostWrite:		resw 1
 Mouse_Button_State:		resw 1
 
 Mouse_Value_X:			resw 1
@@ -247,7 +248,6 @@ MouseHandler_INTERRUPT:
 	call			MouseUndraw_PROC
 	mov			[Mouse_Position_X], cx
 	mov			[Mouse_Position_Y], dx
-	mov			al, 1
 	call			MouseDraw_PROC
 
 %%MouseNotMoved:
@@ -306,6 +306,7 @@ MouseDraw_PROC:
 	int			0x10
 	mov			[Mouse_CharAttr], ax
 	not			ah
+	and			ah, 0x7f
 	jmp			%%SetCharAttr
 %%DoUndraw:
 	mov			ax, [Mouse_CharAttr]
@@ -415,27 +416,84 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
+%imacro PreWriteMouse_INTERNAL 0
+
+SECTION_PROC
+
+PreWriteMouse_PROC:
+	cli
+	push			ax
+	mov			al, [Mouse_Position_X]
+	mov			ah, [Mouse_Position_Y]
+	cmp			al, cl
+	jb			%%NoUndraw
+	cmp			ah, ch
+	jb			%%NoUndraw
+	cmp			al, dl
+	ja			%%NoUndraw
+	cmp			ah, dh
+	ja			%%NoUndraw
+%%DoUndraw:
+	mov			[Mouse_PrePostWrite], byte 1
+	call 			MouseUndraw_PROC
+	jmp			%%Done
+
+%%NoUndraw:
+	mov			[Mouse_PrePostWrite], byte 0
+%%Done:
+	pop			ax
+	ret
+
+__?SECT?__
+
+%endmacro
 
 %imacro PreWriteMouse 0-2
 
 %ifdef Support_Mouse
 
 	PROC_REQUIRE		MouseInitialize
-	cli
-	call 			MouseUndraw_PROC
+	PROC_REQUIRE		PreWriteMouse
+
+	pushm		cx, dx
+	%if %0 = 0
+		mov	cx, [Video_WindMin]
+		mov	dx, [Video_WindMax]
+	%elif %0 = 1
+		movndef	cx, %1, dx, %1
+	%else
+		movndef	cx, %1, dx, %2
+	%endif
+	call		PreWriteMouse_PROC
+	popm		cx, dx
 
 %endif
 
 %endmacro
 ; -----------------------------------------------------------------------------
+%imacro PostWriteMouse_INTERNAL 0
+
+SECTION_PROC
+
+PostWriteMouse_PROC:
+	cmp			[Mouse_PrePostWrite], byte 0
+	je			%%Done
+	call 			MouseDraw_PROC
+%%Done:
+	sti
+	ret
+
+__?SECT?__
+
+%endmacro
 
 %imacro PostWriteMouse 0
 
 %ifdef Support_Mouse
 
 	PROC_REQUIRE		MouseInitialize
-	call 			MouseDraw_PROC
-	sti
+	PROC_REQUIRE		PostWriteMouse
+	call			PostWriteMouse_PROC
 
 %endif
 
