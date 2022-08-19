@@ -58,12 +58,9 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-%if 0 = 0
-;	TextMode		tmCO80
+%if 0 = 1
 	ClrScr
-;	Window			max
-;	SetCursor		small
-	mov			ax, [Mouse_Button_Count]
+;	mov			ax, [Mouse_Button_Count]
 	test			ax, ax
 	jnz			MouseFound
  	WriteStr		'Mouse not present!'
@@ -79,7 +76,7 @@ MouseFound:
 	WriteHexByte		al
  	WriteStr		' button mouse found.'
  	WriteCRLF
- 	MouseShow
+ 	; MouseShow
 
 CheckMouseMove:
 	ReadMouseMove		dx
@@ -93,9 +90,10 @@ MainLoop:
 	pop			dx
 	WriteHexByte		dh
 	WriteChar		':'
-	mov			al, [Mouse_Button_State]
+	; mov			al, [Mouse_Button_State]
 	add			al, '0'
-	WriteChar		al
+	WriteChar		al, '>'
+;	WriteHexWord		[Mouse_Cursor_State]
 
 MainWait:
 	; Idle
@@ -109,10 +107,38 @@ CheckMouseClick:
 	jnc			MainWait
 	jmp			MainLoop
 
+Show:
+	MouseShow
+	jmp			CheckMouseMove
+Hide:
+	MouseHide
+	jmp			CheckMouseMove
+
+Change132:
+	TextMode		0x54
+	jmp			MouseFound
+
+Change80:
+	TextMode		tmCO80
+	jmp			MouseFound
+
+Change40:
+	TextMode		tmCO40
+	jmp			MouseFound
 
 CheckKeyPress:
-	; Just purge and exit
+	; Just purge and exit if not matched
 	ReadKey			ax
+	cmp			al, 'a'
+	je			Show
+	cmp			al, 'b'
+	je			Hide
+	cmp			al, '1'
+	je			Change132
+	cmp			al, '2'
+	je			Change80
+	cmp			al, '3'
+	je			Change40
 	KeyPressed		CheckKeyPress
 
 	WriteCRLF		2
@@ -123,7 +149,8 @@ CheckKeyPress:
 %endif
 
 Finished:
-;	VideoResetSettings
+	delay 1000
+	; VideoResetSettings
 	Terminate		0 ; Automatically includes used LIB functions
 
 ; 	Include_LIB_Functions	; Include any additional LIB functions

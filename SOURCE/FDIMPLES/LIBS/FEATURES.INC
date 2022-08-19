@@ -87,6 +87,7 @@
 %define vcbDirect	00000001b	; Use Direct Video if possible
 %define vcbScroll	00000010b	; Enable last line auto-scroll (normal)
 %define vcbCtrlChar 	00000100b	; Print, don't process control chars
+%define vcbAutoMouse	00001000b	; Automatic mouse pointer visibility
 ; -----------------------------------------------------------------------------
 ; Internal defines to make coding macros simpler
 %undef BIOS_Direct_Video

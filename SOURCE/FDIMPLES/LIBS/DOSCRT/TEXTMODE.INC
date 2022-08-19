@@ -266,7 +266,13 @@ __?SECT?__
 SECTION_PROC
 
 TextMode_PROC:
-	PreWriteMouse
+
+	%ifdef Support_Mouse
+
+		PROC_REQUIRE		MouseInitialize
+		call			MouseHide_PROC
+
+	%endif
 	mov			bx, 0x0040
 	push 			bx
 	pop			es
@@ -289,7 +295,15 @@ TextMode_PROC:
 %%NoModeChange:
 	clc
 %%Done:
-	PostWriteMouse
+	%ifdef Support_Mouse
+
+		PROC_REQUIRE		MouseInitialize
+		test			[Video_Options], word vcbAutoMouse
+		jz			%%NoAutoMouse
+		call 			MouseShow_PROC
+	%%NoAutoMouse:
+
+	%endif
 	ret
 
 __?SECT?__
@@ -340,9 +354,24 @@ VideoResetSettings_PROC:
 %%Done:
 	mov			al, [Initial_Video_Attr]
 	mov			[Video_Attr], al
-	; Must call directly, otherwise NASM may embed the macro's code here
-	; Instead of later (where we want it)
+
+	%ifdef Support_Mouse
+
+		PROC_REQUIRE		MouseInitialize
+		call 			MouseHide_PROC
+
+	%endif
+
 	call			VideoInitializeState_PROC
+
+	%ifdef Support_Mouse
+
+		test			[Video_Options], word vcbAutoMouse
+		jz			%%NoAutoMouse
+		call 			MouseShow_PROC
+	%%NoAutoMouse:
+
+	%endif
 	ret
 
 __?SECT?__

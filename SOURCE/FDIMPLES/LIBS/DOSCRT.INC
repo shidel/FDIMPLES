@@ -322,7 +322,12 @@
 %ifndef DO_NOT_INITIALIZE_LIBS
 	%ifndef DOSCRT_INIT_CODE
 	%define DOSCRT_INIT_CODE
-		mov [Video_Options], byte vcbDirect + vcbScroll ; + vcbCtrlChar
+
+	%ifdef Support_Mouse
+		mov [Video_Options], byte vcbDirect + vcbScroll + vcbAutoMouse
+	%else
+		mov [Video_Options], byte vcbDirect + vcbScroll
+	%endif
 		mov [Video_Tab], word 0x0408
 		VideoInitializeState
 		WindowMax

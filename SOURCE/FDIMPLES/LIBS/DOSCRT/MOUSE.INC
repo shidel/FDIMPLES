@@ -364,7 +364,9 @@ MouseHide_PROC:
 	sub			[Mouse_Cursor_State], word 1
 	cmp			[Mouse_Cursor_State], word -1
 	jne			%%NoStateChange
-	jmp			MouseUndraw_PROC
+	push			ax
+	xor			al, al
+	jmp			%%MouseDrawing
 
 MouseShow_PROC:
 	add			[Mouse_Cursor_State], word 1
@@ -384,6 +386,10 @@ __?SECT?__
 	PROC_REQUIRE		MouseInitialize
 
 	call 			MouseInitialize_PROC
+	test			[Video_Options], word vcbAutoMouse
+	jz			%%NoAutoMouse
+	call 			MouseShow_PROC
+%%NoAutoMouse:
 
 %endif
 
@@ -423,7 +429,7 @@ MouseFinalize_PROC:
 	je			%%Done
 	; If mouse is present then hide it and restore original mouse
 	RegsPreserve		cx, dx, es
-	call			MouseUndraw_PROC
+	call			MouseHide_PROC
 	mov			cx, [Mouse_Original_Mask]
 	mov			dx, [Mouse_Original_Handler]
 	mov			es, [Mouse_Original_Handler + 2]
