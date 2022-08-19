@@ -243,6 +243,24 @@
 
 %include "DOSCRT/CURSOR.INC"
 
+; Test if mouse has been moved
+; MACRO:  MouseMoved 0-1
+; INPUT:  %1 = [Optional] jump address if mouse has been moved.
+; OUTPUT: Carry Flag Set if mouse has moved. Does not clear movement flag.
+; REGS:	  none
+
+; Test if mouse has not moved
+; MACRO:  NotMouseMoved 0-1
+; INPUT:  %1 = [Optional] jump address if mouse has not moved.
+; OUTPUT: Carry Flag Set if mouse has moved. (Same as MouseMoved)
+; REGS:	  none
+
+; Check if mouse has moved and get position.
+; MACRO:  ReadMouseMove 1
+; OUTPUT: %1 = current mouse screen position (prefers dx)
+;	  Carry Flag Set if mouse has moved since last ReadMouseMove.
+; REGS:	  dx
+
 %include "DOSCRT/MOUSE.INC"
 ; -----------------------------------------------------------------------------
 ; Standard text video display mode constants
