@@ -46,6 +46,7 @@ KeyPressed_PROC:
 	RegsPreserve		ax
 	mov  			ah, 0x01
 	int  			0x16
+	; ZF if no keystroke available
 	clc
 	jz   			%%Done
 	stc

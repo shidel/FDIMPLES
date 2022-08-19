@@ -244,6 +244,16 @@
 	%endif
 %endmacro
 
+%imacro poppush 1-*
+; Performa a pop and push for each register
+	%rep  %0
+		pop	%1
+		push    %1
+	%rotate 1
+	%endrep
+%endmacro
+
+
 %imacro regpush 0-*
 ; When Registers are not Preserved, perform push
 	%ifndef Preserve_Registers

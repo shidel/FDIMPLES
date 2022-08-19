@@ -531,24 +531,108 @@ __?SECT?__
 ; *****************************************************************************
 ; The end user bellow section. :-)
 ; *****************************************************************************
+; -----------------------------------------------------------------------------
+; Test if mouse has been moved
+; MACRO:  MouseMoved 0-1
+; INPUT:  %1 = [Optional] jump address if mouse has been moved.
+; OUTPUT: Carry Flag Set if mouse has moved. (Same as NotMouseMoved)
+; REGS:	  none
+; -----------------------------------------------------------------------------
 %imacro MouseMoved_INTERNAL 0
 
 SECTION_PROC
 
 MouseMoved_PROC:
+	clc
+	cmp			[Mouse_Move_Flag], byte 0x00
+	jz			%%Done
+	stc
+%%Done:
 	ret
 
 __?SECT?__
 
 %endmacro
 
-%imacro MouseMoved 0
+%imacro MouseMoved 0-1
 
 %ifdef Support_Mouse
 
 	PROC_REQUIRE		MouseInitialize
 	PROC_REQUIRE		MouseMoved
-	call			PostWriteMouse_PROC
+	call			MouseMoved_PROC
+	%if %0 = 1
+		jc		%1
+	%endif
+
+%endif
+
+%endmacro
+
+; -----------------------------------------------------------------------------
+; Test if mouse has not moved
+; MACRO:  NotMouseMoved 0-1
+; INPUT:  %1 = [Optional] jump address if mouse has not moved.
+; OUTPUT: Carry Flag Set if mouse has moved. (Same as MouseMoved)
+; REGS:	  none
+; -----------------------------------------------------------------------------
+%imacro NotMouseMoved 0-1
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseInitialize
+	PROC_REQUIRE		MouseMoved
+	call			MouseMoved_PROC
+	%if %0 = 1
+		jnc		%1
+	%endif
+
+%endif
+
+%endmacro
+
+; -----------------------------------------------------------------------------
+; Check if mouse has not moved.
+; MACRO:  ReadMouseMove 1
+; INPUT:  none
+; OUTPUT:
+;	%1 = current mouse position (prefers dx)
+;	Carry Flag Set if mouse has moved since last ReadMouseMove.
+; REGS:	  dx
+; -----------------------------------------------------------------------------
+%imacro ReadMouseMove_INTERNAL 0
+
+SECTION_PROC
+
+ReadMouseMove_PROC:
+	mov			dl, [Mouse_Position_X]
+	mov			dh, [Mouse_Position_Y]
+	clc
+	cmp			[Mouse_Move_Flag], byte 0x00
+	jz			%%Done
+	mov			[Mouse_Move_Flag], byte 0x00
+	stc
+%%Done:
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro ReadMouseMove 1
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseInitialize
+	PROC_REQUIRE		ReadMouseMove
+	%ifnidni %1, dx
+		RegsPreserve	dx
+	%endif
+	call			ReadMouseMove_PROC
+	%ifnidni %1, dx
+		movndef		%1, dx
+		RegsRestore	dx
+	%endif
 
 %endif
 
@@ -563,12 +647,11 @@ __?SECT?__
 	PROC_PROVIDE		PostWriteMouse
 
 	PROC_PROVIDE		MouseMoved
-	PROC_PROVIDE		NotMousewMoved
 	PROC_PROVIDE		ReadMouseMove
 
-	PROC_PROVIDE		MouseClicked
-	PROC_PROVIDE		NotMousewClicked
-	PROC_PROVIDE		ReadMouseClick
+	; PROC_PROVIDE		MouseClicked
+	; PROC_PROVIDE		NotMousewClicked
+	; PROC_PROVIDE		ReadMouseClick
 
 
 %endif

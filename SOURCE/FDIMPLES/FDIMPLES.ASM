@@ -79,19 +79,35 @@ MouseFound:
 	WriteHexByte		al
  	WriteStr		' button mouse found.'
  	WriteCRLF
-	MouseShow
+ 	MouseShow
+
+CheckMouseMove:
+	ReadMouseMove		dx
 
 MainLoop:
+	push			dx
 	GotoXY			0x0300
-	WriteHexByte 		[Mouse_Position_X]
+	poppush			dx
+	WriteHexByte 		dl
 	WriteChar		'/'
-	WriteHexByte		[Mouse_Position_Y]
+	pop			dx
+	WriteHexByte		dh
 	WriteChar		':'
 	mov			al, [Mouse_Button_State]
 	add			al, '0'
 	WriteChar		al
+
+MainWait:
+	; Idle
 	KeyPressed		CheckKeyPress
+	; MouseClicked		CheckMouseClick
+	MouseMoved		CheckMouseMove		; Generally, not needed
+	jmp			MainWait
+
+CheckMouseClick:
+	; ReadMouseClick		bx, dx
 	jmp			MainLoop
+
 
 CheckKeyPress:
 	; Just purge and exit
