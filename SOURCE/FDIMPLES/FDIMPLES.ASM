@@ -101,11 +101,12 @@ MainWait:
 	; Idle
 	KeyPressed		CheckKeyPress
 	; MouseClicked		CheckMouseClick
-	MouseMoved		CheckMouseMove		; Generally, not needed
-	jmp			MainWait
+	; MouseMoved		CheckMouseMove		; Generally, not needed
+	; jmp			MainWait
 
 CheckMouseClick:
-	; ReadMouseClick		bx, dx
+	ReadMouseClick		bx, dx
+	jnc			MainWait
 	jmp			MainLoop
 
 

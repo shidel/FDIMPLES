@@ -243,6 +243,21 @@
 
 %include "DOSCRT/CURSOR.INC"
 
+; Check if mouse button event has occurred and remove it from the buffer.
+; Generally, this is the only mouse macro you will absolutely need to use.
+; However, if you want to do things like hover-over highlighting. You will
+; also may to use the MouseMove/ReadMouseMove macros to simplify the code.
+; MACRO:  ReadMouseClick 2
+; INPUT:  none
+; OUTPUT:
+;	If CarryFlag is true, then...
+;	%1 = mouse button status for event (prefers bx)
+;	%2 = mouse screen position for event (prefers dx)
+;	If Carry Flag is false, then...
+;	%1 = current mouse button status (prefers bx)
+;	%2 = current mouse screen position (prefers dx)
+; REGS:	bx, dx, si
+
 ; Test if mouse has been moved
 ; MACRO:  MouseMoved 0-1
 ; INPUT:  %1 = [Optional] jump address if mouse has been moved.
@@ -260,6 +275,18 @@
 ; OUTPUT: %1 = current mouse screen position (prefers dx)
 ;	  Carry Flag Set if mouse has moved since last ReadMouseMove.
 ; REGS:	  dx
+
+; Test if any mouse button event has occurred and is waiting in the buffer.
+; MACRO:  MouseClicked 0-1
+; INPUT:  %1 = [Optional] jump address if a mouse button event occurred.
+; OUTPUT: Carry Flag Set if mouse has button event is waiting in the buffer.
+; REGS:	  ax
+
+; Test if no mouse button events are waiting in the buffer.
+; MACRO:  NotMouseClicked 0-1
+; INPUT:  %1 = [Optional] jump address if a mouse button event has not occurred.
+; OUTPUT: Carry Flag Set if a button event is waiting. (Same as MouseClicked)
+; REGS:	  ax
 
 %include "DOSCRT/MOUSE.INC"
 ; -----------------------------------------------------------------------------

@@ -37,6 +37,8 @@
 ; does not need direct interaction by the end user (programmer/developer).
 ; Look for the end-user section bellow.
 ; -----------------------------------------------------------------------------
+%idefine Mouse_Buffer_Struc_Size 4 ; 1 word + 2 bytes per event buffer entry
+
 %imacro MouseDataReset_INTERNAL 0
 
 SECTION_PROC
@@ -265,13 +267,14 @@ MouseHandler_INTERRUPT:
 
 	; Button event add to buffer
 	mov			di, [Mouse_Buffer_Head]
-	add			di, 4
+	add			di, Mouse_Buffer_Struc_Size
 	cmp			di, Mouse_Buffer_End
 	jb			%%BufferNoWrap
 	mov			di, Mouse_Buffer_Start
 %%BufferNoWrap:
 	cmp			di, [Mouse_Buffer_Tail]
 	je			%%BufferFull
+	mov			[Mouse_Buffer_Head], di
 	mov			[di], bx
 	mov			[di + 2], cl
 	mov			[di + 3], dl
@@ -636,6 +639,143 @@ __?SECT?__
 %endif
 
 %endmacro
+; -----------------------------------------------------------------------------
+; Test if any mouse button event has occurred and is waiting in the buffer.
+; MACRO:  MouseClicked 0-1
+; INPUT:  %1 = [Optional] jump address if a mouse button event occurred.
+; OUTPUT: Carry Flag Set if mouse has button event is waiting in the buffer.
+; REGS:	  ax
+; -----------------------------------------------------------------------------
+%imacro MouseClicked_INTERNAL 0
+
+SECTION_PROC
+
+MouseClicked_PROC:
+	RegsPreserve		ax
+	mov			ax, [Mouse_Buffer_Head]
+	clc
+	cmp			[Mouse_Buffer_Tail], ax
+	je			%%Done
+	stc
+%%Done:
+	RegsRestore		ax
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro MouseClicked 0-1
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseInitialize
+	PROC_REQUIRE		MouseClicked
+	call			MouseClicked_PROC
+	%if %0 = 1
+		jc		%1
+	%endif
+
+%endif
+
+%endmacro
+
+; -----------------------------------------------------------------------------
+; Test if no mouse button events are waiting in the buffer.
+; MACRO:  NotMouseClicked 0-1
+; INPUT:  %1 = [Optional] jump address if a mouse button event has not occurred.
+; OUTPUT: Carry Flag Set if a button event is waiting. (Same as MouseClicked)
+; REGS:	  ax
+; -----------------------------------------------------------------------------
+%imacro NotMouseClicked 0-1
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseInitialize
+	PROC_REQUIRE		MouseClicked
+	call			MouseClicked_PROC
+	%if %0 = 1
+		jnc		%1
+	%endif
+
+%endif
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Check if mouse button event has occurred and remove it from the buffer.
+; Generally, this is the only mouse macro you will absolutely need to use.
+; However, if you want to do things like hover-over highlighting. You will
+; also may to use the MouseMove/ReadMouseMove macros to simplify the code.
+; MACRO:  ReadMouseClick 2
+; INPUT:  none
+; OUTPUT:
+;	If CarryFlag is true, then...
+;	%1 = mouse button status for event (prefers bx)
+;	%2 = mouse screen position for event (prefers dx)
+;	If Carry Flag is false, then...
+;	%1 = current mouse button status (prefers bx)
+;	%2 = current mouse screen position (prefers dx)
+; REGS:	bx, dx, si
+; -----------------------------------------------------------------------------
+%imacro ReadMouseClick_INTERNAL 0
+
+SECTION_PROC
+
+ReadMouseClick_PROC:
+	cli
+	RegsPreserve		si
+	mov			si, [Mouse_Buffer_Tail]
+	cmp			si, [Mouse_Buffer_Head]
+	je			%%NoEvent
+	add			si, Mouse_Buffer_Struc_Size
+	cmp			si, Mouse_Buffer_End
+	jb			%%BufferNoWrap
+	mov			si, Mouse_Buffer_Start
+%%BufferNoWrap:
+	mov			[Mouse_Buffer_Tail], si
+	mov			bx, [si]
+	mov			dl, [si + 2]
+	mov			dh, [si + 3]
+	stc
+	jmp			%%Done
+%%NoEvent:
+	mov			bx, [Mouse_Button_State]
+	mov			dl, [Mouse_Position_X]
+	mov			dh, [Mouse_Position_Y]
+	clc
+%%Done:
+	RegsRestore		si
+	sti
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro ReadMouseClick 2
+
+%ifdef Support_Mouse
+
+	PROC_REQUIRE		MouseInitialize
+	PROC_REQUIRE		ReadMouseClick
+	%ifnidni %1, bx
+		RegsPreserve	bx
+	%endif
+	%ifnidni %2, dx
+		RegsPreserve	dx
+	%endif
+	call			ReadMouseClick_PROC
+	movndef			%1, bx, %2, dx
+	%ifnidni %2, dx
+		RegsRestore	dx
+	%endif
+	%ifnidni %1, bx
+		RegsRestore	bx
+	%endif
+
+%endif
+
+%endmacro
 
 ; *****************************************************************************
 %else
@@ -648,9 +788,9 @@ __?SECT?__
 	PROC_PROVIDE		MouseMoved
 	PROC_PROVIDE		ReadMouseMove
 
-	; PROC_PROVIDE		MouseClicked
+	PROC_PROVIDE		MouseClicked
 	; PROC_PROVIDE		NotMousewClicked
-	; PROC_PROVIDE		ReadMouseClick
+	PROC_PROVIDE		ReadMouseClick
 
 
 %endif
