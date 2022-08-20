@@ -311,6 +311,13 @@ MouseDraw_PROC:
 	; AL = 0/1 for Undraw/Draw
 	; Basically save then move cursor to mouse position. Then ether
 	; read or write charattr. Then move cursor back to previous position.
+
+BIOSorDIRECT MouseDrawing
+
+%ifdef Support_BIOS_Video
+MouseDrawing_BIOS:
+
+
 	pushm			bx, cx, dx
 	; Save current cursor position
 	%ifdef DOS_BUG_FIXES
@@ -356,9 +363,24 @@ MouseDraw_PROC:
 	mov			ah, 0x02
 	int			0x10
 	popm			bx, cx, dx
+%endif
+
+%ifdef BIOS_AND_DIRECT_VIDEO
+	jmp			%%DoneDrawing
+%endif
+
+%ifdef Support_Direct_Video
+MouseDrawing_DIRECT:
+	%warning 'MOUSE, direct video support not implemented'
+	jmp  MouseDrawing_BIOS
+	ret
+%endif
+
 %%DoneDrawing:
 	pop			ax
 	ret
+
+
 
 MouseHide_PROC:
 	sub			[Mouse_Cursor_State], word 1

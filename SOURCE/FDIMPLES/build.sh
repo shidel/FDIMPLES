@@ -2,6 +2,7 @@
 
 function build () {
 
+	echo "Compile ${1}......"
 	[[ -f "${1}.COM" ]] && rm "${1}.COM"
 	nasm "${1}.ASM" -ILIBS/ -fbin -O9 -o "${1}.COM" || exit 1
 	if [ ! -f  "${1}.COM" ] ; then
