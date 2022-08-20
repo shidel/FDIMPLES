@@ -52,12 +52,13 @@ SECTION .text
 %undef Video_VESA		; SuperVGA check/support
 
 %include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
-				; initialization routines. Calls to those
+				; initialization routines. Some calls for those
 				; routines gets inserted automatically. For
 				; example DOSCRT requires preparation. If those
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
+	WriteStr		'FDIMPLES ', __DATE__
+
 Finished:
-	; VideoResetSettings
 	Terminate		0 ; Automatically includes used LIB functions

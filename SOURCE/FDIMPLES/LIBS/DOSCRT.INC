@@ -47,28 +47,28 @@
 ; use a shared temporary buffer in the BSS.
 ; MACRO:  VideoInitializeState 0
 ; OUTPUT: undefined, sets data in BSS.
-; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
+; REGS:	  AX, BX, CX, DX, DI (NEVER preserved)
 
 ; Probes for current video settings. It needs called prior to any other DOSCRT
 ; macros. It probably should only be called only once at startup. It is called
 ; automatically. But if for some reason you need to call it again, its there.
 ; MACRO:  VideoInitializeOriginals 0
 ; OUTPUT: undefined, sets data in BSS.
-; REGS:	  AX, BX, ES (NEVER preserved)
+; REGS:	  AX, BX (NEVER preserved)
 
 ; Restores video settings, to original mode, page, and cursor if needed.
 ; Requires using InitialVideoSettings macro during startup. Should probably
 ; call before exit. Automatically, calls ProbeVideoSettings to update data.
 ; MACRO:  VideoResetSettings 0
 ; OUTPUT: undefined, sets data in BSS.
-; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
+; REGS:	  AX, BX, CX, DX, DI (NEVER preserved)
 
 ; Changes video mode if needed. Automatically calls ProbeVideoSettings to
 ; update data.
 ; MACRO:  TextMode 1
 ; INPUT:  %1 = video mode (prefers al), original returns it to Initial Setting
 ; OUTPUT: Carry Flag set if error occurred.
-; REGS:	  AX, BX, CX, DX, ES, DI (NEVER preserved)
+; REGS:	  AX, BX, CX, DX, DI (NEVER preserved)
 
 %include "DOSCRT/TEXTMODE.INC"
 

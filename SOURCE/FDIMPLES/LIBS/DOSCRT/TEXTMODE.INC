@@ -47,6 +47,7 @@ SECTION_PROC
 
 VideoInitializeState_PROC:
 
+
 ; Assume at least monochrome MDA
 	%ifdef Support_Direct_Video
 		mov		[Video_Segment], word 0xb000
@@ -55,6 +56,7 @@ VideoInitializeState_PROC:
 	mov			[Video_Card], byte Video_MDA
 	mov			[Video_Cursor_State], word 0x0000
 
+	push			es
 ; If color assume at least CGA
 	mov			ax, 0x0040
 	push 			ax
@@ -155,6 +157,7 @@ VideoInitializeState_PROC:
 		PROC_REQUIRE	MouseDataReset
 		MouseDataReset
 	%endif
+	pop	es
 	ret
 
 
@@ -221,6 +224,7 @@ __?SECT?__
 SECTION_PROC
 
 VideoInitializeOriginals_PROC:
+	push			es
 	mov			ax, 0x0040
 	push 			ax
 	pop			es
@@ -233,6 +237,7 @@ VideoInitializeOriginals_PROC:
 	mov			ah, 0x08
 	int			0x10
 	mov			[Initial_Video_Attr], ah
+	pop			es
 	ret
 
 SECTION_BSS
@@ -273,6 +278,7 @@ TextMode_PROC:
 		call			MouseHide_PROC
 
 	%endif
+	push			es
 	mov			bx, 0x0040
 	push 			bx
 	pop			es
@@ -304,6 +310,7 @@ TextMode_PROC:
 	%%NoAutoMouse:
 
 	%endif
+	pop			es
 	ret
 
 __?SECT?__
@@ -336,6 +343,10 @@ SECTION_PROC
 
 VideoResetSettings_PROC:
 	TextMode		original
+	push			es
+	mov			ax, 0x0040
+	push			ax
+	pop			es
 	mov			ah, [es:0x0062]
 	mov			al, [Initial_Video_Page]
 	cmp			ah, al
@@ -372,6 +383,7 @@ VideoResetSettings_PROC:
 	%%NoAutoMouse:
 
 	%endif
+		pop		es
 	ret
 
 __?SECT?__
