@@ -1,17 +1,24 @@
 @echo off
 
-del FDIMPLES.COM >nul
-nasm "FDIMPLES.ASM" -ILIBS/ -fbin -O9 -o "FDIMPLES.COM"
-if not exist FDIMPLES.COM goto end
+if "%1" == "" goto buildlist
+
+if exist %1.COM del %1.COM >nul
+nasm %1.ASM -ILIBS/ -fbin -O9 -o %1.COM
+if not exist %1.COM goto end
 
 if not exist ..\..\BIN\NUL mkdir ..\..\BIN
 
-if not exist ..\..\BIN\FDIMPLES.COM goto NoOld
+if not exist ..\..\BIN\%1.COM goto NoOld
 
-dir ..\..\BIN\FDIMPLES.COM
+dir ..\..\BIN\%1.COM
 
 :NoOld
-copy /y FDIMPLES.COM ..\..\BIN\ >NUL
-dir ..\..\BIN\FDIMPLES.COM
+copy /y %1.COM ..\..\BIN\ >NUL
+dir ..\..\BIN\%1.COM
+goto end
+
+:buildlist
+
+CALL %0 FDIMPLES
 
 :end
