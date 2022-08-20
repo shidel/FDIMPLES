@@ -33,6 +33,7 @@
 %define WRITE_INC_DEFINED
 ; -----------------------------------------------------------------------------
 %imacro WriteChar_INTERNAL 0
+; AL = character to display
 
 SECTION_PROC
 
