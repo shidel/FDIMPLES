@@ -89,12 +89,17 @@
 %define vcbCtrlChar 	00000100b	; Print, don't process control chars
 %define vcbAutoMouse	00001000b	; Automatic mouse pointer visibility
 ; -----------------------------------------------------------------------------
-; Internal defines to make coding macros simpler
-%undef BIOS_Direct_Video
-%ifdef Support_BIOS_Video
-	%ifdef Support_Direct_Video
-		%define BIOS_Direct_Video
-	%endif
 %endif
 ; -----------------------------------------------------------------------------
+; Internal defines to make coding macros simpler
+%define NO_VIDEO_SUPPORT
+%undef BIOS_AND_DIRECT_VIDEO
+%ifdef Support_BIOS_Video
+	%undef NO_VIDEO_SUPPORT
+	%ifdef Support_Direct_Video
+		%define BIOS_AND_DIRECT_VIDEO
+	%endif
+%elifdef Support_Direct_Video
+	%undef NO_VIDEO_SUPPORT
 %endif
+; -----------------------------------------------------------------------------

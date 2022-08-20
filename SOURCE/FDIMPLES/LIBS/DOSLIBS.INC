@@ -39,7 +39,9 @@
 		%include "FEATURES.INC"
 		%include "DOSMEM.INC"
 		%include "DOSSYS.INC"
-		%include "DOSCRT.INC"
+		%ifndef NO_VIDEO_SUPPORT
+			%include "DOSCRT.INC"
+		%endif
 	%endmacro
 
 	%imacro Include_LIB_Functions 0
@@ -52,3 +54,4 @@
 	DOSLIBS_INCLUDE_ALL
 	%define DOSLIBS_INCLUDED_DEFINED
 %endif
+

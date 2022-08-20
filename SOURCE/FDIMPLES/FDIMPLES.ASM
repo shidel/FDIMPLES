@@ -41,15 +41,16 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers	; Preserve all registers in most macros
-; %undef DOS_BUG_FIXES		; Include some fixes for various DOS and BIOS
-%undef DOSCRT_Range_Check	; Prevent out of bounds coordinate settings
-%undef Support_BIOS_Timer	; Try to use high precision int15 timer
-%undef Support_Direct_Video	; Direct video addressing support
-; %undef Support_Mouse		; Mouse support
-%undef Video_MCGA		; MCGA check/support
-%undef Video_VGA		; VGA check/support
-%undef Video_VESA		; SuperVGA check/support
+%undef Preserve_Registers	; disable preserving registers in macros
+; %undef DOS_BUG_FIXES		; keep some fixes for various DOS and BIOS bugs
+%undef DOSCRT_Range_Check	; disable out of bounds coordinate settings
+%undef Support_BIOS_Timer	; disable attempts to use int15 timer
+; %undef Support_BIOS_Video	; keep BIOS video support
+; %undef Support_Direct_Video	; keep Direct video addressing support
+; %undef Support_Mouse		; keep Mouse support
+%undef Video_MCGA		; disable MCGA check/support
+%undef Video_VGA		; disable VGA check/support
+%undef Video_VESA		; disable SuperVGA check/support
 
 %include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
 				; initialization routines. Some calls for those
@@ -61,4 +62,5 @@ SECTION .text
 	WriteStr		'FDIMPLES ', __DATE__
 
 Finished:
-	Terminate		0 ; Automatically includes used LIB functions
+	VideoResetSettings		; Reset TextMode, Cursor, etc if needed
+	Terminate		0	; Also includes used LIB functions

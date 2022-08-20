@@ -320,20 +320,23 @@
 ; -----------------------------------------------------------------------------
 ; Automatically initialize video display and other settings
 %ifndef DO_NOT_INITIALIZE_LIBS
-	%ifndef DOSCRT_INIT_CODE
-	%define DOSCRT_INIT_CODE
+  %ifndef DOSCRT_INIT_CODE
+  %define DOSCRT_INIT_CODE
 
+    %ifndef NO_VIDEO_SUPPORT
 	%ifdef Support_Mouse
 		mov [Video_Options], byte vcbDirect + vcbScroll + vcbAutoMouse
 	%else
 		mov [Video_Options], byte vcbDirect + vcbScroll
 	%endif
-		mov [Video_Tab], word 0x0408
-		VideoInitializeState
-		WindowMax
-		VideoInitializeOriginals
-		MouseInitialize
-	%endif
+	mov [Video_Tab], word 0x0408
+	VideoInitializeState
+	WindowMax
+	VideoInitializeOriginals
+	MouseInitialize
+    %endif
+  %endif
+
 %endif
 ; -----------------------------------------------------------------------------
 
