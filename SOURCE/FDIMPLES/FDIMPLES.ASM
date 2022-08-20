@@ -46,7 +46,7 @@ SECTION .text
 %undef DOSCRT_Range_Check	; disable out of bounds coordinate settings
 %undef Support_BIOS_Timer	; disable attempts to use int15 timer
 ; %undef Support_BIOS_Video	; keep BIOS video support
-; %undef Support_Direct_Video	; keep Direct video addressing support
+%undef Support_Direct_Video	; Direct video addressing, not yet implemented
 ; %undef Support_Mouse		; keep Mouse support
 %undef Video_MCGA		; disable MCGA check/support
 %undef Video_VGA		; disable VGA check/support

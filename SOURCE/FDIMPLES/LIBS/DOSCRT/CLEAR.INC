@@ -40,7 +40,10 @@
 
 SECTION_PROC
 
-ClrScr_PROC:
+BIOSorDIRECT ClrScr_PROC
+
+%ifdef Support_BIOS_Video
+ClrScr_PROC_BIOS:
 	RegsPreserve		ax, bx, cx, dx
 	mov			ax, 0x0600	; Scroll Up 0 lines
 	mov			bh, [Video_Attr]
@@ -62,6 +65,14 @@ ClrScr_PROC:
 	int			0x10
 	RegsRestore		ax, bx, cx, dx
 	ret
+%endif
+
+%ifdef Support_Direct_Video
+ClrScr_PROC_DIRECT:
+	%warning 'ClrScr, direct video support not implemented'
+	jmp  ClrScr_PROC_BIOS
+	ret
+%endif
 
 __?SECT?__
 
@@ -83,7 +94,10 @@ __?SECT?__
 
 SECTION_PROC
 
-ClrEOL_PROC:
+BIOSorDIRECT ClrEOL_PROC
+
+%ifdef Support_BIOS_Video
+ClrEOL_PROC_BIOS:
 	RegsPreserve		ax, bx, cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
@@ -108,6 +122,14 @@ ClrEOL_PROC:
 	PostWriteMouse
 	RegsRestore		ax, bx, cx, dx
 	ret
+%endif
+
+%ifdef Support_Direct_Video
+ClrEOL_PROC_DIRECT:
+	%warning 'ClrEOL, direct video support not implemented'
+	jmp  ClrEOL_PROC_BIOS
+	ret
+%endif
 
 __?SECT?__
 

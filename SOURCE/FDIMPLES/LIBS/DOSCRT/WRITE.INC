@@ -36,7 +36,11 @@
 
 SECTION_PROC
 
-WriteChar_PROC:
+BIOSorDIRECT WriteChar_PROC
+
+%ifdef Support_BIOS_Video
+WriteChar_PROC_BIOS:
+
 ; al = character to display
 	RegsPreserve		bx, cx, dx
 	; push ax,  see - https://fd.lod.bz/rbil/interrup/video/1003.html
@@ -151,6 +155,14 @@ WriteChar_PROC:
 	int			0x10
 	RegsRestore		bx, cx, dx
 	ret
+%endif
+
+%ifdef Support_Direct_Video
+WriteChar_PROC_DIRECT:
+	%warning 'WriteChar, direct video support not implemented'
+	jmp WriteChar_PROC_BIOS
+	ret
+%endif
 
 __?SECT?__
 

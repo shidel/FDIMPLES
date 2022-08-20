@@ -36,6 +36,20 @@
 %include "FEATURES.INC"
 %include "NASMEXT.INC"
 ; -----------------------------------------------------------------------------
+; Internal macro to decide wether to use BIOS or DIRECT video for CRT macros
+%ifndef BIOSorDIRECT_DEFINED
+%define BIOSorDIRECT_DEFINED
+	%macro BIOSorDIRECT 1
+
+		%1:
+
+		%ifdef BIOS_AND_DIRECT_VIDEO
+			test 	[Video_Options], byte vcbDirect
+			jz	%1_BIOS
+			jmp	%1_DIRECT
+		%endif
+	%endmacro
+%endif
 ; List of macros and functions provided by this file.
 ; Note: Macros often have have preferred register to use when passing when
 ; passing them a parameter. Using the preferred register will result in saving

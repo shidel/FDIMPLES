@@ -43,7 +43,10 @@
 
 SECTION_PROC
 
-ScrollWindowUpDown_PROC:
+BIOSorDIRECT ScrollWindowUpDown_PROC
+
+%ifdef Support_BIOS_Video
+ScrollWindowUpDown_PROC_BIOS:
 	RegsPreserve		bx, cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
@@ -76,6 +79,14 @@ ScrollWindowUpDown_PROC:
 	PostWriteMouse
 	RegsRestore		bx, cx, dx
 	ret
+%endif
+
+%ifdef Support_Direct_Video
+ScrollWindowUpDown_PROC_DIRECT:
+	%warning 'ScrollWindowUpDown, direct video support not implemented'
+	jmp ScrollWindowUpDown_PROC_BIOS
+	ret
+%endif
 
 __?SECT?__
 
