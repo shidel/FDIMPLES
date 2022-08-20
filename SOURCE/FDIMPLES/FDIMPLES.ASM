@@ -54,10 +54,13 @@ SECTION .text
 
 %include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
 				; initialization routines. Some calls for those
-				; routines gets inserted automatically. For
+				; routines get inserted automatically. For
 				; example DOSCRT requires preparation. If those
-				; are not needed, you can save some bytes by
+				; are not needed, you might save some bytes by
 				; including only the required LIBS directly.
+				; Or better yet, you disable those features to
+				; prevent accidentally using a macro that you
+				; did may have prevented from being initialized.
 
 	WriteStr		'FDIMPLES ', __DATE__
 
