@@ -46,7 +46,10 @@
 ; INPUT:  %1+ = Characters (prefers dl)
 ; OUTPUT: none
 
-; Send ASCIIz string to standard output device
+; Send ASCIIz string to standard output device. When passed a memory reference,
+; like a register or number, it will use the ES segment (like [ES:?]). When
+; passed a hard string (like 'HELLO'), it will be stored in the DATA segment
+; and it will automatically adjust ES to DS and back again.
 ; MACRO:  StdOutStr 1+
 ; INPUT:  %1+ = ASCIIz string sent to STDOUT (prefers si)
 ; OUTPUT: none

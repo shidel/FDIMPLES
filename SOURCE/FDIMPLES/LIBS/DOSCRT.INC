@@ -226,7 +226,10 @@
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
 ; REG: 	  ax, bx, cx, dx
 
-; Send ASCIIz string to display
+; Send ASCIIz string to display. When passed a memory reference, like a
+; register or number, it will use the ES segment (like [ES:?]). When passed
+; a hard string (like 'HELLO'), it will be stored in the DATA segment
+; and it will automatically adjust ES to DS and back again.
 ; MACRO:  WriteStr 1-*
 ; INPUT:  ASCIIz string(s) to sent to display (prefers si)
 ; REGS:   ax, bx, cx, dx, si

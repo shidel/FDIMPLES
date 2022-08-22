@@ -77,6 +77,36 @@ __?SECT?__
 
 %endmacro
 
+%imacro StdOutCR_INTERNAL 0
+
+SECTION_PROC
+
+StdOutCR_PROC:
+	pushm			dx, ax
+	mov			ah, 0x02
+	mov			dl, 0x0d
+	popm			dx, ax
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro StdOutLF_INTERNAL 0
+
+SECTION_PROC
+
+StdOutLF_PROC:
+	pushm			dx, ax
+	mov			dl, 0x0a
+	int			0x21
+	popm			dx, ax
+	ret
+
+__?SECT?__
+
+%endmacro
+
 %imacro StdOutCRLF 0-1	1
 
 	PROC_REQUIRE StdOutCRLF
@@ -94,9 +124,12 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-; Send ASCIIz string to standard output device
-; MACRO:  StdOutStr 1-*
-; INPUT:  ASCIIz string(s) sent to STDOUT (prefers si)
+; Send ASCIIz string to standard output device. When passed a memory reference,
+; like a register or number, it will use the ES segment (like [ES:?]). When
+; passed a hard string (like 'HELLO'), it will be stored in the DATA segment
+; and it will automatically adjust ES to DS and back again.
+; MACRO:  StdOutStr 1+
+; INPUT:  %1+ = ASCIIz string sent to STDOUT (prefers si)
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
 %imacro StdOutStr_INTERNAL 0
@@ -104,12 +137,11 @@ __?SECT?__
 SECTION_PROC
 
 StdOutStr_PROC:
-; DS:SI = Address of ASCIIz string
 	pushm			ax, dx
 	mov			ah, 0x02
 	cld
 %%DisplayMessage:
-	mov			dl, [si]
+	mov			dl, [es:si]
 	test			dl, dl
 	jz 			%%NoDisplayChar
 	inc			si
@@ -123,9 +155,22 @@ __?SECT?__
 
 %endmacro
 
+%imacro StdOutStrDS_INTERNAL 0
+
+StdOutStrDS_PROC:
+	push		es
+	push		ds
+	pop		es
+	call		StdOutStr_PROC
+	pop		es
+	ret
+%endmacro
+
+
 %imacro StdOutStr_SUBMAC 1
 
 	PROC_REQUIRE StdOutStr
+	PROC_REQUIRE StdOutStrDS
 
 SECTION_DATA
 
@@ -140,18 +185,29 @@ __?SECT?__
 
 	%ifstr %1
 		movndef		si, %%str
+		call		StdOutStrDS_PROC
 	%else
 		mov		si, %1
+		call		StdOutStr_PROC
 	%endif
-	call			StdOutStr_PROC
 
 %endmacro
 
 %imacro StdOutStr 1-*
+
+	PROC_REQUIRE	StdOutCR
+	PROC_REQUIRE	StdOutLF
+
 	%rep  %0
-		push		si
-		StdOutStr_SUBMAC %1
-		pop		si
+		%ifidni %1, CR
+			call	StdOutCR_PROC
+		%elifidni %1, LF
+			call	StdOutLF_PROC
+		%else
+			push		si
+			StdOutStr_SUBMAC %1
+			pop		si
+		%endif
 	%rotate 1
 	%endrep
 %endmacro
@@ -234,6 +290,9 @@ __?SECT?__
 ; *****************************************************************************
 %else
 	PROC_PROVIDE StdOutCRLF
+	PROC_PROVIDE StdOutCR
+	PROC_PROVIDE StdOutLF
 	PROC_PROVIDE StdOutStr
+	PROC_PROVIDE StdOutStrDS
 	PROC_PROVIDE StdOutHexByte
 %endif

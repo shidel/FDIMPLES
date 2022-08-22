@@ -211,6 +211,40 @@ __?SECT?__
 
 %endmacro
 
+%imacro WriteCR_INTERNAL 0
+
+	PROC_REQUIRE WriteChar
+
+SECTION_PROC
+
+WriteCR_PROC:
+	RegsPreserve		ax
+	mov			al, CR
+	call			WriteChar_PROC
+	RegsRestore		ax
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro WriteLF_INTERNAL 0
+
+	PROC_REQUIRE WriteChar
+
+SECTION_PROC
+
+WriteLF_PROC:
+	RegsPreserve		ax
+	mov			al, LF
+	call			WriteChar_PROC
+	RegsRestore		ax
+	ret
+
+__?SECT?__
+
+%endmacro
+
 %imacro WriteCRLF 0-1 1
 
 	PROC_REQUIRE 		WriteCRLF
@@ -230,7 +264,10 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-; Send ASCIIz string to display
+; Send ASCIIz string to display. When passed a memory reference, like a
+; register or number, it will use the ES segment (like [ES:?]). When passed
+; a hard string (like 'HELLO'), it will be stored in the DATA segment
+; and it will automatically adjust ES to DS and back again.
 ; MACRO:  WriteStr 1-*
 ; INPUT:  ASCIIz string(s) to sent to display (prefers si)
 ; REGS:   ax, bx, cx, dx, si
@@ -242,11 +279,10 @@ __?SECT?__
 SECTION_PROC
 
 WriteStr_PROC:
-; DS:SI = Address of ASCIIz string
 	RegsPreserve		ax
 	cld
 %%DisplayMessage:
-	lodsb
+	es lodsb
 	test			al, al
 	jz 			%%NoDisplayChar
 	call			WriteChar_PROC
@@ -259,8 +295,20 @@ __?SECT?__
 
 %endmacro
 
+%imacro WriteStrDS_INTERNAL 0
+
+WriteStrDS_PROC:
+	push		es
+	push		ds
+	pop		es
+	call		WriteStr_PROC
+	pop		es
+	ret
+%endmacro
+
 %imacro WriteStr_SUBMAC 1
 
+	PROC_REQUIRE WriteStrDS
 	PROC_REQUIRE WriteChar
 	PROC_REQUIRE WriteStr
 
@@ -278,18 +326,28 @@ __?SECT?__
 	RegsPreserve		si
 	%ifstr %1
 		movndef		si, %%str
+		call		WriteStrDS_PROC
 	%else
-		mov		si, %1
+		movndef		si, %1
+		call		WriteStr_PROC
 	%endif
-	call			WriteStr_PROC
 	RegsRestore		si
 
 %endmacro
 
 %imacro WriteStr 1-*
 
+	PROC_REQUIRE WriteCR
+	PROC_REQUIRE WriteLF
+
 	%rep  %0
-		WriteStr_SUBMAC %1
+		%ifidni %1, CR
+			call	WriteCR_PROC
+		%elifidni %1, LF
+			call	WriteLF_PROC
+		%else
+			WriteStr_SUBMAC %1
+		%endif
 	%rotate 1
 	%endrep
 %endmacro
@@ -380,6 +438,9 @@ __?SECT?__
 %else
 	PROC_PROVIDE		WriteChar
 	PROC_PROVIDE		WriteCRLF
+	PROC_PROVIDE		WriteCR
+	PROC_PROVIDE		WriteLF
 	PROC_PROVIDE		WriteStr
+	PROC_PROVIDE		WriteStrDS
 	PROC_PROVIDE		WriteHexByte
 %endif
