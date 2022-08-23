@@ -32,6 +32,55 @@
 %ifndef TEXTMODE_INC_DEFINED
 %define TEXTMODE_INC_DEFINED
 ; -----------------------------------------------------------------------------
+; Provided an XY position on the screen, it returns a pointer to that position
+; in video ram.
+; MACRO:  Calc_Video_Pointer 1
+; INPUT:  %1 = XY screen coordinate (prefers ax)
+; OUTPUT: ES:DI Pointer to video coordinate in ram, AX=bytes per line
+; REGS:	  ES, DI, AX (NEVER preserved)
+; -----------------------------------------------------------------------------
+%macro Calc_Video_Pointer_INTERNAL 0
+
+SECTION_PROC
+
+Calc_Video_Pointer_PROC:
+	; %1 = XY coor of screen position
+	pushm		cx, dx
+	shl		ax, 1
+	push		ax
+	xor		ah, ah
+	mov		di, ax
+	pop		ax
+	mov		al, ah
+	xor		ah, ah
+	mov		ch, ah
+	mov		cl, [Video_MaxX]
+	inc		cl
+	mul		cx
+	add		di, ax
+	mov		ax, cx
+	shl		ax, 1
+	add		di, [Video_Offset]
+	mov		dx, [Video_Segment]
+	push		dx
+	pop		es
+	popm		cx, dx
+	; ES:DI Video Pointer
+	; AX is bytes per line
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro Calc_Video_Pointer 1
+
+	PROC_REQUIRE		Calc_Video_Pointer
+	movndef			ax, %1
+	call 			Calc_Video_Pointer_PROC
+
+%endmacro
+; -----------------------------------------------------------------------------
 ; Probes video hardware for card type and current settings. It needs called
 ; prior to any other DOSCRT macros. However, it can be called multiple times.
 ; For example, after mode changes. Warning: If VESA is enabled, the macro will
@@ -41,7 +90,7 @@
 ; INPUT:  none
 ; OUTPUT: undefined, sets data in BSS.
 ; -----------------------------------------------------------------------------
-%imacro VideoInitializeState_INTERNAL 0
+%macro VideoInitializeState_INTERNAL 0
 
 SECTION_PROC
 
@@ -50,6 +99,7 @@ VideoInitializeState_PROC:
 
 ; Assume at least monochrome MDA
 	%ifdef Support_Direct_Video
+		PROC_REQUIRE	Calc_Video_Pointer
 		mov		[Video_Segment], word 0xb000
 		mov		[Video_Offset], word 0x0000
 	%endif
@@ -211,6 +261,7 @@ __?SECT?__
 	call 			VideoInitializeState_PROC
 
 %endmacro
+
 ; -----------------------------------------------------------------------------
 ; Probes for current video settings. It needs called prior to any other DOSCRT
 ; macros. It probably should only be called only once at startup. It is called
@@ -404,4 +455,6 @@ __?SECT?__
 	PROC_PROVIDE		VideoInitializeOriginals
 	PROC_PROVIDE 		VideoResetSettings
 	PROC_PROVIDE 		TextMode
+	PROC_PROVIDE 		Calc_Video_Pointer
+
 %endif

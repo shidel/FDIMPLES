@@ -36,20 +36,27 @@
 ; MACRO: ClrScr 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
+
 %imacro ClrScr_INTERNAL 0
 
 SECTION_PROC
 
-BIOSorDIRECT ClrScr_PROC
-
-%ifdef Support_BIOS_Video
-ClrScr_PROC_BIOS:
+ClrScr_PROC:
 	RegsPreserve		ax, bx, cx, dx
-	mov			ax, 0x0600	; Scroll Up 0 lines
 	mov			bh, [Video_Attr]
 	mov			cx, [Video_WindMin]
 	mov			dx, [Video_WindMax]
 	PreWriteMouse		cx, dx
+
+%ifdef BIOS_AND_DIRECT_VIDEO
+	test 	[Video_Options], byte vcbDirect
+	jz	ClrScr_PROC_BIOS
+	jmp	ClrScr_PROC_DIRECT
+%endif
+
+%ifdef Support_BIOS_Video
+ClrScr_PROC_BIOS:
+	mov			ax, 0x0600	; Scroll Up 0 lines
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
 		pushm		ds, bp
@@ -58,21 +65,48 @@ ClrScr_PROC_BIOS:
 	%ifdef DOS_BUG_FIXES
 		popm		ds, bp
 	%endif
+%endif
+
+%ifdef BIOS_AND_DIRECT_VIDEO
+	jmp			%%Done
+%endif
+
+%ifdef Support_Direct_Video
+
+ClrScr_PROC_DIRECT:
+	pushm 			es, di
+	mov			bl, 0x20
+	Calc_Video_Pointer	cx  ; es:di=video ptr, ax is now bytes per line
+	xchg			ax, bx	    ; ax=char/attr, bx=bytes/line
+
+	sub			dx, cx
+	add			dx, 0x0101 ; dl=column count, dh=row count
+
+	cld
+%%ClearRow:
+	push			di
+	push			dx
+%%ClearLine:
+	stosw
+	dec			dl
+	jnz			%%ClearLine
+	pop			dx
+	pop			di
+	add			di, bx
+	dec			dh
+	jnz			%%ClearRow
+
+	popm			es, di
+%endif
+
+%%Done:
 	PostWriteMouse
-	mov			ah, 0x02	; Set Cursor Position
+	mov			ah, 0x02	; Set Cursor Pos Window 0:0
 	mov			bh, [Video_Page]
 	mov			dx, cx
 	int			0x10
 	RegsRestore		ax, bx, cx, dx
 	ret
-%endif
-
-%ifdef Support_Direct_Video
-ClrScr_PROC_DIRECT:
-	%warning 'ClrScr, direct video support not implemented'
-	jmp  ClrScr_PROC_BIOS
-	ret
-%endif
 
 __?SECT?__
 

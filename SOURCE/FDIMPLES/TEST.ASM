@@ -46,7 +46,7 @@ SECTION .text
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
 ; %undef Support_BIOS_Video
-%undef Support_Direct_Video
+; %undef Support_Direct_Video
 ; %undef Support_Mouse
 %undef Video_MCGA
 %undef Video_VGA
@@ -60,6 +60,11 @@ SECTION .text
 				; including only the required LIBS directly.
 
 	; TextMode	0x54
+
+	; Window		0x0502, 0x0705
+	; TextBackground  clBlue
+	; ClrScr
+	; jmp		WaitKeyPressed
 
 	mov		cx, 10
 MakeBoxes:
