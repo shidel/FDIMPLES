@@ -61,8 +61,6 @@ SECTION .text
 
 	; TextMode	0x54
 
-	; Window		0x0502, 0x0705
-
 	WriteStr	'Hello '
 	TextBackground  clBlue
 	ClrEOL
@@ -96,11 +94,15 @@ MakeBoxes:
 	pop		cx
 	loop		MakeBoxes
 
-WaitKeyPressed:
-	NotKeypressed	WaitKeyPressed
-PurgeKeys:
+	call		WaitKeypress
+	jmp		Finished
+
+WaitKeypress:
+	NotKeypressed	WaitKeypress
+PurgingKeys:
 	ReadKey		ax
-	Keypressed	PurgeKeys
+	Keypressed	PurgingKeys
+	ret
 
 Finished:
 	VideoResetSettings
@@ -110,17 +112,26 @@ Finished:
 	StdOutStr	'Here', ' ', 'we', ' ', 'go', CRLF
 	push		cs
 	pop		es
-	mov		cx, 0x200
+	mov		dx, [Video_WindMax]
+	sub		dx, 0x0606
+	Window		0x0606, dx
+	TextBackground  clBlue
 NiceOneLoop:
-	push		cx
 	WriteStr	NiceOneStr
-	pop		cx
-	loop		NiceOneLoop
-	WriteStr	CRLF, 'bye.', CRLF
+	delay 		25
+	NotKeypressed	NiceOneLoop
+	call		WaitKeypress
+	Window		max
+	mov		dx, [Video_WindMax]
+	xor		dl, dl
+	dec		dh
+	GotoXY		dx
+	TextAttr	original
+	WriteStr	'bye.', CRLF
 
 	Terminate		0 ; Automatically includes used LIB functions
 
-;	Include_LIB_Functions
+	; Include_LIB_Functions
 
 NiceOneStr:
 	db		'Nice One Bud! ', 0

@@ -376,8 +376,7 @@ MouseDrawing_DIRECT:
 	mov			al, [Mouse_Position_X]
 	mov			ah, [Mouse_Position_Y]
 	Calc_Video_Pointer	ax ; es:di=video ptr, ax is now bytes per line
-
-	test 			dl, dl
+	test 			dl, dl  ; write or erase?
 	jz			%%DoDirectUndraw
 %%DoDirectDraw:
 	mov			ax, [es:di]
@@ -389,15 +388,12 @@ MouseDrawing_DIRECT:
 	mov			ax, [Mouse_CharAttr]
 %%SetDirectCharAttr:
 	mov			[es:di], ax
-
 	popm			es, di, dx
 %endif
 
 %%DoneDrawing:
 	pop			ax
 	ret
-
-
 
 MouseHide_PROC:
 	sub			[Mouse_Cursor_State], word 1
