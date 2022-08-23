@@ -41,12 +41,12 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers	; disable preserving registers in macros
+; %undef Preserve_Registers	; disable preserving registers in macros
 ; %undef DOS_BUG_FIXES		; keep some fixes for various DOS and BIOS bugs
 %undef DOSCRT_Range_Check	; disable out of bounds coordinate settings
 %undef Support_BIOS_Timer	; disable attempts to use int15 timer
 ; %undef Support_BIOS_Video	; keep BIOS video support
-%undef Support_Direct_Video	; Direct video addressing, not yet implemented
+; %undef Support_Direct_Video	; Direct video addressing, not yet implemented
 ; %undef Support_Mouse		; keep Mouse support
 %undef Video_MCGA		; disable MCGA check/support
 %undef Video_VGA		; disable VGA check/support
@@ -62,8 +62,51 @@ SECTION .text
 				; prevent accidentally using a macro that you
 				; did may have prevented from being initialized.
 
-	WriteStr		'FDIMPLES ', __DATE__
+	WriteStr		'FDIMPLES ', __DATE__, CRLF
+	Delay			500
+	TextAttr		clLightRed
+	WriteStr		'Package media not found!'
+	TextAttr		original
+	Delay			250
+	WriteStr		CRLF, 'please stand by...'
+	Delay			1500
+
+MainWindow:
+	Window			max
+	TextAttr		[Theme_TextAttr]
+	ClrScr
+	TextAttr		[Theme_TitleBar]
+	ClrEOL
+	RelativeX		+5
+	TextAttr		[Theme_TitleLongName]
+	WriteStr		'FreeDOS Installer - My Package List Editor Software'
+	RelativeX		+1
+	TextAttr		[Theme_TitleVersion]
+	WriteStr		'1.0.0'
+	RelativeX		+1
+	TextAttr		[Theme_TitleBar]
+	WriteChar		'('
+	TextAttr		[Theme_TitleShortName]
+	WriteStr		'FDIMPLES'
+	TextAttr		[Theme_TitleBar]
+	WriteChar		')'
+
+
+
+MainLoop:
+	NotKeyPressed		MainLoop
+	ReadKey			ax
 
 Finished:
 	VideoResetSettings		; Reset TextMode, Cursor, etc if needed
+	TextAttr		original
+	ClrScr
 	Terminate		0	; Also includes used LIB functions
+
+SECTION .data
+
+Theme_TextAttr:			db 0x17
+Theme_TitleBar:			db 0x70
+Theme_TitleLongName:		db 0x70
+Theme_TitleShortName:		db 0x78
+Theme_TitleVersion:		db 0x74

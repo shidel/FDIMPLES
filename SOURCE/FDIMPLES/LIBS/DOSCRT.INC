@@ -186,6 +186,22 @@
 ; OUTPUT: %1 - Y (prefers dh)
 ; REGS:  ax, bx, cx, dh
 
+; Move the cursor relative to it's current XY position
+; MACRO: RelativeXY 2
+; INPUT: %1 - X (prefers cx)
+; INPUT: %2 - Y (prefers dx)
+; REGS:  ax, bx, cx, dx
+
+; Move the cursor relative to it's current X position
+; MACRO: RelativeX 1
+; INPUT: %1 - X (prefers cx)
+; REGS:  ax, bx, cx, dx
+
+; Move the cursor relative to it's current XY position
+; MACRO: RelativeY 1
+; INPUT: %1 - Y (prefers dx)
+; REGS:  ax, bx, cx, dx
+
 %include "DOSCRT/WINDOW.INC"
 
 ; Clear the remaining portion of the current line

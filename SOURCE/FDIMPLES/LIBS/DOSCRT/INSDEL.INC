@@ -83,7 +83,7 @@ ScrollWindowUpDown_PROC_BIOS:
 
 %ifdef Support_Direct_Video
 ScrollWindowUpDown_PROC_DIRECT:
-	%warning 'ScrollWindowUpDown, direct video support not implemented'
+	; %warning 'ScrollWindowUpDown, direct video support not implemented'
 	jmp ScrollWindowUpDown_PROC_BIOS
 	ret
 %endif

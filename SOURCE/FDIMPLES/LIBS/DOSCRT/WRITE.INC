@@ -411,7 +411,7 @@ __?SECT?__
 		%endif
 		call		WriteHexByte_PROC
 		%ifnidni %1, al
-			RegsPreserve 	ax
+			RegsRestore 	ax
 		%endif
 	%rotate 1
 	%endrep

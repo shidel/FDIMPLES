@@ -184,7 +184,14 @@ __?SECT?__
 	%elifnum %1
 		mov		[Video_Attr], byte %1
 	%else
-		mov		[Video_Attr], %1
+		%ifnidni %1, al
+			RegsPreserve	ax
+		%endif
+		movndef		al, %1
+		mov		[Video_Attr], al
+		%ifnidni %1, al
+			RegsRestore	ax
+		%endif
 	%endif
 
 %endmacro

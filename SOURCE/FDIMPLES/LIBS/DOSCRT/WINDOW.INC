@@ -96,6 +96,7 @@ Window_PROC:
 		mov		dh, ch
 		jmp		%%TryAgain
 	%%OkayY2:
+		RegsRestore	cx
 	%endif
 
 	RegsPreserve 		bx
@@ -107,9 +108,6 @@ Window_PROC:
 	int			0x10
 	RegsRestore 		bx
 
-	%ifdef DOSCRT_Range_Check
-		RegsRestore	cx
-	%endif
 	ret
 
 __?SECT?__
@@ -123,9 +121,9 @@ __?SECT?__
 	RegsPreserve 		ax, dx
 	%if %0 = 1
 		%ifidni %1, maximum
-			WindowMax
+
 		%elifidni %1, max
-			WindowMax
+
 		%else
 			%error Invalid window dimension or option parameter
 		%endif
@@ -241,7 +239,7 @@ __?SECT?__
 	%endif
 	call 			WhereXY_PROC
 	movndef			%1, dx
-	%ifnidni %1, ax
+	%ifnidni %1, dx
 		RegsRestore	dx
 	%endif
 
@@ -280,7 +278,7 @@ __?SECT?__
 	%endif
 	call 			WhereX_PROC
 	movndef			%1, dl
-	%ifnidni %1, ax
+	%ifnidni %1, dx
 		RegsRestore	dx
 	%endif
 
@@ -319,11 +317,121 @@ __?SECT?__
 	%endif
 	call 			WhereY_PROC
 	movndef			%1, dh
-	%ifnidni %1, ax
+	%ifnidni %1, dx
 		RegsRestore	dx
 	%endif
 
 %endmacro
+; -----------------------------------------------------------------------------
+; Move the cursor relative to it's current XY position
+; MACRO: RelativeXY 2
+; INPUT: %1 - X (prefers cx)
+; INPUT: %2 - Y (prefers dx)
+; REGS:  ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro RelativeXY_INTERNAL 0
+
+SECTION_PROC
+
+RelativeY_PROC:
+	xor			cx, cx
+	jmp			RelativeXY_PROC
+RelativeX_PROC:
+	xor			dx, dx
+RelativeXY_PROC:
+	RegsPreserve		ax, bx
+
+	pushm			cx, dx
+	call			WhereXY_PROC
+	mov			al, dl
+	mov			bl, dh
+	xor			ah, ah
+	mov			bh, ah
+	popm			cx, dx
+	add			ax, cx
+	add			bx, dx
+	mov			dl, al
+	mov			dh, bl
+	call			GotoXY_PROC
+
+	RegsRestore		ax, bx
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro RelativeXY 2
+
+	PROC_REQUIRE WhereXY
+	PROC_REQUIRE GotoXY
+	PROC_REQUIRE RelativeXY
+
+	%ifnidni %1, cx
+		RegsPreserve	cx
+	%endif
+	%ifnidni %2, dx
+		RegsPreserve	dx
+	%endif
+	movndef			cx, %1, dx, %2
+	call 			RelativeXY_PROC
+	%ifnidni %2, dx
+		RegsRestore	dx
+	%endif
+	%ifnidni %1, cx
+		RegsRestore	cx
+	%endif
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Move the cursor relative to it's current X position
+; MACRO: RelativeX 1
+; INPUT: %1 - X (prefers cx)
+; REGS:  ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro RelativeX 1
+
+	PROC_REQUIRE WhereXY
+	PROC_REQUIRE GotoXY
+	PROC_REQUIRE RelativeXY
+
+	RegsPreserve		dx
+	%ifnidni %1, cx
+		RegsPreserve	cx
+	%endif
+	movndef			cx, %1
+	call 			RelativeX_PROC
+	%ifnidni %1, cx
+		RegsRestore	cx
+	%endif
+	RegsRestore		dx
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Move the cursor relative to it's current XY position
+; MACRO: RelativeY 1
+; INPUT: %1 - Y (prefers dx)
+; REGS:  ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro RelativeY 1
+
+	PROC_REQUIRE WhereXY
+	PROC_REQUIRE GotoXY
+	PROC_REQUIRE RelativeXY
+
+	RegsPreserve		cx
+	%ifnidni %1, dx
+		RegsPreserve	dx
+	%endif
+	movndef			dx, %1
+	call 			RelativeY_PROC
+	%ifnidni %1, dx
+		RegsRestore	dx
+	%endif
+	RegsRestore		cx
+
+%endmacro
+
 ; *****************************************************************************
 %else
 	PROC_PROVIDE WindowMax
@@ -332,4 +440,5 @@ __?SECT?__
 	PROC_PROVIDE WhereXY
 	PROC_PROVIDE WhereX
 	PROC_PROVIDE WhereY
+	PROC_PROVIDE RelativeXY
 %endif

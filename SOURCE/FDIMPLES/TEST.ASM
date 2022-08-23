@@ -41,13 +41,13 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers
+; %undef Preserve_Registers
 ; %undef DOS_BUG_FIXES
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
 ; %undef Support_BIOS_Video
-; %undef Support_Direct_Video
-; %undef Support_Mouse
+%undef Support_Direct_Video
+%undef Support_Mouse
 %undef Video_MCGA
 %undef Video_VGA
 %undef Video_VESA
@@ -59,6 +59,7 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
+
 	; TextMode	0x54
 
 	WriteStr	'Hello '
@@ -68,7 +69,7 @@ SECTION .text
 	WriteChar	'!'
 	WriteCRLF
 	; jmp		WaitKeyPressed
-	Delay 		1000
+	; Delay 		1000
 
 	mov		cx, 10
 MakeBoxes:
