@@ -86,14 +86,12 @@ ClrScr_PROC_DIRECT:
 
 	cld
 %%ClearRow:
-	push			di
-	push			dx
+	pushm			di, dx
 %%ClearLine:
 	stosw
 	dec			dl
 	jnz			%%ClearLine
-	pop			dx
-	pop			di
+	popm			di, dx
 	add			di, bx
 	dec			dh
 	jnz			%%ClearRow

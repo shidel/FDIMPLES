@@ -69,7 +69,8 @@ SECTION .text
 	TextAttr	original
 	WriteChar	'!'
 	WriteCRLF
-	jmp		WaitKeyPressed
+	; jmp		WaitKeyPressed
+	Delay 		1000
 
 	mov		cx, 10
 MakeBoxes:
@@ -110,6 +111,7 @@ Finished:
 	push		cs
 	pop		es
 	WriteStr	NiceStr
+	WriteStr	'bye.', CRLF
 
 	Terminate		0 ; Automatically includes used LIB functions
 

@@ -305,7 +305,7 @@ MouseDraw_PROC:
 	cmp			[Mouse_Cursor_State], word 0x0000
 	jl			%%DoneDrawing
 	mov			al, 0x01
-;	jmp			%%MouseDrawing
+        ; jmp			%%MouseDrawing
 
 %%MouseDrawing:
 	; AL = 0/1 for Undraw/Draw
@@ -373,7 +373,6 @@ MouseDrawing_BIOS:
 MouseDrawing_DIRECT:
 	%warning 'MOUSE, direct video support not implemented'
 	jmp  MouseDrawing_BIOS
-	ret
 %endif
 
 %%DoneDrawing:

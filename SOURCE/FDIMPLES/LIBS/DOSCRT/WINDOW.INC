@@ -118,6 +118,9 @@ __?SECT?__
 
 %imacro Window 1-2
 
+	PROC_REQUIRE Window
+
+	RegsPreserve 		ax, dx
 	%if %0 = 1
 		%ifidni %1, maximum
 			WindowMax
@@ -126,14 +129,13 @@ __?SECT?__
 		%else
 			%error Invalid window dimension or option parameter
 		%endif
+		xor		ax, ax
+		mov		dx, [Video_ScreenMax]
 	%else
-		PROC_REQUIRE Window
-
-		RegsPreserve 		ax, dx
 		movndef	     		ax, %1, dx, %2
-		call			Window_PROC
-		RegsRestore  		ax, dx
 	%endif
+	call			Window_PROC
+	RegsRestore  		ax, dx
 
 %endmacro
 ; -----------------------------------------------------------------------------
