@@ -62,9 +62,14 @@ SECTION .text
 	; TextMode	0x54
 
 	; Window		0x0502, 0x0705
-	; TextBackground  clBlue
-	; ClrScr
-	; jmp		WaitKeyPressed
+
+	WriteStr	'Hello '
+	TextBackground  clBlue
+	ClrEOL
+	TextAttr	original
+	WriteChar	'!'
+	WriteCRLF
+	jmp		WaitKeyPressed
 
 	mov		cx, 10
 MakeBoxes:

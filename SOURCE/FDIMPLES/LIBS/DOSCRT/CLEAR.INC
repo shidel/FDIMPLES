@@ -43,9 +43,11 @@ SECTION_PROC
 
 ClrScr_PROC:
 	RegsPreserve		ax, bx, cx, dx
-	mov			bh, [Video_Attr]
 	mov			cx, [Video_WindMin]
 	mov			dx, [Video_WindMax]
+Clear_Region_PROC:
+	mov			bh, [Video_Attr]
+
 	PreWriteMouse		cx, dx
 
 %ifdef BIOS_AND_DIRECT_VIDEO
@@ -128,10 +130,7 @@ __?SECT?__
 
 SECTION_PROC
 
-BIOSorDIRECT ClrEOL_PROC
-
-%ifdef Support_BIOS_Video
-ClrEOL_PROC_BIOS:
+ClrEOL_PROC:
 	RegsPreserve		ax, bx, cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
@@ -140,30 +139,10 @@ ClrEOL_PROC_BIOS:
 	mov			bh, [Video_Page]
 	int			0x10
 	mov			cx, dx
-	mov			ax, 0x0600		; Scroll Up 0 lines
 	mov			bh, [Video_Attr]
 	mov			dx, [Video_WindMax]
 	mov			dh, ch
-	PreWriteMouse		cx, dx
-	%ifdef DOS_BUG_FIXES
-		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
-		pushm		ds, bp
-	%endif
-	int			0x10
-	%ifdef DOS_BUG_FIXES
-		popm		ds, bp
-	%endif
-	PostWriteMouse
-	RegsRestore		ax, bx, cx, dx
-	ret
-%endif
-
-%ifdef Support_Direct_Video
-ClrEOL_PROC_DIRECT:
-	%warning 'ClrEOL, direct video support not implemented'
-	jmp  ClrEOL_PROC_BIOS
-	ret
-%endif
+	jmp			Clear_Region_PROC
 
 __?SECT?__
 
@@ -171,6 +150,7 @@ __?SECT?__
 
 %imacro ClrEOL 0
 
+	PROC_REQUIRE ClrScr
 	PROC_REQUIRE ClrEOL
 
 	call 			ClrEOL_PROC
