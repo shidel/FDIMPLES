@@ -357,7 +357,7 @@ MouseDrawing_BIOS:
 	; mov			bh, [Video_Page]
 	int			0x10
 	; all done, restore cursor position
-%%NoWrite:
+; %%NoWrite:
 	pop			dx
 	; mov			bh, [Video_Page]
 	mov			ah, 0x02
@@ -371,8 +371,26 @@ MouseDrawing_BIOS:
 
 %ifdef Support_Direct_Video
 MouseDrawing_DIRECT:
-	%warning 'MOUSE, direct video support not implemented'
-	jmp  MouseDrawing_BIOS
+	pushm			es, di, dx
+	mov			dl, al
+	mov			al, [Mouse_Position_X]
+	mov			ah, [Mouse_Position_Y]
+	Calc_Video_Pointer	ax ; es:di=video ptr, ax is now bytes per line
+
+	test 			dl, dl
+	jz			%%DoDirectUndraw
+%%DoDirectDraw:
+	mov			ax, [es:di]
+	mov			[Mouse_CharAttr], ax
+	not			ah
+	and			ah, 0x7f
+	jmp			%%SetDirectCharAttr
+%%DoDirectUndraw:
+	mov			ax, [Mouse_CharAttr]
+%%SetDirectCharAttr:
+	mov			[es:di], ax
+
+	popm			es, di, dx
 %endif
 
 %%DoneDrawing:

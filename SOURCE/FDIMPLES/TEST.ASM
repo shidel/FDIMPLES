@@ -110,12 +110,17 @@ Finished:
 	StdOutStr	'Here', ' ', 'we', ' ', 'go', CRLF
 	push		cs
 	pop		es
-	WriteStr	NiceStr
-	WriteStr	'bye.', CRLF
+	mov		cx, 0x200
+NiceOneLoop:
+	push		cx
+	WriteStr	NiceOneStr
+	pop		cx
+	loop		NiceOneLoop
+	WriteStr	CRLF, 'bye.', CRLF
 
 	Terminate		0 ; Automatically includes used LIB functions
 
 ;	Include_LIB_Functions
 
-NiceStr:
-	db		'Nice one!', CRLF, 0
+NiceOneStr:
+	db		'Nice One Bud! ', 0
