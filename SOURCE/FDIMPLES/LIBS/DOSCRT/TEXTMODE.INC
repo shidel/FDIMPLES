@@ -94,8 +94,9 @@ __?SECT?__
 
 SECTION_PROC
 
-VideoInitializeState_PROC:
+	PROC_REQUIRE	ScrollWindowUpDown
 
+VideoInitializeState_PROC:
 
 ; Assume at least monochrome MDA
 	%ifdef Support_Direct_Video

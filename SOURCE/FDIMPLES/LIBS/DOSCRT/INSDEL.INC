@@ -174,6 +174,7 @@ __?SECT?__
 
 %imacro WindowScrollUp 0
 
+	PROC_REQUIRE 		ScrollWindowUpDown
 	PROC_REQUIRE 		WindowScrollUp
 
 	call 			WindowScrollUp_PROC

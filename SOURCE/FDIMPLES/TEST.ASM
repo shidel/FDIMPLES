@@ -118,7 +118,7 @@ Finished:
 	TextBackground  clBlue
 NiceOneLoop:
 	WriteStr	NiceOneStr
-	delay 		25
+	; delay 		25
 	NotKeypressed	NiceOneLoop
 	call		WaitKeypress
 	Window		max

@@ -37,10 +37,7 @@
 
 SECTION_PROC
 
-BIOSorDIRECT WriteChar_PROC
-
-%ifdef Support_BIOS_Video
-WriteChar_PROC_BIOS:
+WriteChar_PROC:
 
 ; al = character to display
 	RegsPreserve		bx, cx, dx
@@ -108,12 +105,39 @@ WriteChar_PROC_BIOS:
 	jmp			%%PostDisplayChar
 %%DisplayChar:
 	PreWriteMouse		dx
+
+%ifdef BIOS_AND_DIRECT_VIDEO
+	test 	[Video_Options], byte vcbDirect
+	jz	DisplayChar_PROC_BIOS
+	jmp	DisplayChar_PROC_DIRECT
+%endif
+
+%ifdef Support_BIOS_Video
+DisplayChar_PROC_BIOS:
 	mov			ah, 0x09		; Write the Char/Attr
 	; mov			al, "Character"		; already set
 	; mov			bh, [Video_Page]	; already set
 	; mov			bl, [Video_Attr]	; already set
 	mov			cx, 0x0001		; Char count
 	int			0x10
+%endif
+
+%ifdef BIOS_AND_DIRECT_VIDEO
+	jmp			%%DisplayCharDone
+%endif
+
+%ifdef Support_Direct_Video
+DisplayChar_PROC_DIRECT:
+	pushm			es, di
+	mov			ah, bl
+	push			ax
+	Calc_Video_Pointer	dx ; es:di=video ptr, ax is now bytes per line
+	pop			ax
+	mov			[es:di], ax
+	popm			es, di
+%endif
+
+%%DisplayCharDone:
 	PostWriteMouse
 	inc			dl			; Move to next position
 %%PostDisplayChar:
@@ -133,21 +157,10 @@ WriteChar_PROC_BIOS:
 %%ScrollUp:
 	dec			dh			; Cursor back up one
 	push			dx			; save position
-	mov			dx, cx			; WindMax
-	mov			cx, ax			; WindMin
-	xchg			bl, bh			; swap page/attr
-	mov			ax, 0x0601		; Scroll up one line
-	%ifdef DOS_BUG_FIXES
-		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
-		pushm		ds, bp
-	%endif
-	PreWriteMouse		cx, dx
-	int			0x10
-	%ifdef DOS_BUG_FIXES
-		popm		ds, bp
-	%endif
-	PostWriteMouse
-	xchg			bl, bh			; swap page/attr back
+	regpush			bx
+	mov			ax, 0x0600
+	call			ScrollWindowUpDown_PROC
+	regpop			bx
 	pop			dx			; restore position
 %%PositionOkay:
 	mov			ah, 0x02		; Move Cursor
@@ -156,14 +169,6 @@ WriteChar_PROC_BIOS:
 	int			0x10
 	RegsRestore		bx, cx, dx
 	ret
-%endif
-
-%ifdef Support_Direct_Video
-WriteChar_PROC_DIRECT:
-	%warning 'WriteChar, direct video support not implemented'
-	jmp WriteChar_PROC_BIOS
-	ret
-%endif
 
 __?SECT?__
 
@@ -176,7 +181,7 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %imacro WriteChar 1-*
 
-	PROC_REQUIRE		WriteChar
+	PROC_REQUIRE WriteChar
 
 	RegsPreserve		ax
 	%rep  %0
