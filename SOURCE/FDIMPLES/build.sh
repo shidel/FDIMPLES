@@ -10,27 +10,36 @@ function die () {
 
 function build () {
 
-	echo "Compile ${1}......"
-	[[ -f "${1}.COM" ]] && rm "${1}.COM"
-	nasm "${1}.ASM" -ILIBS/ -fbin -O9 -o "${1}.COM" || die "${1}"
-	if [ ! -f  "${1}.COM" ] ; then
-		die "${1}"
+	local s="${1}"
+	local n="${s##*/}"
+	n="${n%.*}"
+	local o="${n}.COM"
+	echo "Compile ${n}......"
+	[[ -f "${o}" ]] && rm "${o}"
+	nasm "${s}" -ILIBS/ -fbin -O9 -o "${o}" || die "${n}"
+	if [ ! -f  "${o}" ] ; then
+		die "${n}"
 	fi;
 	if [ ! -d ../../BIN ] ; then
-		mkdir ../../BIN || die "${1}"
+		mkdir ../../BIN || die "${n}"
 	fi
-	if [ -f "../../BIN/${1}.COM" ] ; then
-		ls -al "../../BIN/${1}.COM"
+	if [ -f "../../BIN/${o}" ] ; then
+		ls -al "../../BIN/${o}"
 	fi
-	cp "${1}.COM" "../../BIN/${1}.COM"
-	ls -al "../../BIN/${1}.COM"
+	cp "${o}" "../../BIN/${o}"
+	ls -al "../../BIN/${o}"
 }
 
 function main () {
 
 	local i
+	for i in DEVTESTS/*.ASM ; do
+		[[ ! -e "${i}" ]] && continue
+		build "${i}"
+	done
 	for i in *.ASM ; do
-		build "${i%.*}"
+		[[ ! -e "${i}" ]] && continue
+		build "${i}"
 	done
 }
 
