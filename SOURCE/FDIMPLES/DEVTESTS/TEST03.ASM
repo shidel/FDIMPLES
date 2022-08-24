@@ -46,7 +46,7 @@ SECTION .text
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
 ; %undef Support_BIOS_Video
-%undef Support_Direct_Video
+; %undef Support_Direct_Video
 %undef Support_Mouse
 %undef Video_MCGA
 %undef Video_VGA
@@ -62,39 +62,39 @@ SECTION .text
 
 	; TextMode	0x54
 
-	mov		cx, 10
+	mov		cx, 5
 MakeBoxes:
-	push		cx
-	push		cx
-	TextBackground	cl
-	pop		cx
-	not		cl
-	TextColor	cl
+	mov		al, cl
+	TextBackground	al
+	not		al
+	TextColor	al
 	ClrScr
+	push		cx
 	mov		cx, [Video_WindMin]
 	mov		dx, [Video_WindMax]
-	pushm		cx, dx
 	WriteHexWord	cx
 	WriteChar	'/'
-	popm		cx, dx
-	pushm		cx, dx
 	WriteHexWord	dx
-	popm		cx, dx
 	add		cx, 0x0102
 	sub		dx, 0x0102
 	Window		cx, dx
 	pop		cx
 	loop		MakeBoxes
 
-	call		WaitKeypress
-	jmp		Finished
-
-WaitKeypress:
-	NotKeypressed	WaitKeypress
-PurgingKeys:
-	ReadKey		ax
-	Keypressed	PurgingKeys
-	ret
+	WriteStr	'Message will scroll', CRLF
+	TextBackground	clRed
+	mov		cx, 10
+	push		cx
+ScrollDown:
+	Delay 		500
+	ScrollWindowDown
+	loop		ScrollDown
+	pop		cx
+	TextBackground	clGreen
+ScrollUp:
+	Delay 		500
+	ScrollWindowUp
+	loop		ScrollUp
 
 Finished:
 	VideoResetSettings

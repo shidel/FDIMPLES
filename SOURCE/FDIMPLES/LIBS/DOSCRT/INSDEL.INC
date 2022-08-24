@@ -152,16 +152,16 @@ __?SECT?__
 %endmacro
 ; -----------------------------------------------------------------------------
 ; Scrolls the window up
-; MACRO: WindowScrollUp 0
+; MACRO: ScrollWindowUp 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro WindowScrollUp_INTERNAL 0
+%imacro ScrollWindowUp_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowUpDown
 
 SECTION_PROC
 
-WindowScrollUp_PROC:
+ScrollWindowUp_PROC:
 	RegsPreserve		ax
 	mov			ax, 0x0600
 	call			ScrollWindowUpDown_PROC
@@ -172,26 +172,26 @@ __?SECT?__
 
 %endmacro
 
-%imacro WindowScrollUp 0
+%imacro ScrollWindowUp 0
 
 	PROC_REQUIRE 		ScrollWindowUpDown
-	PROC_REQUIRE 		WindowScrollUp
+	PROC_REQUIRE 		ScrollWindowUp
 
-	call 			WindowScrollUp_PROC
+	call 			ScrollWindowUp_PROC
 
 %endmacro
 ; -----------------------------------------------------------------------------
 ; Scrolls the window down
-; MACRO: WindowScrollDown 0
+; MACRO: ScrollWindowDown 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro WindowScrollDown_INTERNAL 0
+%imacro ScrollWindowDown_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowUpDown
 
 SECTION_PROC
 
-WindowScrollDown_PROC:
+ScrollWindowDown_PROC:
 	RegsPreserve		ax
 	mov			ax, 0x0700
 	call			ScrollWindowUpDown_PROC
@@ -202,11 +202,11 @@ __?SECT?__
 
 %endmacro
 
-%imacro WindowScrollDown 0
+%imacro ScrollWindowDown 0
 
-	PROC_REQUIRE 		WindowScrollDown
+	PROC_REQUIRE 		ScrollWindowDown
 
-	call 			WindowScrollDown_PROC
+	call 			ScrollWindowDown_PROC
 
 %endmacro
 ; *****************************************************************************

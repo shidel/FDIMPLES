@@ -223,11 +223,11 @@
 ; REGS: ax, bx, cx, dx
 
 ; Scrolls the window up
-; MACRO: WindowScrollUp 0
+; MACRO: ScrollWindowUp 0
 ; REGS: ax, bx, cx, dx
 
 ; Scrolls the window down
-; MACRO: WindowScrollDown 0
+; MACRO: ScrollWindowDown 0
 ; REGS: ax, bx, cx, dx
 
 %include "DOSCRT/INSDEL.INC"
