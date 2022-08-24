@@ -81,20 +81,33 @@ MakeBoxes:
 	pop		cx
 	loop		MakeBoxes
 
-	WriteStr	'Message will scroll down then up', CRLF
+	WriteStr	'Message will scroll down, up, right then left', CRLF
 	TextBackground	clRed
 	mov		cx, 10
 	push		cx
 ScrollDown:
-	Delay 		250
+	Delay 		100
 	ScrollWindow	Down
 	loop		ScrollDown
-	pop		cx
+	PopPush		cx
 	TextBackground	clGreen
 ScrollUp:
-	Delay 		250
+	Delay 		100
 	ScrollWindow	Up
 	loop		ScrollUp
+	PopPush		cx
+	TextBackground	clCyan
+ScrollRight:
+	Delay 		100
+	ScrollWindow	Right
+	loop		ScrollRight
+	PopPush		cx
+	TextBackground	clMagenta
+ScrollLeft:
+	Delay 		100
+	ScrollWindow	Left
+	loop		ScrollLeft
+	pop		cx
 
 Finished:
 	VideoResetSettings

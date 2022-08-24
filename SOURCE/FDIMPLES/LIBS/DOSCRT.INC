@@ -222,6 +222,15 @@
 ; MACRO: InsLine 0
 ; REGS: ax, bx, cx, dx
 
+; Delete the current column and add fresh one on the right side of the window
+; MACRO: DelColumn 0
+; REGS: ax, bx, cx, dx
+
+; Insert a blank column at the current location
+; MACRO: InsColumn 0
+; REGS: ax, bx, cx, dx
+
+
 ; Scrolls the window up
 ; MACRO: ScrollWindowUp 0
 ; REGS: ax, bx, cx, dx
@@ -229,6 +238,20 @@
 ; Scrolls the window down
 ; MACRO: ScrollWindowDown 0
 ; REGS: ax, bx, cx, dx
+
+; Scrolls the window left
+; MACRO: ScrollWindowLeft 0
+; REGS: ax, bx, cx, dx
+
+; Scrolls the window right
+; MACRO: ScrollWindowRight 0
+; REGS: ax, bx, cx, dx
+
+; Scrolls the window some direction
+; MACRO: ScrollWindow 1
+; INPUT: %1 = up, down, left or right
+; REGS: ax, bx, cx, dx
+
 
 %include "DOSCRT/INSDEL.INC"
 
