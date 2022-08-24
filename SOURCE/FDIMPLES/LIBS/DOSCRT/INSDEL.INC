@@ -175,18 +175,21 @@ ScrollWindowLeftRight_PROC:
 ScrollWindowLeftRight_PROC_BIOS:
 	%ifdef Support_Direct_Video
 		pushm			es, di, si
+	%else
+		push			di
 	%endif
 	RegsPreserve		bx, cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
 	%endif
 	push			ax
-	cmp			al, 0x01
-	jne			%%EntireWindow
 	mov			ah, 0x03		; Get Cursor Pos & Size
 	mov			bh, [Video_Page]
 	int			0x10
 	mov			di, dx			;  Temporary save pos
+	poppush			ax
+	cmp			al, 0x01
+	jne			%%EntireWindow
 	mov			cl, dl
 	mov			ch, [Video_WindMinY]
 	jmp			%%PerformScroll
@@ -194,7 +197,6 @@ ScrollWindowLeftRight_PROC_BIOS:
 	mov			cx, [Video_WindMin]
 %%PerformScroll:
 	pop			ax
-	mov			bh, [Video_Attr]
 	mov			dx, [Video_WindMax]
 	PreWriteMouse		cx, dx
 
@@ -206,17 +208,71 @@ ScrollWindowLeftRight_PROC_BIOS:
 
 	%ifdef Support_BIOS_Video
 %%ScrollWindow_PROC_BIOS:
-		%ifdef DOS_BUG_FIXES
-			; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
-			pushm		ds, bp
-		%endif
 
 		; BIOS do not support Left/Right scrolling
 
-
 		%ifdef DOS_BUG_FIXES
-			popm		ds, bp
+			; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
+			; See https://fd.lod.bz/rbil/interrup/video/1008.html
+			pushm		ds, bp, di, si
 		%endif
+
+		mov			si, 1
+		sub			dx, cx
+		xchg			dx, cx
+		cmp			ah, 0x06
+		jne			%%BIOSRowLoop
+		mov			si, -1
+		add			dl, cl
+
+	%%BIOSRowLoop:
+		pushm			cx, dx
+		xor			ch, ch
+	%%BIOSLineLoop:
+		add			dx, si
+		call			%%GetChar
+		sub			dx, si
+		call			%%PutChar
+		add			dx, si
+		loop			%%BIOSLineLoop
+		mov			ah, [Video_Attr]
+		mov			al, 0x20
+		call			%%PutChar
+
+		popm			cx, dx
+		inc			dh
+		test			ch, ch
+		jz			%%BIOSRowLoopDone
+		dec			ch
+		jmp			%%BIOSRowLoop
+	%%BIOSRowLoopDone:
+		%ifdef DOS_BUG_FIXES
+			popm		ds, bp, di, si
+		%endif
+		mov			ah, 0x02	; cursor to original xy
+		mov			dx, di
+		int			0x10
+		jmp			%%BIOSDone
+	%%GetChar:
+		mov			ah, 0x02	; move cursor to xy
+		int			0x10		; dx=xy, bh=page
+		mov			ah, 0x08	; read char/attr
+		int			0x10
+		ret
+	%%PutChar:
+		pushm			cx, bx
+		mov			bl, ah		; write char/attr
+		mov			ah, 0x02	; move cursor to xy
+		int			0x10		; dx=xy, bh=page
+		mov			ah, 0x09
+		mov			cx, 0x0001
+		int			0x10
+		popm			cx, bx
+		ret
+
+
+	%%BIOSDone:
+
 	%endif
 
 	%ifdef BIOS_AND_DIRECT_VIDEO
@@ -275,6 +331,8 @@ ScrollWindowLeftRight_PROC_BIOS:
 	RegsRestore		bx, cx, dx
 	%ifdef Support_Direct_Video
 		popm			es, di, si
+	%else
+		pop			di
 	%endif
 	ret
 
