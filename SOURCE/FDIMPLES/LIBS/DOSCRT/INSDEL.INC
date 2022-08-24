@@ -162,7 +162,7 @@ __?SECT?__
 ; Internal horizontal window scroller.
 ; MACRO: ScrollWindowLeftRight_INTERNAL 0
 ; ON CALL:
-;	ah = BIOS or DirectVideo function (6=Up, 7=down)
+;	ah = BIOS or DirectVideo function (6=Right, 7=Left)
 ;	al= 0 is entire window, 1 from current line only.
 ; REGS: bx, cx, dx. Always destroys ax.
 ; -----------------------------------------------------------------------------
@@ -186,8 +186,9 @@ ScrollWindowLeftRight_PROC_BIOS:
 	mov			ah, 0x03		; Get Cursor Pos & Size
 	mov			bh, [Video_Page]
 	int			0x10
-	mov			ch, dh
-	mov			cl, [Video_WindMinX]
+	mov			di, dx			;  Temporary save pos
+	mov			cl, dl
+	mov			ch, [Video_WindMinY]
 	jmp			%%PerformScroll
 %%EntireWindow:
 	mov			cx, [Video_WindMin]
@@ -209,8 +210,10 @@ ScrollWindowLeftRight_PROC_BIOS:
 			; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
 			pushm		ds, bp
 		%endif
-		mov			al, 0x01	; Scroll 1 line
-		int			0x10
+
+		; BIOS do not support Left/Right scrolling
+
+
 		%ifdef DOS_BUG_FIXES
 			popm		ds, bp
 		%endif
@@ -222,54 +225,49 @@ ScrollWindowLeftRight_PROC_BIOS:
 
 	%ifdef Support_Direct_Video
 %%ScrollWindow_PROC_DIRECT:
-		cld
 		mov			bx, dx
 		add			bx, 0x0101
 		sub			bx, cx
-		mov			dl, cl
-		push			ax
+		mov			dh, ch
 		cmp			ah, 0x07
-		je			%%DirectDown
+		je			%%DirectRight
 		Calc_Video_Pointer	cx
 		mov			si, di
-		add			si, ax
+		add			si, 2
+		cld
 		jmp			%%DirectScroll
-	%%DirectDown:
+	%%DirectRight:
 		Calc_Video_Pointer	dx
 		mov			si, di
-		sub			si, ax
-
+		sub			si, 2
+		std
 	%%DirectScroll:
-		mov			dx, ax
-		pop			ax	; still need direction
+		mov			dx, ax  ; bytes per line
 		xor			ch, ch
-		mov			cl, bh
+		mov			cl, bl
+		mov			bl, bh
 		xor			bh, bh
 	%%DirectRowLoop:
+		pushm			cx, si, di, ax
+	%%DirectLineLoop:
 		dec			cx
 		jz			%%DirectFill
-		pushm			cx, si, di, ax
-		mov			cx, bx
-	%%DirectLineLoop:
 		es lodsw
 		stosw
-		loop			%%DirectLineLoop
-		popm			cx, si, di, ax
-		cmp			ah, 0x07
-		je			%%DirectDec
-		add			si, dx
-		add			di, dx
-		jmp			%%DirectRowLoop
-	%%DirectDec:
-		sub			si, dx
-		sub			di, dx
-		jmp			%%DirectRowLoop
-
+		jmp			%%DirectLineLoop
 	%%DirectFill:
-		mov			cx, bx
 		mov			ah, [Video_Attr]
 		mov			al, 0x20
-		rep stosw
+		stosw
+
+		popm			cx, si, di, ax
+		add			si, dx
+		add			di, dx
+
+	%%ScrollDone:
+		dec			bx
+		jnz			%%DirectRowLoop
+		cld
 	%endif
 
 %%PerformScrollDone:
