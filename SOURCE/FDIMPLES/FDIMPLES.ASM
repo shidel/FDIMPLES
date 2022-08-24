@@ -46,7 +46,7 @@ SECTION .text
 %undef DOSCRT_Range_Check	; disable out of bounds coordinate settings
 %undef Support_BIOS_Timer	; disable attempts to use int15 timer
 ; %undef Support_BIOS_Video	; keep BIOS video support
-; %undef Support_Direct_Video	; Direct video addressing, not yet implemented
+%undef Support_Direct_Video	; Direct video addressing, not yet implemented
 ; %undef Support_Mouse		; keep Mouse support
 %undef Video_MCGA		; disable MCGA check/support
 %undef Video_VGA		; disable VGA check/support
@@ -62,6 +62,7 @@ SECTION .text
 				; prevent accidentally using a macro that you
 				; did may have prevented from being initialized.
 
+	SetCursor		Hide
 	WriteStr		'FDIMPLES ', __DATE__, CRLF
 	Delay			500
 	TextAttr		clLightRed
@@ -77,7 +78,9 @@ MainWindow:
 	ClrScr
 	TextAttr		[Theme_TitleBar]
 	ClrEOL
-	RelativeX		+5
+	RelativeX		+1
+	WriteChar		0xf0
+	RelativeX		+4
 	TextAttr		[Theme_TitleLongName]
 	WriteStr		'FreeDOS Installer - My Package List Editor Software'
 	RelativeX		+1
@@ -90,8 +93,6 @@ MainWindow:
 	WriteStr		'FDIMPLES'
 	TextAttr		[Theme_TitleBar]
 	WriteChar		')'
-
-
 
 MainLoop:
 	NotKeyPressed		MainLoop
