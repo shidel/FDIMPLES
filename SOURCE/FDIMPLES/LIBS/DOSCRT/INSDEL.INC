@@ -230,7 +230,11 @@ ScrollWindowLeftRight_PROC_BIOS:
 		xor			ch, ch
 	%%BIOSLineLoop:
 		add			dx, si
-		call			%%GetChar
+		mov			ah, 0x02	; move cursor to xy
+		int			0x10		; dx=xy, bh=page
+		mov			ah, 0x08	; read char/attr
+		int			0x10
+
 		sub			dx, si
 		call			%%PutChar
 		add			dx, si
@@ -245,20 +249,6 @@ ScrollWindowLeftRight_PROC_BIOS:
 		jz			%%BIOSRowLoopDone
 		dec			ch
 		jmp			%%BIOSRowLoop
-	%%BIOSRowLoopDone:
-		%ifdef DOS_BUG_FIXES
-			popm		ds, bp, di, si
-		%endif
-		mov			ah, 0x02	; cursor to original xy
-		mov			dx, di
-		int			0x10
-		jmp			%%BIOSDone
-	%%GetChar:
-		mov			ah, 0x02	; move cursor to xy
-		int			0x10		; dx=xy, bh=page
-		mov			ah, 0x08	; read char/attr
-		int			0x10
-		ret
 	%%PutChar:
 		pushm			cx, bx
 		mov			bl, ah		; write char/attr
@@ -269,9 +259,13 @@ ScrollWindowLeftRight_PROC_BIOS:
 		int			0x10
 		popm			cx, bx
 		ret
-
-
-	%%BIOSDone:
+	%%BIOSRowLoopDone:
+		%ifdef DOS_BUG_FIXES
+			popm		ds, bp, di, si
+		%endif
+		mov			ah, 0x02	; cursor to original xy
+		mov			dx, di
+		int			0x10
 
 	%endif
 

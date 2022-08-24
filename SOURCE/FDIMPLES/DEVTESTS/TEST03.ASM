@@ -45,8 +45,8 @@ SECTION .text
 ; %undef DOS_BUG_FIXES
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
-; %undef Support_BIOS_Video
-; %undef Support_Direct_Video
+;%undef Support_BIOS_Video
+;%undef Support_Direct_Video
 %undef Support_Mouse
 %undef Video_MCGA
 %undef Video_VGA
@@ -86,25 +86,25 @@ MakeBoxes:
 	mov		cx, 10
 	push		cx
 ScrollDown:
-	Delay 		100
+	;Delay 		100
 	ScrollWindow	Down
 	loop		ScrollDown
 	PopPush		cx
 	TextBackground	clGreen
 ScrollUp:
-	Delay 		100
+	;Delay 		100
 	ScrollWindow	Up
 	loop		ScrollUp
 	PopPush		cx
 	TextBackground	clCyan
 ScrollRight:
-	Delay 		100
+	;Delay 		100
 	ScrollWindow	Right
 	loop		ScrollRight
 	PopPush		cx
 	TextBackground	clMagenta
 ScrollLeft:
-	Delay 		100
+	;Delay 		100
 	ScrollWindow	Left
 	loop		ScrollLeft
 	pop		cx
