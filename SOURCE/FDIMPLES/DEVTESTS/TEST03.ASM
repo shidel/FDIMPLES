@@ -86,25 +86,25 @@ MakeBoxes:
 	mov		cx, 10
 	push		cx
 ScrollDown:
-	;Delay 		100
+	Delay 		100
 	ScrollWindow	Down
 	loop		ScrollDown
 	PopPush		cx
 	TextBackground	clGreen
 ScrollUp:
-	;Delay 		100
+	Delay 		100
 	ScrollWindow	Up
 	loop		ScrollUp
 	PopPush		cx
 	TextBackground	clCyan
 ScrollRight:
-	;Delay 		100
+	Delay 		100
 	ScrollWindow	Right
 	loop		ScrollRight
 	PopPush		cx
 	TextBackground	clMagenta
 ScrollLeft:
-	;Delay 		100
+	Delay 		100
 	ScrollWindow	Left
 	loop		ScrollLeft
 	pop		cx
