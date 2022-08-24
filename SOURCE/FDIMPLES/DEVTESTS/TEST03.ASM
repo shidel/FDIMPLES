@@ -81,19 +81,19 @@ MakeBoxes:
 	pop		cx
 	loop		MakeBoxes
 
-	WriteStr	'Message will scroll', CRLF
+	WriteStr	'Message will scroll down then up', CRLF
 	TextBackground	clRed
 	mov		cx, 10
 	push		cx
 ScrollDown:
-	Delay 		500
-	ScrollWindowDown
+	Delay 		250
+	ScrollWindow	Down
 	loop		ScrollDown
 	pop		cx
 	TextBackground	clGreen
 ScrollUp:
-	Delay 		500
-	ScrollWindowUp
+	Delay 		250
+	ScrollWindow	Up
 	loop		ScrollUp
 
 Finished:

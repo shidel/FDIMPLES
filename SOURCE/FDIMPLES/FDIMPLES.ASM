@@ -100,7 +100,7 @@ MainLoop:
 
 Finished:
 	VideoResetSettings		; Reset TextMode, Cursor, etc if needed
-	TextAttr		original
+	TextAttr		0x07
 	ClrScr
 	Terminate		0	; Also includes used LIB functions
 

@@ -43,10 +43,12 @@
 
 SECTION_PROC
 
-BIOSorDIRECT ScrollWindowUpDown_PROC
+ScrollWindowUpDown_PROC:
 
-%ifdef Support_BIOS_Video
 ScrollWindowUpDown_PROC_BIOS:
+	%ifdef Support_Direct_Video
+		pushm			es, di, si
+	%endif
 	RegsPreserve		bx, cx, dx
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
@@ -64,29 +66,92 @@ ScrollWindowUpDown_PROC_BIOS:
 	mov			cx, [Video_WindMin]
 %%PerformScroll:
 	pop			ax
-	mov			al, 0x01		; Scroll 1 line
 	mov			bh, [Video_Attr]
 	mov			dx, [Video_WindMax]
 	PreWriteMouse		cx, dx
-	%ifdef DOS_BUG_FIXES
-		; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
-		pushm		ds, bp
+
+	%ifdef BIOS_AND_DIRECT_VIDEO
+		test 	[Video_Options], byte vcbDirect
+		jz	ScrollWindow_PROC_BIOS
+		jmp	ScrollWindow_PROC_DIRECT
 	%endif
-	int			0x10
-	%ifdef DOS_BUG_FIXES
-		popm		ds, bp
+
+	%ifdef Support_BIOS_Video
+ScrollWindow_PROC_BIOS:
+		%ifdef DOS_BUG_FIXES
+			; See -- https://fd.lod.bz/rbil/interrup/video/1006.html#130
+			pushm		ds, bp
+		%endif
+		mov			al, 0x01	; Scroll 1 line
+		int			0x10
+		%ifdef DOS_BUG_FIXES
+			popm		ds, bp
+		%endif
 	%endif
+
+	%ifdef BIOS_AND_DIRECT_VIDEO
+		jmp			%%PerformScrollDone
+	%endif
+
+	%ifdef Support_Direct_Video
+ScrollWindow_PROC_DIRECT:
+		cld
+		mov			bx, dx
+		add			bx, 0x0101
+		sub			bx, cx
+		mov			dl, cl
+		push			ax
+		cmp			ah, 0x07
+		je			%%DirectDown
+		Calc_Video_Pointer	cx
+		mov			si, di
+		add			si, ax
+		jmp			%%DirectScroll
+	%%DirectDown:
+		Calc_Video_Pointer	dx
+		mov			si, di
+		sub			si, ax
+
+	%%DirectScroll:
+		mov			dx, ax
+		pop			ax	; still need direction
+		xor			ch, ch
+		mov			cl, bh
+		xor			bh, bh
+	%%DirectRowLoop:
+		dec			cx
+		jz			%%DirectFill
+		pushm			cx, si, di, ax
+		mov			cx, bx
+	%%DirectLineLoop:
+		es lodsw
+		stosw
+		loop			%%DirectLineLoop
+		popm			cx, si, di, ax
+		cmp			ah, 0x07
+		je			%%DirectDec
+		add			si, dx
+		add			di, dx
+		jmp			%%DirectRowLoop
+	%%DirectDec:
+		sub			si, dx
+		sub			di, dx
+		jmp			%%DirectRowLoop
+
+	%%DirectFill:
+		mov			cx, bx
+		mov			ah, [Video_Attr]
+		mov			al, 0x20
+		rep stosw
+	%endif
+
+%%PerformScrollDone:
 	PostWriteMouse
 	RegsRestore		bx, cx, dx
+	%ifdef Support_Direct_Video
+		popm			es, di, si
+	%endif
 	ret
-%endif
-
-%ifdef Support_Direct_Video
-ScrollWindowUpDown_PROC_DIRECT:
-	; %warning 'ScrollWindowUpDown, direct video support not implemented'
-	jmp ScrollWindowUpDown_PROC_BIOS
-	ret
-%endif
 
 __?SECT?__
 
@@ -207,6 +272,25 @@ __?SECT?__
 	PROC_REQUIRE 		ScrollWindowDown
 
 	call 			ScrollWindowDown_PROC
+
+%endmacro
+; -----------------------------------------------------------------------------
+; Scrolls the window a direction
+; MACRO: ScrollWindowDown 1
+; INPUT: %1 = up, down, left, right
+; REGS: ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%imacro ScrollWindow 1
+
+	%ifidni %1, Down
+		PROC_REQUIRE 		ScrollWindowDown
+		call 			ScrollWindowDown_PROC
+	%elifidni %1, Up
+		PROC_REQUIRE 		ScrollWindowUp
+		call 			ScrollWindowUp_PROC
+	%else
+		%error 'ScrollWindow expects Up or Down'
+	%endif
 
 %endmacro
 ; *****************************************************************************
