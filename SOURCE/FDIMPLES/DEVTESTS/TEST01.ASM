@@ -41,7 +41,7 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers
+; %undef Preserve_Registers
 ; %undef DOS_BUG_FIXES
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
@@ -60,12 +60,13 @@ SECTION .text
 				; including only the required LIBS directly.
 
 
+	; TextMode	0x54
 
-Main:
-	StdOutStr		'Basic size test', CRLF
+	WriteStr	'BIOS size test', CRLF
 
 Finished:
+	VideoResetSettings
+
 	Terminate		0 ; Automatically includes used LIB functions
 
 	; Include_LIB_Functions
-

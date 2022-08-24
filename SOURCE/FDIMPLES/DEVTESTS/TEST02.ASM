@@ -41,13 +41,13 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers
+; %undef Preserve_Registers
 ; %undef DOS_BUG_FIXES
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
 ; %undef Support_BIOS_Video
-%undef Support_Direct_Video
-%undef Support_Mouse
+; %undef Support_Direct_Video
+; %undef Support_Mouse
 %undef Video_MCGA
 %undef Video_VGA
 %undef Video_VESA
@@ -60,12 +60,13 @@ SECTION .text
 				; including only the required LIBS directly.
 
 
+	; TextMode	0x54
 
-Main:
-	StdOutStr		'Basic size test', CRLF
+	WriteStr	'Normal size test + Mouse', CRLF
 
 Finished:
+	VideoResetSettings
+
 	Terminate		0 ; Automatically includes used LIB functions
 
 	; Include_LIB_Functions
-

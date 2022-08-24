@@ -41,7 +41,7 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers
+; %undef Preserve_Registers
 ; %undef DOS_BUG_FIXES
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
@@ -60,11 +60,44 @@ SECTION .text
 				; including only the required LIBS directly.
 
 
+	; TextMode	0x54
 
-Main:
-	StdOutStr		'Basic size test', CRLF
+	mov		cx, 10
+MakeBoxes:
+	push		cx
+	push		cx
+	TextBackground	cl
+	pop		cx
+	not		cl
+	TextColor	cl
+	ClrScr
+	mov		cx, [Video_WindMin]
+	mov		dx, [Video_WindMax]
+	pushm		cx, dx
+	WriteHexWord	cx
+	WriteChar	'/'
+	popm		cx, dx
+	pushm		cx, dx
+	WriteHexWord	dx
+	popm		cx, dx
+	add		cx, 0x0102
+	sub		dx, 0x0102
+	Window		cx, dx
+	pop		cx
+	loop		MakeBoxes
+
+	call		WaitKeypress
+	jmp		Finished
+
+WaitKeypress:
+	NotKeypressed	WaitKeypress
+PurgingKeys:
+	ReadKey		ax
+	Keypressed	PurgingKeys
+	ret
 
 Finished:
+	VideoResetSettings
 	Terminate		0 ; Automatically includes used LIB functions
 
 	; Include_LIB_Functions

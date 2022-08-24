@@ -30,13 +30,18 @@ function build () {
 	ls -al "../../BIN/${o}"
 }
 
-function main () {
+function build_tests () {
 
 	local i
 	for i in DEVTESTS/*.ASM ; do
 		[[ ! -e "${i}" ]] && continue
 		build "${i}"
 	done
+}
+
+function build_main () {
+
+	local i
 	for i in *.ASM ; do
 		[[ ! -e "${i}" ]] && continue
 		build "${i}"
@@ -44,7 +49,8 @@ function main () {
 }
 
 if [[ $# -eq 0 ]] ; then
-	main
+	build_tests  # when libs are more complete, won't build automatically
+	build_main
 else
    while [[ "${1}" != "" ]] ; do
    	build "${1%.*}"
