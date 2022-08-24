@@ -1,7 +1,7 @@
 ; FreeDOS Installer (FDI) - My Package List Editor Software
 
 ; BSD 3-Clause License
-; Copyright (c) 2022, Jerome Shidel
+; Copyright (c) 2016-2022, Jerome Shidel
 ; All rights reserved.
 
 ; Redistribution and use in source and binary forms, with or without
@@ -72,6 +72,9 @@ SECTION .text
 	WriteStr		CRLF, 'please stand by...'
 	Delay			1500
 
+	; TextMode		0x54
+	Cursor			hide
+
 MainWindow:
 	Window			max
 	TextAttr		[Theme_TextAttr]
@@ -79,8 +82,13 @@ MainWindow:
 	TextAttr		[Theme_TitleBar]
 	ClrEOL
 	RelativeX		+1
-	WriteChar		0xf0
-	RelativeX		+4
+	WriteChar		0xf0			; Hamburger menu icon
+	mov			al, [Video_WindMaxX]	; Compute position for
+	sub			al, [Video_WindMinX]	; centering title
+	sub			al, 70
+	cwd
+	shr			ax, 1
+	RelativeX		ax
 	TextAttr		[Theme_TitleLongName]
 	WriteStr		'FreeDOS Installer - My Package List Editor Software'
 	RelativeX		+1
