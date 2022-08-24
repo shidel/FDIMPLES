@@ -231,6 +231,8 @@ __?SECT?__
 	%endif
 
 %endmacro
+
+%idefine Cursor SetCursor
 ; *****************************************************************************
 %else
 	PROC_PROVIDE GetCursor

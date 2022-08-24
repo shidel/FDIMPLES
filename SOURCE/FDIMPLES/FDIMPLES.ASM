@@ -62,7 +62,7 @@ SECTION .text
 				; prevent accidentally using a macro that you
 				; did may have prevented from being initialized.
 
-	SetCursor		Hide
+	Cursor			hide
 	WriteStr		'FDIMPLES ', __DATE__, CRLF
 	Delay			500
 	TextAttr		clLightRed
