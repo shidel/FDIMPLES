@@ -44,6 +44,26 @@
 %define SECTION_PROC [section .proc]
 %define SECTION_DATA [section .data]
 %define SECTION_BSS  [section .bss]
+
+%define CODE_SEGMENT section .text
+%define PROC_SEGMENT section .proc
+%define DATA_SEGMENT section .data
+%define BSS_SEGMENT  section .bss
+
+%assign NEW_SECTION_ID_VALUE 0
+%macro NEW_SECTIONS 0
+	%assign NEW_SECTION_ID_VALUE NEW_SECTION_ID_VALUE + 1
+	%define SECTION_CODE [section .text %+ NEW_SECTION_ID_VALUE]
+	%define SECTION_PROC [section .proc %+ NEW_SECTION_ID_VALUE]
+	%define SECTION_DATA [section .data %+ NEW_SECTION_ID_VALUE]
+	%define CODE_SEGMENT section .text %+ NEW_SECTION_ID_VALUE
+	%define PROC_SEGMENT section .proc %+ NEW_SECTION_ID_VALUE
+	%define DATA_SEGMENT section .data %+ NEW_SECTION_ID_VALUE
+	CODE_SEGMENT
+%endmacro
+
+%define NEW_SEGMENTS NEW_SECTIONS
+
 ; -----------------------------------------------------------------------------
 %imacro movip 1
 ; mov	ip (+3 bytes) into register.

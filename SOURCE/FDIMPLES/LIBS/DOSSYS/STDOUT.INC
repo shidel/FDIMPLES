@@ -139,7 +139,6 @@ SECTION_PROC
 StdOutStr_PROC:
 	pushm			ax, dx
 	mov			ah, 0x02
-	cld
 %%DisplayMessage:
 	mov			dl, [es:si]
 	test			dl, dl
