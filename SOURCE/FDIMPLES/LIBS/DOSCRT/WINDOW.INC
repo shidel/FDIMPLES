@@ -36,7 +36,7 @@
 ; MACRO: WindowMax 0
 ; REGS:  ax
 ; -----------------------------------------------------------------------------
-%imacro WindowMax_INTERNAL 0
+%macro WindowMax_INTERNAL 0
 
 SECTION_PROC
 
@@ -68,7 +68,7 @@ __?SECT?__
 ;	%2 = Window MaxXY (prefers dx)
 ; REGS:  ax, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro Window_INTERNAL 0
+%macro Window_INTERNAL 0
 
 SECTION_PROC
 
@@ -138,11 +138,13 @@ __?SECT?__
 %endmacro
 ; -----------------------------------------------------------------------------
 ; Move cursor to new position within window
-; MACRO: GotoXY 1
+; MACRO: GotoXY 1-2
 ; INPUT: %1 - XY (prefers ax)
+;        or
+; 	 %1 - X (prefers al), %2 - Y (prefers ah)
 ; REGS:  ax, bx, dx
 ; -----------------------------------------------------------------------------
-%imacro GotoXY_INTERNAL 0
+%macro GotoXY_INTERNAL 0
 
 SECTION_PROC
 
@@ -172,15 +174,22 @@ __?SECT?__
 
 %endmacro
 
-%imacro GotoXY 1
+%imacro GotoXY 1-2
 
 	PROC_REQUIRE GotoXY
 
 	%ifnidni %1, ax
 		RegsPreserve	ax
 	%endif
-	movndef			ax, %1
+
+	%if %0 = 1
+		movndef			ax, %1
+	%else
+		movndef			al, %1, ah, %2
+	%endif
+
 	call 			GotoXY_PROC
+
 	%ifnidni %1, ax
 		RegsRestore	ax
 	%endif
@@ -192,7 +201,7 @@ __?SECT?__
 ; OUTPUT: %1 - XY (prefers dx)
 ; REGS:  ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro WhereXY_INTERNAL 0
+%macro WhereXY_INTERNAL 0
 
 SECTION_PROC
 
@@ -250,7 +259,7 @@ __?SECT?__
 ; OUTPUT: %1 - X (prefers dl)
 ; REGS:  ax, bx, cx, dl
 ; -----------------------------------------------------------------------------
-%imacro WhereX_INTERNAL 0
+%macro WhereX_INTERNAL 0
 
 SECTION_PROC
 
@@ -289,7 +298,7 @@ __?SECT?__
 ; OUTPUT: %1 - Y (prefers dh)
 ; REGS:  ax, bx, cx, dh
 ; -----------------------------------------------------------------------------
-%imacro WhereY_INTERNAL 0
+%macro WhereY_INTERNAL 0
 
 SECTION_PROC
 
@@ -329,7 +338,7 @@ __?SECT?__
 ; INPUT: %2 - Y (prefers dx)
 ; REGS:  ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro RelativeXY_INTERNAL 0
+%macro RelativeXY_INTERNAL 0
 
 SECTION_PROC
 
@@ -431,7 +440,60 @@ __?SECT?__
 	RegsRestore		cx
 
 %endmacro
-
+; -----------------------------------------------------------------------------
+; Return current window minimum XY
+; MACRO:  WindMin 1
+; OUTPUT: %1 - XY (needs 16-bit register)
+; REGS:  none
+; -----------------------------------------------------------------------------
+%imacro WindMin 1
+	mov	%1, [Video_WindMin]
+%endmacro
+; -----------------------------------------------------------------------------
+; Return current window minimum X
+; MACRO:  WindMinX 1
+; OUTPUT: %1 - X (needs 8-bit register)
+; REGS:  none
+; -----------------------------------------------------------------------------
+%imacro WindMinX 1
+	mov	%1, [Video_WindMinX]
+%endmacro
+; -----------------------------------------------------------------------------
+; Return current window minimum Y
+; MACRO:  WindMinY 1
+; OUTPUT: %1 - Y (needs 8-bit register)
+; REGS:  none
+; -----------------------------------------------------------------------------
+%imacro WindMinY 1
+	mov	%1, [Video_WindMinY]
+%endmacro
+; -----------------------------------------------------------------------------
+; Return current window maximum XY
+; MACRO:  WindMax 1
+; OUTPUT: %1 - XY (needs 16-bit register)
+; REGS:  none
+; -----------------------------------------------------------------------------
+%imacro WindMax 1
+	mov	%1, [Video_WindMax]
+%endmacro
+; -----------------------------------------------------------------------------
+; Return current window maximum X
+; MACRO:  WindMaxX 1
+; OUTPUT: %1 - X (needs 8-bit register)
+; REGS:  none
+; -----------------------------------------------------------------------------
+%imacro WindMaxX 1
+	mov	%1, [Video_WindMaxX]
+%endmacro
+; -----------------------------------------------------------------------------
+; Return current window maximum Y
+; MACRO:  WindMaxY 1
+; OUTPUT: %1 - Y (needs 8-bit register)
+; REGS:  none
+; -----------------------------------------------------------------------------
+%imacro WindMaxY 1
+	mov	%1, [Video_WindMaxY]
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE WindowMax

@@ -37,7 +37,7 @@
 ; OUTPUT: %1 = Cursor Shape (prefers cx)
 ; REGS:   ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro GetCursor_INTERNAL 0
+%macro GetCursor_INTERNAL 0
 
 SECTION_PROC
 
@@ -75,7 +75,7 @@ __?SECT?__
 ;	  Like the cursor itself, the counters are reset on mode changes.
 ; REGS:   ax, cx
 ; -----------------------------------------------------------------------------
-%imacro SetCursor_INTERNAL 0
+%macro SetCursor_INTERNAL 0
 
 SECTION_PROC
 
@@ -96,7 +96,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro SetCursorShow_INTERNAL 0
+%macro SetCursorShow_INTERNAL 0
 
 SECTION_PROC
 
@@ -112,7 +112,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro SetCursorHide_INTERNAL 0
+%macro SetCursorHide_INTERNAL 0
 
 SECTION_PROC
 
@@ -128,7 +128,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro SetCursorSmall_INTERNAL 0
+%macro SetCursorSmall_INTERNAL 0
 
 SECTION_PROC
 
@@ -150,7 +150,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro SetCursorHalf_INTERNAL 0
+%macro SetCursorHalf_INTERNAL 0
 
 SECTION_PROC
 
@@ -173,7 +173,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro SetCursorFull_INTERNAL 0
+%macro SetCursorFull_INTERNAL 0
 
 SECTION_PROC
 

@@ -59,7 +59,7 @@
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
-%imacro StdOutCRLF_INTERNAL 0
+%macro StdOutCRLF_INTERNAL 0
 
 SECTION_PROC
 
@@ -77,7 +77,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro StdOutCR_INTERNAL 0
+%macro StdOutCR_INTERNAL 0
 
 SECTION_PROC
 
@@ -92,7 +92,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro StdOutLF_INTERNAL 0
+%macro StdOutLF_INTERNAL 0
 
 SECTION_PROC
 
@@ -132,7 +132,7 @@ __?SECT?__
 ; INPUT:  %1+ = ASCIIz string sent to STDOUT (prefers si)
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
-%imacro StdOutStr_INTERNAL 0
+%macro StdOutStr_INTERNAL 0
 
 SECTION_PROC
 
@@ -154,7 +154,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro StdOutStrDS_INTERNAL 0
+%macro StdOutStrDS_INTERNAL 0
 
 StdOutStrDS_PROC:
 	push		es
@@ -166,7 +166,7 @@ StdOutStrDS_PROC:
 %endmacro
 
 
-%imacro StdOutStr_SUBMAC 1
+%macro StdOutStr_SUBMAC 1
 
 	PROC_REQUIRE StdOutStr
 	PROC_REQUIRE StdOutStrDS
@@ -216,7 +216,7 @@ __?SECT?__
 ; INPUT:  %1+ = byte to print (prefers al)
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
-%imacro StdOutHexByte_INTERNAL 0
+%macro StdOutHexByte_INTERNAL 0
 
 SECTION_PROC
 
@@ -249,7 +249,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro StdOutHexByte 1-*
+%macro StdOutHexByte 1-*
 
 	PROC_REQUIRE StdOutHexByte
 

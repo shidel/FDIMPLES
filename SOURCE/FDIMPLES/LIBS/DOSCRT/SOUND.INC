@@ -38,7 +38,7 @@
 ; OUTPUT: none
 ; REGS:   ax, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro Sound_INTERNAL 0
+%macro Sound_INTERNAL 0
 
 SECTION_PROC
 
@@ -95,7 +95,7 @@ __?SECT?__
 ; OUTPUT: none
 ; REGS:   ax, dx
 ; -----------------------------------------------------------------------------
-%imacro NoSound_INTERNAL 0
+%macro NoSound_INTERNAL 0
 
 SECTION_PROC
 

@@ -302,6 +302,49 @@
 	%endif
 %endmacro
 
+%imacro regmatch 2-*
+; %1 = 16-bit register to check against
+; %2+ = 8/16-bit possible matching registers
+; REGISTER_MATCH is left defined if it was matched
+	%define  REGISTER_MATCH %1
+	%undef  REGISTER_MATCH_FLAG
+	%rep  %0 - 1
+		%rotate 1
+		%ifidni REGISTER_MATCH, %1
+			%define  REGISTER_MATCH_FLAG
+		%elifidni REGISTER_MATCH, ax
+			%ifidni %1, al
+				%define  REGISTER_MATCH_FLAG
+			%elifidni %1, ah
+				%define  REGISTER_MATCH_FLAG
+			%endif
+		%elifidni REGISTER_MATCH, bx
+			%ifidni %1, bl
+				%define  REGISTER_MATCH_FLAG
+			%elifidni %1, bh
+				%define  REGISTER_MATCH_FLAG
+			%endif
+		%elifidni REGISTER_MATCH, cx
+			%ifidni %1, cl
+				%define  REGISTER_MATCH_FLAG
+			%elifidni %1, ch
+				%define  REGISTER_MATCH_FLAG
+			%endif
+		%elifidni REGISTER_MATCH, dx
+			%ifidni %1, dl
+				%define  REGISTER_MATCH_FLAG
+			%elifidni %1, dh
+				%define  REGISTER_MATCH_FLAG
+			%endif
+		%endif
+	%endrep
+	%ifdef REGISTER_MATCH_FLAG
+		%undef  REGISTER_MATCH_FLAG
+	%else
+		%undef  REGISTER_MATCH
+	%endif
+%endmacro
+
 %imacro PROC_REQUIRE 1
 	%ifndef %1_REQUIRED
 		%define %1_REQUIRED 0

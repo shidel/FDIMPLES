@@ -37,9 +37,9 @@
 ; does not need direct interaction by the end user (programmer/developer).
 ; Look for the end-user section bellow.
 ; -----------------------------------------------------------------------------
-%idefine Mouse_Buffer_Struc_Size 4 ; 1 word + 2 bytes per event buffer entry
+%define Mouse_Buffer_Struc_Size 4 ; 1 word + 2 bytes per event buffer entry
 
-%imacro MouseDataReset_INTERNAL 0
+%macro MouseDataReset_INTERNAL 0
 
 SECTION_PROC
 
@@ -157,7 +157,7 @@ __?SECT?__
 %endmacro
 
 ; -----------------------------------------------------------------------------
-%imacro MouseInitialize_INTERNAL 0
+%macro MouseInitialize_INTERNAL 0
 
 SECTION_PROC
 
@@ -455,7 +455,7 @@ __?SECT?__
 %endmacro
 
 ; -----------------------------------------------------------------------------
-%imacro MouseFinalize_INTERNAL 0
+%macro MouseFinalize_INTERNAL 0
 
 SECTION_PROC
 
@@ -490,7 +490,7 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-%imacro PreWriteMouse_INTERNAL 0
+%macro PreWriteMouse_INTERNAL 0
 
 SECTION_PROC
 
@@ -545,7 +545,7 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-%imacro PostWriteMouse_INTERNAL 0
+%macro PostWriteMouse_INTERNAL 0
 
 SECTION_PROC
 
@@ -582,7 +582,7 @@ __?SECT?__
 ; OUTPUT: Carry Flag Set if mouse has moved. Does not clear movement flag.
 ; REGS:	  none
 ; -----------------------------------------------------------------------------
-%imacro MouseMoved_INTERNAL 0
+%macro MouseMoved_INTERNAL 0
 
 SECTION_PROC
 
@@ -643,7 +643,7 @@ __?SECT?__
 ;	Carry Flag Set if mouse has moved since last ReadMouseMove.
 ; REGS:	  dx
 ; -----------------------------------------------------------------------------
-%imacro ReadMouseMove_INTERNAL 0
+%macro ReadMouseMove_INTERNAL 0
 
 SECTION_PROC
 
@@ -687,7 +687,7 @@ __?SECT?__
 ; OUTPUT: Carry Flag Set if mouse has button event is waiting in the buffer.
 ; REGS:	  ax
 ; -----------------------------------------------------------------------------
-%imacro MouseClicked_INTERNAL 0
+%macro MouseClicked_INTERNAL 0
 
 SECTION_PROC
 
@@ -758,7 +758,7 @@ __?SECT?__
 ;	%2 = current mouse screen position (prefers dx)
 ; REGS:	bx, dx, si
 ; -----------------------------------------------------------------------------
-%imacro ReadMouseClick_INTERNAL 0
+%macro ReadMouseClick_INTERNAL 0
 
 SECTION_PROC
 

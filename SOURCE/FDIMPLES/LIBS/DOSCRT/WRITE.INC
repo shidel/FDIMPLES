@@ -32,7 +32,7 @@
 %ifndef WRITE_INC_DEFINED
 %define WRITE_INC_DEFINED
 ; -----------------------------------------------------------------------------
-%imacro WriteChar_INTERNAL 0
+%macro WriteChar_INTERNAL 0
 ; AL = character to display
 
 SECTION_PROC
@@ -197,7 +197,7 @@ __?SECT?__
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
 ; REG: 	  ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro WriteCRLF_INTERNAL 0
+%macro WriteCRLF_INTERNAL 0
 
 	PROC_REQUIRE WriteChar
 
@@ -216,7 +216,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro WriteCR_INTERNAL 0
+%macro WriteCR_INTERNAL 0
 
 	PROC_REQUIRE WriteChar
 
@@ -233,7 +233,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro WriteLF_INTERNAL 0
+%macro WriteLF_INTERNAL 0
 
 	PROC_REQUIRE WriteChar
 
@@ -277,7 +277,7 @@ __?SECT?__
 ; INPUT:  ASCIIz string(s) to sent to display (prefers si)
 ; REGS:   ax, bx, cx, dx, si
 ; -----------------------------------------------------------------------------
-%imacro WriteStr_INTERNAL 0
+%macro WriteStr_INTERNAL 0
 
 	PROC_REQUIRE WriteChar
 
@@ -300,7 +300,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro WriteStrDS_INTERNAL 0
+%macro WriteStrDS_INTERNAL 0
 
 WriteStrDS_PROC:
 	push		es
@@ -311,7 +311,7 @@ WriteStrDS_PROC:
 	ret
 %endmacro
 
-%imacro WriteStr_SUBMAC 1
+%macro WriteStr_SUBMAC 1
 
 	PROC_REQUIRE WriteStrDS
 	PROC_REQUIRE WriteChar
@@ -362,7 +362,7 @@ __?SECT?__
 ; INPUT:  %1+ = byte to display (prefers al)
 ; REGS:   ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro WriteHexByte_INTERNAL 0
+%macro WriteHexByte_INTERNAL 0
 
 	PROC_REQUIRE WriteChar
 

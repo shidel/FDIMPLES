@@ -40,7 +40,7 @@
 ; OUTPUT: none
 ; REGS:   ax, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro Delay_INTERNAL 0
+%macro Delay_INTERNAL 0
 
 SECTION_PROC
 

@@ -38,7 +38,7 @@
 ; OUTPUT: Carry Flag Set if key has been pressed.
 ; REGS:	  ax
 ; -----------------------------------------------------------------------------
-%imacro KeyPressed_INTERNAL 0
+%macro KeyPressed_INTERNAL 0
 
 SECTION_PROC
 
@@ -92,7 +92,7 @@ __?SECT?__
 ; OUTPUT: %1 is key press (prefers ax)
 ; REGS:	  ax
 ; -----------------------------------------------------------------------------
-%imacro ReadKey_INTERNAL 0
+%macro ReadKey_INTERNAL 0
 
 SECTION_PROC
 

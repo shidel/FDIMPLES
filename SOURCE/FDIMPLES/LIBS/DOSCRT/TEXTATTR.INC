@@ -38,7 +38,7 @@
 ; OUTPUT: none
 ; REGS:   ax
 ; -----------------------------------------------------------------------------
-%imacro TextColor_RESET_INTERNAL 0
+%macro TextColor_RESET_INTERNAL 0
 
 SECTION_PROC
 
@@ -55,7 +55,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro TextColor_INTERNAL 0
+%macro TextColor_INTERNAL 0
 
 SECTION_PROC
 
@@ -98,7 +98,7 @@ __?SECT?__
 ; OUTPUT: none
 ; REGS:   ax, cx
 ; -----------------------------------------------------------------------------
-%imacro TextBackground_RESET_INTERNAL 0
+%macro TextBackground_RESET_INTERNAL 0
 
 SECTION_PROC
 
@@ -115,7 +115,7 @@ __?SECT?__
 
 %endmacro
 
-%imacro TextBackground_INTERNAL 0
+%macro TextBackground_INTERNAL 0
 
 SECTION_PROC
 
@@ -161,7 +161,7 @@ __?SECT?__
 ; OUTPUT: none
 ; REGS:   ax
 ; -----------------------------------------------------------------------------
-%imacro TextAttr_RESET_INTERNAL 0
+%macro TextAttr_RESET_INTERNAL 0
 
 SECTION_PROC
 
@@ -226,7 +226,7 @@ __?SECT?__
 ; OUTPUT: none
 ; REGS:   none
 ; -----------------------------------------------------------------------------
-%imacro NormVideo_INTERNAL 0
+%macro NormVideo_INTERNAL 0
 
 SECTION_PROC
 

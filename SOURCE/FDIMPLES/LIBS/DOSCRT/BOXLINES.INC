@@ -1,5 +1,3 @@
-; FreeDOS Installer (FDI) - My Package List Editor Software
-
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -31,45 +29,61 @@
 
 ; NASM 2.15.05, or later
 
-use16
+%ifndef BOXLINES_INC_DEFINED
+%define BOXLINES_INC_DEFINED
+; -----------------------------------------------------------------------------
+%macro BoxLineData_INTERNAL 0
 
-cpu 8086
+SECTION_DATA
 
-org 0x100
+BoxLineData_DATA:
+	db 0
 
-SECTION .text
+__?SECT?__
 
-%include "FEATURES.INC"		; Default DEFINES & options for library macros
+%endmacro
+; -----------------------------------------------------------------------------
+; Display a horizontal line
+; MACRO:  DrawHLine 3
+; INPUT:  %1 = XY, %2 = Count, %3 = Options (Prefers AX, CL, CH)
+; OUTPUT: none
+; REGS:	  ax, cx
+; -----------------------------------------------------------------------------
+%macro DrawHLine_INTERNAL 0
 
-%undef Preserve_Registers
-; %undef DOS_BUG_FIXES
-%undef DOSCRT_Range_Check
-%undef Support_BIOS_Timer
-; %undef Support_BIOS_Video
-; %undef Support_Direct_Video
-%undef Support_Mouse
-%undef Video_MCGA
-%undef Video_VGA
-%undef Video_VESA
+SECTION_PROC
 
-%include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
-				; initialization routines. Some calls for those
-				; routines gets inserted automatically. For
-				; example DOSCRT requires preparation. If those
-				; are not needed, you can save some bytes by
-				; including only the required LIBS directly.
+DrawHLine_PROC:
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro DrawHLine 3
+
+	PROC_REQUIRE		BoxLineData
+	PROC_REQUIRE		DrawHLine
+
+	RegsPreserve		ax, cx
+	regmatch		cx, %1
+	%ifdef REGISTER_MATCH
+		push		cx
+		movndef		cl, %2, ch, %3
+		pop		ax
+	%else
+		movndef		cl, %2, ch, %3
+		movndef		ax, %1
+	%endif
+	call 			DrawHLine_PROC
+	RegsRestore		ax, cx
 
 
-	GotoXY 		0,0
-	WriteStr	'Box Test'
-	ClrEOL
+%endmacro
+; *****************************************************************************
+%else
+	PROC_PROVIDE		BoxLineData
+	PROC_PROVIDE		DrawHLine
+	PROC_PROVIDE		DrawVLine
 
-	DrawHLine	0x0502, 15, bxDouble + bxConnect
-	WindMaxY	ah
-	Dec		ah
-	GotoXY		0, 24
-
-Finished:
-	; VideoResetSettings
-
-	Terminate		0 ; Automatically includes used LIB functions
+%endif

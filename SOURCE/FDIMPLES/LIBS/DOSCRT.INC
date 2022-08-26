@@ -167,8 +167,10 @@
 ; REGS:  ax, cx, dx
 
 ; Move cursor to new position within window
-; MACRO: GotoXY 1
+; MACRO: GotoXY 1-2
 ; INPUT: %1 - XY (prefers ax)
+;        or
+; 	 %1 - X (prefers al), %2 - Y (prefers ah)
 ; REGS:  ax, bx, dx
 
 ; Return the cursor position within window
@@ -345,6 +347,9 @@
 ; REGS:	  ax
 
 %include "DOSCRT/MOUSE.INC"
+
+%include "DOSCRT/BOXLINES.INC"
+
 ; -----------------------------------------------------------------------------
 ; Standard text video display mode constants
 %idefine tmBW40		0	; 40x25 B/W on Color adapter
@@ -372,6 +377,17 @@
 %idefine clLightMagenta	13
 %idefine clYellow	14
 %idefine clWhite	15
+
+; Box and Line constants
+%idefine bxSingle	0
+%idefine bxSingleHorz	0
+%idefine bxSingleVert	0
+%idefine bxDoubleHorz	1
+%idefine bxDoubleVert	2
+%idefine bxDouble	3
+%idefine bxNoShadow	0
+%idefine bxShadow	4
+%idefine bxConnect	8
 
 ; -----------------------------------------------------------------------------
 ; Automatically initialize video display and other settings

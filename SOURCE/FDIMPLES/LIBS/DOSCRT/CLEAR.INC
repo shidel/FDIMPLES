@@ -37,7 +37,7 @@
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
 
-%imacro ClrScr_INTERNAL 0
+%macro ClrScr_INTERNAL 0
 
 SECTION_PROC
 
@@ -124,7 +124,7 @@ __?SECT?__
 ; MACRO: ClrEOL 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro ClrEOL_INTERNAL 0
+%macro ClrEOL_INTERNAL 0
 
 SECTION_PROC
 

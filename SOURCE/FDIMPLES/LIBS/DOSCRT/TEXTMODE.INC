@@ -271,7 +271,7 @@ __?SECT?__
 ; OUTPUT: undefined, sets data in BSS.
 ; REGS:	  AX, BX, ES (NEVER preserved)
 ; -----------------------------------------------------------------------------
-%imacro VideoInitializeOriginals_INTERNAL 0
+%macro VideoInitializeOriginals_INTERNAL 0
 
 SECTION_PROC
 
@@ -318,7 +318,7 @@ __?SECT?__
 ; INPUT:  %1 = video mode (prefers al), original returns it to Initial Setting
 ; OUTPUT: Carry Flag set if error occurred.
 ; -----------------------------------------------------------------------------
-%imacro TextMode_INTERNAL 0
+%macro TextMode_INTERNAL 0
 
 SECTION_PROC
 
@@ -389,7 +389,7 @@ __?SECT?__
 ; INPUT:  none
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
-%imacro VideoResetSettings_INTERNAL 0
+%macro VideoResetSettings_INTERNAL 0
 
 SECTION_PROC
 

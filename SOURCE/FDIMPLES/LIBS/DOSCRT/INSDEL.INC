@@ -41,7 +41,7 @@
 ;	al= 0 is entire window, 1 from current line only.
 ; REGS: bx, cx, dx. Always destroys ax.
 ; -----------------------------------------------------------------------------
-%imacro ScrollWindowUpDown_INTERNAL 0
+%macro ScrollWindowUpDown_INTERNAL 0
 
 SECTION_PROC
 
@@ -166,7 +166,7 @@ __?SECT?__
 ;	al= 0 is entire window, 1 from current line only.
 ; REGS: bx, cx, dx. Always destroys ax.
 ; -----------------------------------------------------------------------------
-%imacro ScrollWindowLeftRight_INTERNAL 0
+%macro ScrollWindowLeftRight_INTERNAL 0
 
 SECTION_PROC
 
@@ -338,7 +338,7 @@ __?SECT?__
 ; MACRO: DelLine 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro DelLine_INTERNAL 0
+%macro DelLine_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowUpDown
 
@@ -368,7 +368,7 @@ __?SECT?__
 ; MACRO: InsLine 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro InsLine_INTERNAL 0
+%macro InsLine_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowUpDown
 
@@ -398,7 +398,7 @@ __?SECT?__
 ; MACRO: DelColumn 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro DelColumn_INTERNAL 0
+%macro DelColumn_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowLeftRight
 
@@ -428,7 +428,7 @@ __?SECT?__
 ; MACRO: InsColumn 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro InsColumn_INTERNAL 0
+%macro InsColumn_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowLeftRight
 
@@ -458,7 +458,7 @@ __?SECT?__
 ; MACRO: ScrollWindowUp 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro ScrollWindowUp_INTERNAL 0
+%macro ScrollWindowUp_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowUpDown
 
@@ -488,7 +488,7 @@ __?SECT?__
 ; MACRO: ScrollWindowDown 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro ScrollWindowDown_INTERNAL 0
+%macro ScrollWindowDown_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowUpDown
 
@@ -518,7 +518,7 @@ __?SECT?__
 ; MACRO: ScrollWindowLeft 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro ScrollWindowLeft_INTERNAL 0
+%macro ScrollWindowLeft_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowLeftRight
 
@@ -548,7 +548,7 @@ __?SECT?__
 ; MACRO: ScrollWindowRight 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
-%imacro ScrollWindowRight_INTERNAL 0
+%macro ScrollWindowRight_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowLeftRight
 
