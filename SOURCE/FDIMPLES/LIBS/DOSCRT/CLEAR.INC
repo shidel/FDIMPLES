@@ -120,7 +120,7 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-; Clear the remaining portion of the current line
+; Clear the remaining portion of the current line, cursor does not move
 ; MACRO: ClrEOL 0
 ; REGS: ax, bx, cx, dx
 ; -----------------------------------------------------------------------------
@@ -154,8 +154,50 @@ __?SECT?__
 	call 			ClrEOL_PROC
 
 %endmacro
+
+; -----------------------------------------------------------------------------
+; Clear an area of the screen, cursor does not move
+; MACRO: ClrArea 2
+; INPUT: %1 = MinXY, %2 = MaxXY (prefers cx, dx)
+; REGS: ax, bx, cx, dx
+; -----------------------------------------------------------------------------
+%macro ClrArea_INTERNAL 0
+
+SECTION_PROC
+
+ClrArea_PROC:
+	RegsPreserve		ax, bx, cx, dx
+	mov			bh, [Video_Attr]
+	jmp			Clear_Region_PROC
+
+__?SECT?__
+
+%endmacro
+
+%imacro ClrArea 2
+
+	PROC_REQUIRE ClrScr
+	PROC_REQUIRE ClrArea
+
+	%ifnidni %1, cx
+		RegsPreserve	cx
+	%endif
+	%ifnidni %2, dx
+		RegsPreserve	dx
+	%endif
+	movndef			cx, %1, dx, %2
+	call 			ClrArea_PROC
+	%ifnidni %2, dx
+		RegsRestore	dx
+	%endif
+	%ifnidni %1, cx
+		RegsRestore	cx
+	%endif
+
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE ClrScr
 	PROC_PROVIDE ClrEOL
+	PROC_PROVIDE ClrArea
 %endif

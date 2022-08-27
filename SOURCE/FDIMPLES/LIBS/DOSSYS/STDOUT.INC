@@ -98,6 +98,7 @@ SECTION_PROC
 
 StdOutLF_PROC:
 	pushm			dx, ax
+	mov			ah, 0x02
 	mov			dl, 0x0a
 	int			0x21
 	popm			dx, ax

@@ -36,9 +36,18 @@
 
 %include "FEATURES.INC"
 ; -----------------------------------------------------------------------------
-%idefine CR 0x0d
-%idefine LF 0x0a
+%idefine Ascii_CR 		0x0d
+%idefine Ascii_LF 		0x0a
+%idefine Ascii_Space		0x20
+%idefine Ascii_OpenParenthesis	0x28
+%idefine Ascii_CloseParenthesis	0x29
+%idefine Ascii_HamburgerMenu	0xf0
+
+%idefine CR 			Ascii_CR
+%idefine LF 			Ascii_LF
 %idefine CRLF CR,LF
+%idefine FALSE 0
+%idefine TRUE  1
 ; -----------------------------------------------------------------------------
 %define SECTION_CODE [section .text]
 %define SECTION_PROC [section .proc]
@@ -176,47 +185,6 @@
 	%endif
 %endmacro
 
-%imacro movndef 2-*
-; MOV if not Default.
-; When not the default preferred register, generate a mov (or similar)
-; instruction to load the register.
-; MOVNDEF ax, ax		 -> NULL
-; MOVNDEF ax, bx		 -> mov ax, bx
-; MOVNDEF ax, bx, cx, dx	 -> mov ax, bx; mov cx, dx
-; MOVNDEF ax, bx, cx, ax 	 -> push ax; mov ax, bx; pop cx
-    %ifidni %0, 2
-    	%ifnidni %1, %2
-    	    mov %1, %2
-    	%endif
-    %elifidni %0, 4
-	%ifidni %1, %4
-	    push %4
-    	    mov  %1, %2
-	    pop  %3
-	%else
-	    %ifnidni %1, %2
-		mov %1, %2
-	    %endif
-	    %ifnidni %3, %4
-		mov %3, %4
-	    %endif
-	%endif
-    %else
-        %rep  %0 / 2
-	 %ifnidni %1, %2
-		push %2
-	    %endif
-            %rotate 2
-        %endrep
-        %rep %0 / 2
-	%rotate -2
-	    %ifnidni %1, %2
-		pop %1
-	    %endif
-        %endrep
-    %endif
-%endmacro
-
 %imacro TempBuffer 1
 ; Include an extremely temporary application wide shared buffer of %1 bytes
 ; Care must be taken that multiple functions do not use the buffer while data
@@ -344,6 +312,190 @@
 		%undef  REGISTER_MATCH
 	%endif
 %endmacro
+
+%imacro regtemp 2-*
+; 1+ = List of needed 8/16-bit registers
+; TEMP_REGISTER is defined as suggested unused register
+	%undef   TEMP_REGISTER
+	%define  REGISTER_AX_AVAILABLE
+	%define  REGISTER_BX_AVAILABLE
+	%define  REGISTER_CX_AVAILABLE
+	%define  REGISTER_DX_AVAILABLE
+	%define  REGISTER_SI_AVAILABLE
+	%define  REGISTER_DI_AVAILABLE
+	%rep  %0
+		%rotate 1
+		%ifidni %1, ax
+			%undef  REGISTER_AX_AVAILABLE
+		%elifidni %1, al
+			%undef  REGISTER_AX_AVAILABLE
+		%elifidni %1, ah
+			%undef  REGISTER_AX_AVAILABLE
+		%elifidni %1, bx
+			%undef  REGISTER_BX_AVAILABLE
+		%elifidni %1, bl
+			%undef  REGISTER_BX_AVAILABLE
+		%elifidni %1, bh
+			%undef  REGISTER_BX_AVAILABLE
+		%elifidni %1, cx
+			%undef  REGISTER_CX_AVAILABLE
+		%elifidni %1, cl
+			%undef  REGISTER_CX_AVAILABLE
+		%elifidni %1, ch
+			%undef  REGISTER_CX_AVAILABLE
+		%elifidni %1, dx
+			%undef  REGISTER_DX_AVAILABLE
+		%elifidni %1, dl
+			%undef  REGISTER_DX_AVAILABLE
+		%elifidni %1, dh
+			%undef  REGISTER_DX_AVAILABLE
+		%elifidni %1, si
+			%undef  REGISTER_DI_AVAILABLE
+		%elifidni %1, di
+			%undef  REGISTER_SI_AVAILABLE
+		%endif
+	%endrep
+	%ifdef REGISTER_AX_AVAILABLE
+		%define TEMP_REGISTER ax
+	%elifdef REGISTER_BX_AVAILABLE
+		%define TEMP_REGISTER bx
+	%elifdef REGISTER_CX_AVAILABLE
+		%define TEMP_REGISTER cx
+	%elifdef REGISTER_DX_AVAILABLE
+		%define TEMP_REGISTER dx
+	%elifdef REGISTER_SI_AVAILABLE
+		%define TEMP_REGISTER si
+	%elifdef REGISTER_DI_AVAILABLE
+		%define TEMP_REGISTER di
+	; %else
+	;	%error All registers used.
+	%endif
+	%undef  REGISTER_AX_AVAILABLE
+	%undef  REGISTER_BX_AVAILABLE
+	%undef  REGISTER_CX_AVAILABLE
+	%undef  REGISTER_DX_AVAILABLE
+	%undef  REGISTER_DI_AVAILABLE
+	%undef  REGISTER_SI_AVAILABLE
+%endmacro
+
+%imacro regtype 1
+	%ifidni %1, ax
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, bx
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, cx
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, dx
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, si
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, di
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, bp
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, sp
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, es
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, ds
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, cs
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, ss
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, ah
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, al
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, bh
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, bl
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, ch
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, cl
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, dh
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, dl
+		%define REGISTER_TYPE_BITS 8
+	%else
+		%define REGISTER_TYPE_BITS 0
+	%endif
+
+%endmacro
+
+%imacro movndef 2-*
+; MOV if not Default.
+; When not the default preferred register, generate a mov (or similar)
+; instruction to load the register.
+; MOVNDEF ax, ax		 -> NULL
+; MOVNDEF ax, bx		 -> mov ax, bx
+; MOVNDEF ax, bx, cx, dx	 -> mov ax, bx; mov cx, dx
+; MOVNDEF ax, bx, cx, ax 	 -> push ax; mov ax, bx; pop cx
+    %ifidni %0, 2
+    	%ifnidni %1, %2
+    	    mov %1, %2
+    	%endif
+    %elifidni %0, 4
+	%ifidni %1, %4
+	    push %4
+    	    mov  %1, %2
+	    pop  %3
+	%else
+	    %ifnidni %1, %2
+		mov %1, %2
+	    %endif
+	    %ifnidni %3, %4
+		mov %3, %4
+	    %endif
+	%endif
+    %else
+	%undef TEMP_REGISTER
+        %rep  %0
+	    	%ifnum %2
+	    		%define TEMP_REGISTER
+		%endif
+        %rotate 2
+        %endrep
+	%ifdef TEMP_REGISTER
+	    	regtemp %{1:-1}
+	    	; %warning Temporary Register TEMP_REGISTER used.
+	    	push TEMP_REGISTER
+	%endif
+        %rep  %0 / 2
+	    %ifnidni %1, %2
+	    	%ifnum %2
+	    		%ifdef TEMP_REGISTER
+			    	mov  TEMP_REGISTER, %2
+			    	push TEMP_REGISTER
+	    		%else
+	    			%warning No temprorary register available. PUSH %2 for %1 is not 8086 compatible
+				push word %2
+	    		%endif
+	    	%else
+	    		; %warning PUSH %2 for %1
+			push %2
+		%endif
+	    %endif
+            %rotate 2
+        %endrep
+        %rep %0 / 2
+	    %rotate -2
+	    %ifnidni %1, %2
+	    	; %warning POP %1 from %2
+		pop %1
+	    %endif
+        %endrep
+	%ifdef TEMP_REGISTER
+	    	pop TEMP_REGISTER
+	%endif
+	%undef TEMP_REGISTER
+
+    %endif
+%endmacro
+
+
 
 %imacro PROC_REQUIRE 1
 	%ifndef %1_REQUIRED

@@ -60,14 +60,20 @@ SECTION .text
 				; including only the required LIBS directly.
 
 
-	GotoXY 		0,0
+	ClrScr;
 	WriteStr	'Box Test'
 	ClrEOL
 
-	DrawHLine	0x0502, 15, bxDouble + bxConnect
+	DrawBox		0x0202, 0x1003, lnSingle
+	DrawBox		0x0212, 0x0322, lnDouble
+	DrawBox		0x1202, 0x150a, lnDoubleHorz
+	DrawBox		0x1212, 0x1222, lnDoubleVert
+	; DrawLine	0x0502, 15, lnHorizontal + lnDouble + lnConnect
+	; DrawLine	0x0502, 15, lnVertical + lnDouble + lnConnect
 	WindMaxY	ah
 	Dec		ah
-	GotoXY		0, 24
+	GotoXY		0, 23
+	TextAttr	0x07
 
 Finished:
 	; VideoResetSettings

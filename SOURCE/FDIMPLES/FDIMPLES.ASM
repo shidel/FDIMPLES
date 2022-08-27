@@ -62,45 +62,10 @@ SECTION .text
 				; prevent accidentally using a macro that you
 				; did may have prevented from being initialized.
 
-	Cursor			hide
-	WriteStr		'FDIMPLES ', __DATE__, CRLF
-	Delay			500
-	TextAttr		clLightRed
-	WriteStr		'Package media not found!'
-	TextAttr		original
-	Delay			250
-	WriteStr		CRLF, 'please stand by...'
-	Delay			1500
+SECTION_CODE
 
-	; TextMode		0x54
-	Cursor			hide
-
-MainWindow:
-	Window			max
-	TextAttr		[Theme_TextAttr]
-	ClrScr
-	TextAttr		[Theme_TitleBar]
-	ClrEOL
-	RelativeX		+1
-	WriteChar		0xf0			; Hamburger menu icon
-	mov			al, [Video_WindMaxX]	; Compute position for
-	sub			al, [Video_WindMinX]	; centering title
-	sub			al, 70
-	cwd
-	shr			ax, 1
-	RelativeX		ax
-	TextAttr		[Theme_TitleLongName]
-	WriteStr		'FreeDOS Installer - My Package List Editor Software'
-	RelativeX		+1
-	TextAttr		[Theme_TitleVersion]
-	WriteStr		'1.0.0'
-	RelativeX		+1
-	TextAttr		[Theme_TitleBar]
-	WriteChar		'('
-	TextAttr		[Theme_TitleShortName]
-	WriteStr		'FDIMPLES'
-	TextAttr		[Theme_TitleBar]
-	WriteChar		')'
+	call			Initialize
+	call			DrawMainWindow
 
 MainLoop:
 	NotKeyPressed		MainLoop
@@ -110,12 +75,156 @@ Finished:
 	VideoResetSettings		; Reset TextMode, Cursor, etc if needed
 	TextAttr		0x07
 	ClrScr
-	Terminate		0	; Also includes used LIB functions
+	Terminate		0	; Also includes needed LIB function code
 
-SECTION .data
+DrawMainWindow:
+	Window			max
+	cmp			[Theme_TitleBarVisible], byte True
+	jne			.NoTitleBar
 
-Theme_TextAttr:			db 0x17
-Theme_TitleBar:			db 0x70
-Theme_TitleLongName:		db 0x70
-Theme_TitleShortName:		db 0x78
-Theme_TitleVersion:		db 0x74
+	Window			[XY_TitleBar], [XY_TitleBar + 2]
+	TextAttr		[Theme_ProgMenuBar]
+	ClrEOL
+	RelativeX		+1
+	WriteChar		Ascii_HamburgerMenu	; Hamburger menu icon
+	mov			al, [Video_WindMaxX]	; Compute position for
+	sub			al, [Video_WindMinX]	; centering Prog
+	sub			al, 70
+	cbw
+	shr			ax, 1
+	RelativeX		ax
+	TextAttr		[Theme_ProgLongName]
+	WriteStr		Text_ProgLong
+	RelativeX		+1
+	TextAttr		[Theme_ProgVersion]
+	WriteStr		Text_ProgVersion
+	RelativeX		+1
+	TextAttr		[Theme_ProgMenuBar]
+	WriteChar		Ascii_OpenParenthesis
+	TextAttr		[Theme_ProgShortName]
+	WriteStr		Text_ProgShort
+	TextAttr		[Theme_ProgMenuBar]
+	WriteChar		Ascii_CloseParenthesis
+
+.NoTitleBar:
+	cmp			[Theme_WindowBoxVisible], byte True
+	jne			.NoWindowBox
+	Window			max
+	TextAttr		[Theme_WindowBoxAttr]
+	DrawBox			word [XY_Frame], word [XY_Frame + 2], lnSingle
+.NoWindowBox:
+
+	cmp			[Theme_StatusBarVisible], byte True
+	jne			.NoStatusBar
+	mov			dl, al
+	Window			[XY_StatusBar], [XY_StatusBar + 2]
+	TextAttr		[Theme_StatusBarAttr]
+	ClrScr
+	Window			max
+
+.NoStatusBar:
+	Window			[XY_GroupArea], [XY_GroupArea + 2]
+	TextAttr		[Theme_WindowBoxAttr]
+	ClrScr
+	Window			max
+	DrawLine		word [XY_VerticalBar], word [XY_VerticalBar + 2], lnVertical + lnSingle + lnConnect
+
+	ret
+
+Initialize:
+	mov			ax, [Theme_GroupAreaSize]
+	mov			[Size_GroupArea], ax
+
+	Cursor			hide
+	; WriteStr		Text_ProgShort
+	; WriteChar		Ascii_Space
+	; WriteStr		__DATE__, CRLF
+	; Delay			500
+	TextAttr		clLightRed
+	WriteStr		'Package media not found!'
+	TextAttr		original
+	Delay			250
+	WriteStr		CRLF, 'please stand by...'
+	Delay			1500
+
+	cmp			[Theme_TextMode], byte 0xff
+	je			.CurrentTextMode
+	TextMode		[Theme_TextMode]
+	Cursor			hide
+.CurrentTextMode:
+	call			CalculateScreenPositions
+	ret
+
+CalculateScreenPositions:
+	Window			max
+	WindMin			ax
+	WindMax			dx
+
+	; add			ax, 0x0101
+	; sub			dx, 0x0101
+
+	push			dx
+	mov			dh, ah
+	mov			[XY_TitleBar], ax
+	mov			[XY_TitleBar + 2], dx
+	pop			dx
+	inc			ah
+	dec			dh
+	mov			[XY_Frame], ax
+	mov			[XY_Frame + 2], dx
+	pushm			ax, dx
+	inc			dh
+	mov			ah, dh
+	mov			[XY_StatusBar], ax
+	mov			[XY_StatusBar + 2], dx
+	popm			ax, dx
+	add			ax, 0x0101
+	mov			dx, [Size_GroupArea]
+	add			dx, ax
+	mov			[XY_GroupArea], ax
+	mov			[XY_GroupArea + 2], dx
+	add			dx, 0x0101
+	sub			dh, ah
+	mov			al, dl
+	mov			dl, dh
+	xor			dh, dh
+	mov			[XY_VerticalBar], ax
+	mov			[XY_VerticalBar + 2], dx
+
+
+	ret
+
+SECTION_DATA
+
+Text_ProgLong:		db 'FreeDOS Installer - My Package List Editor Software',0
+Text_ProgShort: 	db 'FDIMPLES',0
+Text_ProgVersion:	db '1.0.0',0
+
+Theme_TextMode:		db 0xff
+Theme_TitleBarVisible:	db TRUE
+Theme_WindowBoxVisible:	db TRUE
+Theme_StatusBarVisible:	db TRUE
+Theme_ProgMenuBar:	db 0x70
+Theme_ProgLongName:	db 0x70
+Theme_ProgShortName:	db 0x78
+Theme_ProgVersion:	db 0x74
+Theme_WindowBoxAttr:	db 0x17
+Theme_StatusBarAttr:	db 0x47
+
+Theme_GroupAreaSize:	dw 0x0712
+
+	Include_LIB_Functions	; Include additional needed LIB function code
+
+SECTION_BSS
+
+Size_GroupArea:		resw 1
+
+XY_TitleBar:		resw 2
+XY_Frame:		resw 2
+XY_StatusBar:		resw 2
+XY_GroupArea:		resw 2
+XY_VerticalBar:		resw 2
+XY_HorizontalBar:	resw 2
+
+
+

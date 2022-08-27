@@ -236,12 +236,12 @@ ScrollWindowLeftRight_PROC_BIOS:
 		int			0x10
 
 		sub			dx, si
-		call			%%PutChar
+		call			PutChar_BIOS
 		add			dx, si
 		loop			%%BIOSLineLoop
 		mov			ah, [Video_Attr]
 		mov			al, 0x20
-		call			%%PutChar
+		call			PutChar_BIOS
 
 		popm			cx, dx
 		inc			dh
@@ -249,16 +249,6 @@ ScrollWindowLeftRight_PROC_BIOS:
 		jz			%%BIOSRowLoopDone
 		dec			ch
 		jmp			%%BIOSRowLoop
-	%%PutChar:
-		pushm			cx, bx
-		mov			bl, ah		; write char/attr
-		mov			ah, 0x02	; move cursor to xy
-		int			0x10		; dx=xy, bh=page
-		mov			ah, 0x09
-		mov			cx, 0x0001
-		int			0x10
-		popm			cx, bx
-		ret
 	%%BIOSRowLoopDone:
 		%ifdef DOS_BUG_FIXES
 			popm		ds, bp, di, si
@@ -431,6 +421,7 @@ __?SECT?__
 %macro InsColumn_INTERNAL 0
 
 	PROC_REQUIRE 		ScrollWindowLeftRight
+	PROC_REQUIRE 		PutChar
 
 SECTION_PROC
 
@@ -447,6 +438,7 @@ __?SECT?__
 
 %imacro InsColumn 0
 
+	PROC_REQUIRE 		PutChar
 	PROC_REQUIRE 		ScrollWindowLeftRight
 	PROC_REQUIRE		InsColumn
 
@@ -537,6 +529,7 @@ __?SECT?__
 
 %imacro ScrollWindowLeft 0
 
+	PROC_REQUIRE 		PutChar
 	PROC_REQUIRE 		ScrollWindowLeftRight
 	PROC_REQUIRE 		ScrollWindowLeft
 
@@ -567,6 +560,7 @@ __?SECT?__
 
 %imacro ScrollWindowRight 0
 
+	PROC_REQUIRE 		PutChar
 	PROC_REQUIRE 		ScrollWindowLeftRight
 	PROC_REQUIRE 		ScrollWindowRight
 
@@ -590,10 +584,12 @@ __?SECT?__
 		PROC_REQUIRE 		ScrollWindowUp
 		call 			ScrollWindowUp_PROC
 	%elifidni %1, Right
+		PROC_REQUIRE 		PutChar
 		PROC_REQUIRE 		ScrollWindowLeftRight
 		PROC_REQUIRE 		ScrollWindowRight
 		call 			ScrollWindowRight_PROC
 	%elifidni %1, Left
+		PROC_REQUIRE 		PutChar
 		PROC_REQUIRE 		ScrollWindowLeftRight
 		PROC_REQUIRE 		ScrollWindowLeft
 		call 			ScrollWindowLeft_PROC

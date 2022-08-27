@@ -32,6 +32,30 @@
 %ifndef WRITE_INC_DEFINED
 %define WRITE_INC_DEFINED
 ; -----------------------------------------------------------------------------
+%macro PutChar_INTERNAL 0
+
+SECTION_PROC
+
+PutChar_PROC:
+
+%ifdef Support_BIOS_Video
+
+PutChar_BIOS:
+	pushm			cx, bx
+	mov			bl, ah		; write char/attr
+	mov			ah, 0x02	; move cursor to xy
+	int			0x10		; dx=xy, bh=page
+	mov			ah, 0x09
+	mov			cx, 0x0001
+	int			0x10
+	popm			cx, bx
+	ret
+%endif
+
+__?SECT?__
+
+%endmacro
+; -----------------------------------------------------------------------------
 %macro WriteChar_INTERNAL 0
 ; AL = character to display
 
@@ -441,6 +465,7 @@ __?SECT?__
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE		PutChar
 	PROC_PROVIDE		WriteChar
 	PROC_PROVIDE		WriteCRLF
 	PROC_PROVIDE		WriteCR

@@ -378,16 +378,16 @@
 %idefine clYellow	14
 %idefine clWhite	15
 
-; Box and Line constants
-%idefine bxSingle	0
-%idefine bxSingleHorz	0
-%idefine bxSingleVert	0
-%idefine bxDoubleHorz	1
-%idefine bxDoubleVert	2
-%idefine bxDouble	3
-%idefine bxNoShadow	0
-%idefine bxShadow	4
-%idefine bxConnect	8
+; Box and Frame line constants
+%idefine lnConnect	00001b
+%idefine lnHorizontal   0
+%idefine lnVertical     00010b
+%idefine lnSingle	0
+%idefine lnSingleHorz	0
+%idefine lnSingleVert	0
+%idefine lnDoubleHorz	0100b
+%idefine lnDoubleVert	1000b
+%idefine lnDouble	1100b
 
 ; -----------------------------------------------------------------------------
 ; Automatically initialize video display and other settings
