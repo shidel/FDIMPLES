@@ -72,16 +72,19 @@ MainLoop:
 	ReadKey			ax
 
 Finished:
+; Resets video to normal (if needed), clears the screen and terminates the
+; program.
 	VideoResetSettings		; Reset TextMode, Cursor, etc if needed
 	TextAttr		0x07
 	ClrScr
 	Terminate		0	; Also includes needed LIB function code
 
 DrawMainWindow:
+; Draws the title bar and framing. Also clears the statusbar, group, item list
+; and data windows.
 	Window			max
 	cmp			[Theme_TitleBarVisible], byte True
 	jne			.NoTitleBar
-
 	Window			[XY_TitleBar], [XY_TitleBar + 2]
 	TextAttr		[Theme_ProgMenuBar]
 	ClrEOL
@@ -105,15 +108,19 @@ DrawMainWindow:
 	WriteStr		Text_ProgShort
 	TextAttr		[Theme_ProgMenuBar]
 	WriteChar		Ascii_CloseParenthesis
-
 .NoTitleBar:
 	cmp			[Theme_WindowBoxVisible], byte True
 	jne			.NoWindowBox
 	Window			max
 	TextAttr		[Theme_WindowBoxAttr]
 	DrawBox			word [XY_Frame], word [XY_Frame + 2], lnSingle
+	jmp			.StatusBar
 .NoWindowBox:
-
+	TextAttr		[Theme_WindowBoxAttr]
+	Window			[XY_Frame], [XY_Frame + 2]
+	ClrScr
+	Window			max
+.StatusBar:
 	cmp			[Theme_StatusBarVisible], byte True
 	jne			.NoStatusBar
 	mov			dl, al
@@ -121,18 +128,106 @@ DrawMainWindow:
 	TextAttr		[Theme_StatusBarAttr]
 	ClrScr
 	Window			max
-
 .NoStatusBar:
-	Window			[XY_GroupArea], [XY_GroupArea + 2]
-	TextAttr		[Theme_WindowBoxAttr]
-	ClrScr
 	Window			max
-	DrawLine		word [XY_VerticalBar], word [XY_VerticalBar + 2], lnVertical + lnSingle + lnConnect
+	TextAttr		[Theme_WindowBoxAttr]
+	DrawLine		word [XY_HorizontalBar], word [XY_HorizontalBar + 2], lnHorizontal + lnConnect
+	DrawLine		word [XY_VerticalBar], word [XY_VerticalBar + 2], lnVertical + lnConnect
+	mov			cx, 0x0003
+	mov			si, XY_GroupArea
+.ClearAreasLoop:
+	push			cx
+	Window			[si], [si + 2]
+	ClrScr
+	pop			cx
+	add			si, 4
+	loop			.ClearAreasLoop
+	Window			max
+	ret
 
+CalculateScreenPositions:
+; Needs called at startup and when/if resolution is changed.
+	Window			max
+	WindMin			ax
+	WindMax			dx
+
+	; Reduced screen area usage. For testing calculated areas, sizes and
+	; such mundane program aspects.
+	; add			ax, 0x0303
+	; sub			dx, 0x0303
+
+	; Title Bar position
+	push			dx
+	mov			dh, ah
+	mov			[XY_TitleBar], ax
+	mov			[XY_TitleBar + 2], dx
+	pop			dx
+	; Main window frame
+	inc			ah
+	dec			dh
+	cmp			[Theme_TitleBarVisible], byte False
+	jne			.WithTitleBar
+	dec			ah
+.WithTitleBar:
+	cmp			[Theme_StatusBarVisible], byte False
+	jne			.WithStatusBar
+	inc			dh
+.WithStatusBar:
+	mov			[XY_Frame], ax
+	mov			[XY_Frame + 2], dx
+	; Status Bar position
+	pushm			ax, dx
+	inc			dh
+	mov			ah, dh
+	mov			[XY_StatusBar], ax
+	mov			[XY_StatusBar + 2], dx
+	popm			ax, dx
+	; Group list window area
+	add			ax, 0x0101
+	mov			dx, [Size_GroupArea]
+	add			dx, ax
+	mov			[XY_GroupArea], ax
+	mov			[XY_GroupArea + 2], dx
+	; Group list / Item list separator bar position and length
+	dec			ah
+	add			dx, 0x0201
+	sub			dh, ah
+	mov			al, dl
+	mov			dl, dh
+	xor			dh, dh
+	mov			[XY_VerticalBar], ax
+	mov			[XY_VerticalBar + 2], dx
+	; Group & Item list / Data separator bar position and length
+	add			ah, dl
+	dec			ah
+	mov			al, [XY_Frame]
+	mov			dl, [XY_Frame + 2]
+	sub			dl, al
+	inc			dl
+	mov			[XY_HorizontalBar], ax
+	mov			[XY_HorizontalBar + 2], dx
+	; Item list window area
+	mov			dh, ah
+	mov			dl, [XY_Frame + 2]
+	sub			dx, 0x0101
+	mov			al, [XY_GroupArea + 2]
+	mov			ah, [XY_GroupArea + 1]
+	add			al, 0x02
+	mov			[XY_ItemArea], ax
+	mov			[XY_ItemArea + 2], dx
+	; Data display window area
+	mov			al, [XY_GroupArea]
+	mov			ah, [XY_GroupArea + 3]
+	mov			dh, [XY_Frame + 3]
+	add			ah, 0x02
+	dec			dh
+	mov			[XY_DataArea], ax
+	mov			[XY_DataArea + 2], dx
 	ret
 
 Initialize:
-	mov			ax, [Theme_GroupAreaSize]
+; Performs the initialization of the program at startup.
+	mov			ax, [MinimumGroupAreaSize]
 	mov			[Size_GroupArea], ax
 
 	Cursor			hide
@@ -155,51 +250,14 @@ Initialize:
 	call			CalculateScreenPositions
 	ret
 
-CalculateScreenPositions:
-	Window			max
-	WindMin			ax
-	WindMax			dx
-
-	; add			ax, 0x0101
-	; sub			dx, 0x0101
-
-	push			dx
-	mov			dh, ah
-	mov			[XY_TitleBar], ax
-	mov			[XY_TitleBar + 2], dx
-	pop			dx
-	inc			ah
-	dec			dh
-	mov			[XY_Frame], ax
-	mov			[XY_Frame + 2], dx
-	pushm			ax, dx
-	inc			dh
-	mov			ah, dh
-	mov			[XY_StatusBar], ax
-	mov			[XY_StatusBar + 2], dx
-	popm			ax, dx
-	add			ax, 0x0101
-	mov			dx, [Size_GroupArea]
-	add			dx, ax
-	mov			[XY_GroupArea], ax
-	mov			[XY_GroupArea + 2], dx
-	add			dx, 0x0101
-	sub			dh, ah
-	mov			al, dl
-	mov			dl, dh
-	xor			dh, dh
-	mov			[XY_VerticalBar], ax
-	mov			[XY_VerticalBar + 2], dx
-
-
-	ret
-
 SECTION_DATA
 
+; Hard coded text
 Text_ProgLong:		db 'FreeDOS Installer - My Package List Editor Software',0
 Text_ProgShort: 	db 'FDIMPLES',0
 Text_ProgVersion:	db '1.0.0',0
 
+; Default theme settings
 Theme_TextMode:		db 0xff
 Theme_TitleBarVisible:	db TRUE
 Theme_WindowBoxVisible:	db TRUE
@@ -211,20 +269,28 @@ Theme_ProgVersion:	db 0x74
 Theme_WindowBoxAttr:	db 0x17
 Theme_StatusBarAttr:	db 0x47
 
-Theme_GroupAreaSize:	dw 0x0712
+; Some other default data
+MinimumGroupAreaSize:	dw 0x0712
 
-	Include_LIB_Functions	; Include additional needed LIB function code
+; Include any additional LIB function code that is needed and has not yet been
+; included. Basically, this is code required by any functions that were used
+; for the first time after the most recent previous "Include_LIB_Functions" or
+; "Terminate" macros.
+Include_LIB_Functions
 
 SECTION_BSS
 
-Size_GroupArea:		resw 1
+Size_GroupArea:		resw 1	; Calculated current needed demensions.
 
+; Screen position location data
 XY_TitleBar:		resw 2
 XY_Frame:		resw 2
 XY_StatusBar:		resw 2
-XY_GroupArea:		resw 2
 XY_VerticalBar:		resw 2
 XY_HorizontalBar:	resw 2
+XY_GroupArea:		resw 2
+XY_ItemArea:		resw 2
+XY_DataArea:		resw 2
 
 
 
