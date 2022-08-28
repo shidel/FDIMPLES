@@ -47,7 +47,7 @@ SECTION .text
 %undef Support_BIOS_Timer
 ; %undef Support_BIOS_Video
 ; %undef Support_Direct_Video
-%undef Support_Mouse
+; %undef Support_Mouse
 %undef Video_MCGA
 %undef Video_VGA
 %undef Video_VESA
@@ -60,10 +60,12 @@ SECTION .text
 				; including only the required LIBS directly.
 
 
-	ClrScr;
+
+	ClrScr
 	WriteStr	'Box Test'
 	ClrEOL
 
+	TextColor	clGreen
 	mov		dx, 0x0202
 	mov 		ax, lnSingle
 	call		BoxTest
@@ -76,10 +78,11 @@ SECTION .text
 	mov		dx, 0x0d2a
 	mov 		ax, lnDouble
 	call		BoxTest
-	GotoXY		0, 23
-	TextAttr	0x07
 
 Finished:
+	GotoXY		0, 23
+	TextAttr	0x07
+	WriteCRLF
 	; VideoResetSettings
 
 	Terminate		0 ; Automatically includes used LIB functions
@@ -88,6 +91,7 @@ BoxTest:
 	mov		cx, dx
 	add		cx, 0x0822
 	DrawBox		dx, cx, ax
+	;TextColor	clCyan
 	mov		bx, dx
 	add		bl, 0x3
 	DrawLine	bx, 0x09, lnVertical + lnSingle
@@ -98,6 +102,7 @@ BoxTest:
 	DrawLine	bx, 0x0b, lnVertical + lnSingle
 	add		bl, 2
 	DrawLine	bx, 0x0b, lnVertical + lnDouble
+	;TextColor	clMagenta
 	mov		bx, dx
 	add		bh, 0x1
 	DrawLine	bx, 0x23, lnHorizontal + lnSingle

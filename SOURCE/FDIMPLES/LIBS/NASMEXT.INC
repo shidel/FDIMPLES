@@ -495,8 +495,6 @@
     %endif
 %endmacro
 
-
-
 %imacro PROC_REQUIRE 1
 	%ifndef %1_REQUIRED
 		%define %1_REQUIRED 0
@@ -509,6 +507,111 @@
 		%1_INTERNAL
 	%endif
 %endmacro
+
+%imacro DebugChar 1-*
+
+%ifndef DebugChar_DEFINED
+	%define  DebugChar_DEFINED
+	jmp	%%Over
+DebugChar_PROC:
+	push			ax
+	mov			ah, 0x02
+	int			0x21
+	pop			ax
+	ret
+%endif
+%%Over:
+	%rep %0
+	%ifnidni %1, dl
+		push	dx
+		movndef dl, %1
+		call	 DebugChar_PROC
+		pop	dx
+	%else
+		call	 DebugChar_PROC
+	%endif
+	%rotate 1
+	%endrep
+
+%endmacro
+
+%imacro DebugHexByte 1-*
+
+%ifndef DebugHexByte_DEFINED
+	%define  DebugHexByte_DEFINED
+	jmp	%%Over
+DebugHexByte_PROC:
+	pushm			dx, cx, ax
+
+	mov			cx, 0x0204	; ch = count, cl = bit rotate
+	mov			ah, ch		; mov ah, 0x02
+%%Loopy:
+	ror			al, cl		; rotate first to do high bits
+	mov			dl, al
+	and			dl, 0x0f
+	add			dl, 0x30	; make numbers ascii numbers
+	cmp			dl, 0x39
+	jbe			%%Display	; <= to asciii 9
+	add			dl, 0x27	; make value ascii letter
+%%Display:
+	push			ax
+	int			0x21
+	pop			ax
+	dec			ch
+	jnz			%%Loopy
+	popm			dx, cx, ax
+	ret
+%endif
+
+%%Over:
+	%rep %0
+	%ifnidni %1, al
+		push	ax
+		movndef al, %1
+		call	 DebugHexByte_PROC
+		pop	ax
+	%else
+		call	 DebugHexByte_PROC
+	%endif
+	%rotate 1
+	%endrep
+
+%endmacro
+
+%imacro DebugHexWord 1-*
+	%rep %0
+	%ifnidni %1, ax
+		push	ax
+		movndef ax, %1
+		DebugHexByte ah, al
+		pop	ax
+	%else
+		DebugHexByte	ax
+	%endif
+	%rotate 1
+	%endrep
+%endmacro
+
+%imacro DebugCRLF 0
+
+%ifndef DebugCRLF_DEFINED
+	%define  DebugCRLF_DEFINED
+	jmp	%%Over
+
+DebugCRLF_PROC:
+	pushm			dx, ax
+	mov			ah, 0x02
+	mov			dl, 0x0d
+	int			0x21
+	mov			dl, 0x0a
+	int			0x21
+	popm			dx, ax
+	ret
+%endif
+%%Over:
+	call	DebugCRLF_PROC
+%endmacro
+
 ; -----------------------------------------------------------------------------
 
 %endif

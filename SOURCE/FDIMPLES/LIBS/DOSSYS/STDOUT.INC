@@ -274,6 +274,9 @@ __?SECT?__
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
 %imacro StdOutHexWord 1-*
+
+	PROC_REQUIRE StdOutHexByte
+
 	%rep  %0
 		%ifnidni %1, ax
 			push	ax

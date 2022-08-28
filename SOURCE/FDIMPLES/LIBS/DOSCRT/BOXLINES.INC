@@ -125,6 +125,24 @@ DrawLine_PROC:
 
 	mov		bh, [Video_Page]
 
+	%ifdef Support_Mouse
+
+		push	cx
+		inc	cl
+		test	ch, lnVertical
+		jnz	%%NotIsVertical
+		mov	ch, dh
+		add	cl, dl
+		jmp	%%MaybeHideMouse
+	%%NotIsVertical:
+		mov	ch, cl
+		mov	cl, dl
+		add	ch, dh
+	%%MaybeHideMouse:
+		PreWriteMouse	dx, cx
+		pop	cx
+	%endif
+
 %%DoDrawing:
 	test		cl, cl
 	jz		%%DoneDrawing
@@ -190,6 +208,9 @@ DrawLine_PROC:
 	mov		ah, 0x02
 	int		0x10			; restore cursor position
 
+	%ifdef Support_Mouse
+		PostWriteMouse
+	%endif
 	RegsRestore	bx
 	popm		si, di
 	ret
@@ -247,6 +268,13 @@ DrawBox_PROC:
 	mov		cx, dx
 	add		ax, [Video_WindMin]
 	mov		dx, ax			; dx = real xy, cx = wide/high
+
+	%ifdef Support_Mouse
+		push		cx
+		add		cx, dx
+		PreWriteMouse 	dx, cx
+		pop		cx
+	%endif
 
 	pushm		dx, cx
 	mov		bh, [Video_Page]
@@ -318,7 +346,9 @@ DrawBox_PROC:
 	pop		dx
 	mov		ah, 0x02
 	int		0x10			; restore cursor position
-
+	%ifdef Support_Mouse
+		PostWriteMouse
+	%endif
 	RegsRestore	bx
 	popm		si, di
 	ret
