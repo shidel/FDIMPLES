@@ -379,7 +379,8 @@
 %idefine clWhite	15
 
 ; Box and Frame line constants
-%idefine lnConnect	00001b
+%idefine lnConnect	0
+%idefine lnNoConnect	00001b
 %idefine lnHorizontal   0
 %idefine lnVertical     00010b
 %idefine lnSingle	0

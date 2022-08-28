@@ -43,10 +43,10 @@ SECTION .text
 
 ; %undef Preserve_Registers	; disable preserving registers in macros
 ; %undef DOS_BUG_FIXES		; keep some fixes for various DOS and BIOS bugs
-%undef DOSCRT_Range_Check	; disable out of bounds coordinate settings
+%undef DOSCRT_Range_Check	; disable out of bounds coordinate checking
 %undef Support_BIOS_Timer	; disable attempts to use int15 timer
 ; %undef Support_BIOS_Video	; keep BIOS video support
-%undef Support_Direct_Video	; Direct video addressing, not yet implemented
+; %undef Support_Direct_Video	; keep Direct video addressing
 ; %undef Support_Mouse		; keep Mouse support
 %undef Video_MCGA		; disable MCGA check/support
 %undef Video_VGA		; disable VGA check/support
@@ -109,18 +109,14 @@ DrawMainWindow:
 	TextAttr		[Theme_ProgMenuBar]
 	WriteChar		Ascii_CloseParenthesis
 .NoTitleBar:
-	cmp			[Theme_WindowBoxVisible], byte True
-	jne			.NoWindowBox
-	Window			max
-	TextAttr		[Theme_WindowBoxAttr]
-	DrawBox			word [XY_Frame], word [XY_Frame + 2], lnSingle
-	jmp			.StatusBar
-.NoWindowBox:
 	TextAttr		[Theme_WindowBoxAttr]
 	Window			[XY_Frame], [XY_Frame + 2]
 	ClrScr
 	Window			max
-.StatusBar:
+	cmp			[Theme_WindowBoxVisible], byte True
+	jne			.NoWindowBox
+	DrawBox			word [XY_Frame], word [XY_Frame + 2], lnSingle
+.NoWindowBox:
 	cmp			[Theme_StatusBarVisible], byte True
 	jne			.NoStatusBar
 	mov			dl, al
@@ -131,8 +127,8 @@ DrawMainWindow:
 .NoStatusBar:
 	Window			max
 	TextAttr		[Theme_WindowBoxAttr]
-	DrawLine		word [XY_HorizontalBar], word [XY_HorizontalBar + 2], lnHorizontal + lnConnect
-	DrawLine		word [XY_VerticalBar], word [XY_VerticalBar + 2], lnVertical + lnConnect
+	DrawLine		word [XY_HorizontalBar], word [XY_HorizontalBar + 2], lnHorizontal + lnDouble
+	DrawLine		word [XY_VerticalBar], word [XY_VerticalBar + 2], lnVertical
 	mov			cx, 0x0003
 	mov			si, XY_GroupArea
 .ClearAreasLoop:
@@ -291,6 +287,3 @@ XY_HorizontalBar:	resw 2
 XY_GroupArea:		resw 2
 XY_ItemArea:		resw 2
 XY_DataArea:		resw 2
-
-
-

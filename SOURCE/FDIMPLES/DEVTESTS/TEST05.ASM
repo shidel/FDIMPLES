@@ -41,7 +41,7 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers
+; %undef Preserve_Registers
 ; %undef DOS_BUG_FIXES
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
@@ -64,14 +64,18 @@ SECTION .text
 	WriteStr	'Box Test'
 	ClrEOL
 
-	DrawBox		0x0202, 0x1003, lnSingle
-	DrawBox		0x0212, 0x0322, lnDouble
-	DrawBox		0x1202, 0x150a, lnDoubleHorz
-	DrawBox		0x1212, 0x1222, lnDoubleVert
-	; DrawLine	0x0502, 15, lnHorizontal + lnDouble + lnConnect
-	; DrawLine	0x0502, 15, lnVertical + lnDouble + lnConnect
-	WindMaxY	ah
-	Dec		ah
+	mov		dx, 0x0202
+	mov 		ax, lnSingle
+	call		BoxTest
+	mov		dx, 0x022a
+	mov 		ax, lnDoubleHorz
+	call		BoxTest
+	mov		dx, 0x0d02
+	mov 		ax, lnDoubleVert
+	call		BoxTest
+	mov		dx, 0x0d2a
+	mov 		ax, lnDouble
+	call		BoxTest
 	GotoXY		0, 23
 	TextAttr	0x07
 
@@ -79,3 +83,32 @@ Finished:
 	; VideoResetSettings
 
 	Terminate		0 ; Automatically includes used LIB functions
+
+BoxTest:
+	mov		cx, dx
+	add		cx, 0x0822
+	DrawBox		dx, cx, ax
+	mov		bx, dx
+	add		bl, 0x3
+	DrawLine	bx, 0x09, lnVertical + lnSingle
+	add		bl, 2
+	DrawLine	bx, 0x09, lnVertical + lnDouble
+	dec		bh
+	add		bl, 4
+	DrawLine	bx, 0x0b, lnVertical + lnSingle
+	add		bl, 2
+	DrawLine	bx, 0x0b, lnVertical + lnDouble
+	mov		bx, dx
+	add		bh, 0x1
+	DrawLine	bx, 0x23, lnHorizontal + lnSingle
+	add		bh, 2
+	DrawLine	bx, 0x23, lnHorizontal + lnDouble
+	dec		bl
+	add		bh, 2
+	DrawLine	bx, 0x25, lnHorizontal + lnSingle
+	add		bh, 1
+	DrawLine	bx, 0x25, lnHorizontal + lnDouble
+
+	ret
+
+	Include_LIB_Functions

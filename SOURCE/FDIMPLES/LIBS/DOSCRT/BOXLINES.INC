@@ -41,25 +41,25 @@ BoxLineData_DATA:
 
 .Horizontal:
 	db 0xc4	; single horz
-		; db 0xb3 ; single vert
+		db 0xb3 ; single vert
 		db 0xc3, 0xc5, 0xb4 ; connect vert left, center right
-		; db 0xba ; double vert
+		db 0xba ; double vert
 		db 0xc7, 0xd7, 0xb6 ; connect vert left, center right
 	db 0xcd ; double horz
-		; db 0xb3 ; single vert
+		db 0xb3 ; single vert
 		db 0xc6, 0xd8, 0xb5 ; connect vert left, center right
-		; db 0xba ; double vert
+		db 0xba ; double vert
 		db 0xcc, 0xce, 0xb9 ; connect vert left, center right
 .Vertical:
 	db 0xb3 ; single vert
-		; db 0xc4 ; horz single
+		db 0xc4 ; horz single
 		db 0xc2, 0xc5, 0xc1 ; connect horz single, top, center, bottom
-		; db 0xcd ; horz double
+		db 0xcd ; horz double
 		db 0xd1, 0xd8, 0xcf ; connect horz double top, center, bottom
 	db 0xba ; double vert
-		; db 0xc4 ; horz single
-		db 0xd2, 0xd5, 0xd0 ; connect horz single, top, center, bottom
-		; db 0xcd ; horz double
+		db 0xc4 ; horz single
+		db 0xd2, 0xd7, 0xd0 ; connect horz single, top, center, bottom
+		db 0xcd ; horz double
 		db 0xcb, 0xce, 0xca ; connect horz double top, center, bottom
 
 __?SECT?__
@@ -99,7 +99,8 @@ SECTION_PROC
 DrawLine_PROC:
 	mov		ch, cl
 	mov		cl, dl
-	pushm		si
+	pushm		si, di
+	xor		di, di
 	RegsPreserve	bx
 	pushm		ax, cx
 	mov		bh, [Video_Page]
@@ -117,6 +118,11 @@ DrawLine_PROC:
 	jz		%%NotVerticalChars
 	mov		si, BoxLineData_DATA.Vertical
 %%NotVerticalChars:
+	test		ch, lnDouble		; either double horz/vert
+	jz		%%NotDoubleLine
+	add		si, 9
+%%NotDoubleLine:
+
 	mov		bh, [Video_Page]
 
 %%DoDrawing:
@@ -127,10 +133,39 @@ DrawLine_PROC:
 	mov		ah, 0x02
 	int		0x10			; move cursor to xy position
 	mov		al, [si]
-	test		ch, lnConnect
-	jz		%%NoConnect
+	test		ch, lnNoConnect
+	jnz		%%NoConnect
+
+	push		bx			; save page/textattr
+	push		ax
+	mov		ah, 0x08
+	int		0x10			; fetch char/attr at xy position
+	mov		bl, al
+	pop		ax
+	mov		ah, bl			; ah is now char at position
+	xor		bx, bx
+	cmp		ah, [si + 1]
+	jne		%%SecondTest
+	mov		bx, 2
+	jmp		%%ChangeChar
+%%SecondTest:
+	cmp		ah, [si + 5]
+	jne		%%NoChangeChar
+	mov		bx, 6
+%%ChangeChar:
+	test		di, di			; is it the first char
+	jz		%%ChangeCharDone
+	inc		bx
+	test		cl, cl			; is it the last char
+	jnz		%%ChangeCharDone
+	inc		bx
+%%ChangeCharDone:
+	mov		al, [si+bx]
+%%NoChangeChar:
+	pop		bx			; restore page/textattr
 
 %%NoConnect:
+	inc		di
 	push		cx
 	mov		ah, 0x09
 	mov		cx, 0x0001
@@ -156,7 +191,7 @@ DrawLine_PROC:
 	int		0x10			; restore cursor position
 
 	RegsRestore	bx
-	popm		si
+	popm		si, di
 	ret
 
 
