@@ -101,12 +101,15 @@ DrawLine_PROC:
 	pushm		si, di
 	xor		di, di
 	RegsPreserve	bx
-	pushm		ax, cx
-	mov		bh, [Video_Page]
-	mov		ah, 0x03
-	int		0x10			; get cursor position
-	popm		ax, cx
-	push		dx			; save cursor position
+
+	%ifdef 		Support_BIOS_Video
+		pushm		ax, cx
+		mov		bh, [Video_Page]
+		mov		ah, 0x03
+		int		0x10		; get cursor position
+		popm		ax, cx
+		push		dx		; save cursor position
+	%endif
 
 	mov		dx, ax			; requested start xy position
 	add		dx, [Video_WindMin]	; offset to screen xy position
@@ -202,10 +205,11 @@ DrawLine_PROC:
 %%OutOfBounds:
 %%DoneDrawing:
 
-	pop		dx
-	mov		ah, 0x02
-	int		0x10			; restore cursor position
-
+	%ifdef 		Support_BIOS_Video
+		pop		dx
+		mov		ah, 0x02
+		int		0x10		; restore cursor position
+	%endif
 	%ifdef Support_Mouse
 		PostWriteMouse
 	%endif

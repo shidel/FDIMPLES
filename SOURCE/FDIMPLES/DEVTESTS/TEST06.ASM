@@ -66,24 +66,35 @@ SECTION .text
 
 Main:
 	StdOutStr		'ExitProcTest-'
-	ADD_EXIT_PROC		Exit_1
-	ADD_EXIT_PROC		Exit_2
-	ADD_EXIT_PROC		Exit_3
+	ADD_EXIT_PROC		Exit_1 ; label for 1st exit proc call
+	ADD_EXIT_PROC		Exit_2 ; label for 2nd exit proc call
+	ADD_EXIT_PROC		Exit_3 ; label for 3rd exit proc call
 
 Finished:
-	Terminate		0 ; Automatically includes used LIB functions
+; Automatically includes used LIB functions. Also, automatically call the
+; EXIT_PROC's in reverse order. Finally, use the EXIT_PROC's EXIT_CODE as
+; the ERRORLEVEL that is passed back to DOS.
+	Terminate		[EXIT_CODE]
 
-Exit_1:
-	REMOVE_EXIT_PROC  	Exit_1 	;Must remove first or risk infinite loop
+; The EXIT_PROCs. They could exist anywhere in the program.
+Exit_1:					; This will be the last EXIT_PROC called
+	REMOVE_EXIT_PROC  	Exit_1 	;Must remove itself or infinite loop
 	StdOutChar		'1'
-	retf				;These Use Far Calls
+	retf				;These use far calls. So far return!
 
-Exit_2:
-	REMOVE_EXIT_PROC  Exit_2
+Exit_2:					; This will be the 2nd EXIT_PROC called
+	REMOVE_EXIT_PROC  	Exit_2
 	StdOutChar		'2'
 	retf
 
-Exit_3:
-	REMOVE_EXIT_PROC  Exit_3
+Exit_3:					; This will be the 1st EXIT_PROC called
+	REMOVE_EXIT_PROC  	Exit_3
 	StdOutChar		'3'
 	retf
+
+; In this demo/test program Include_LIBS_Function is not needed. Although, they
+; are after the 'Terminate" macro, the StdOutChar macro creates a simple DOS
+; call directly and the REMOVE_EXIT_PROC macro code is automatically included
+; with the ADD_EXIT_PROC code.
+
+; Include_LIB_Functions
