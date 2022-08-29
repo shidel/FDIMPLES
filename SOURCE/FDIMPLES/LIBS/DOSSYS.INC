@@ -44,7 +44,7 @@
 ; Send individual characters to standard output device
 ; MACRO:  StdOutChar 1-*
 ; INPUT:  %1+ = Characters (prefers dl)
-; OUTPUT: none
+; OUTPUT: ah, dl
 
 ; Send ASCIIz string to standard output device. When passed a memory reference,
 ; like a register or number, it will use the ES segment (like [ES:?]). When
@@ -52,12 +52,12 @@
 ; and it will automatically adjust ES to DS and back again.
 ; MACRO:  StdOutStr 1+
 ; INPUT:  %1+ = ASCIIz string sent to STDOUT (prefers si)
-; OUTPUT: none
+; OUTPUT: ah, dl
 
 ; Send CRLF to standard output device
 ; MACRO:  StdOutCRLF 0-1
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
-; OUTPUT: none
+; OUTPUT: ah, dl
 
 ; Send byte as HEX to standard output device
 ; MACRO:  StdOutHexByte 1-*

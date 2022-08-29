@@ -35,10 +35,10 @@
 ; Send individual characters to standard output device
 ; MACRO:  StdOutChar 1-*
 ; INPUT:  %1+ = Characters (prefers dl)
-; OUTPUT: none
+; OUTPUT: ah, dl
 ; -----------------------------------------------------------------------------
 %imacro StdOutChar 1-*
-	pushm			ax, dx
+	RegsPreserve		ax, dx
 %ifnidni %0, 1
 	mov			ah, 0x02
 	%rep  %0
@@ -51,26 +51,26 @@
 	mov			ah, 0x02
 	int 			0x21
 %endif
-	popm			ax, dx
+	RegsRestore		ax, dx
 %endmacro
 ; -----------------------------------------------------------------------------
 ; Send CRLF to standard output device
 ; MACRO:  StdOutCRLF 0-1
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
-; OUTPUT: none
+; OUTPUT: ah, dl, cx
 ; -----------------------------------------------------------------------------
 %macro StdOutCRLF_INTERNAL 0
 
 SECTION_PROC
 
 StdOutCRLF_PROC:
-	pushm			dx, ax
+	RegsPreserve		ax, dx
 	mov			ah, 0x02
 	mov			dl, 0x0d
 	int			0x21
 	mov			dl, 0x0a
 	int			0x21
-	popm			dx, ax
+	RegsRestore		ax, dx
 	ret
 
 __?SECT?__
@@ -82,10 +82,10 @@ __?SECT?__
 SECTION_PROC
 
 StdOutCR_PROC:
-	pushm			dx, ax
+	RegsPreserve		ax, dx
 	mov			ah, 0x02
 	mov			dl, 0x0d
-	popm			dx, ax
+	RegsRestore		ax, dx
 	ret
 
 __?SECT?__
@@ -97,11 +97,11 @@ __?SECT?__
 SECTION_PROC
 
 StdOutLF_PROC:
-	pushm			dx, ax
+	RegsPreserve		ax, dx
 	mov			ah, 0x02
 	mov			dl, 0x0a
 	int			0x21
-	popm			dx, ax
+	RegsRestore		ax, dx
 	ret
 
 __?SECT?__
@@ -113,12 +113,12 @@ __?SECT?__
 	PROC_REQUIRE StdOutCRLF
 
 	%ifnidni %1, 1
-		push		cx
+		RegsPreserve	cx
 		movndef		cx, %1
 		%%Loopy:
 			call	StdOutCRLF_PROC
 			loop	%%Loopy
-		pop		cx
+		RegsRestore	cx
 	%else
 		call		StdOutCRLF_PROC
 	%endif
@@ -131,14 +131,14 @@ __?SECT?__
 ; and it will automatically adjust ES to DS and back again.
 ; MACRO:  StdOutStr 1+
 ; INPUT:  %1+ = ASCIIz string sent to STDOUT (prefers si)
-; OUTPUT: none
+; OUTPUT: ah, dl
 ; -----------------------------------------------------------------------------
 %macro StdOutStr_INTERNAL 0
 
 SECTION_PROC
 
 StdOutStr_PROC:
-	pushm			ax, dx
+	RegsPreserve		ax, dx
 	mov			ah, 0x02
 %%DisplayMessage:
 	mov			dl, [es:si]
@@ -148,7 +148,7 @@ StdOutStr_PROC:
 	int			0x21
 	jmp			%%DisplayMessage
 %%NoDisplayChar:
-	popm			ax, dx
+	RegsRestore		ax, dx
 	ret
 
 __?SECT?__

@@ -586,7 +586,7 @@ DebugHexByte_PROC:
 		DebugHexByte ah, al
 		pop	ax
 	%else
-		DebugHexByte	ax
+		DebugHexByte ah, al
 	%endif
 	%rotate 1
 	%endrep

@@ -55,3 +55,105 @@
 	%define DOSLIBS_INCLUDED_DEFINED
 %endif
 
+%ifndef EXIT_PROCS_DEFINED
+%define EXIT_PROCS_DEFINED
+%macro  EXIT_PROCS_INTERNAL 0
+%define EXIT_PROCS_INTERNAL_DEFINED
+
+	%ifndef NASMEXT_INC_DEFINED
+		%include "NASMEXT.INC"
+	%endif
+
+SECTION_PROC
+
+	EXIT_PROCS_PROC:
+		xor		ax, ax
+		cmp     	[EXIT_PROCS_NEXT], ax
+		jnz		%%HasProc
+		cmp     	[EXIT_PROCS_NEXT + 2], ax
+		jnz		%%HasProc
+		mov		ax, [EXIT_CODE]
+		ret
+	%%HasProc:
+		call far  	[EXIT_PROCS_NEXT]
+		jmp		EXIT_PROCS_PROC
+
+SECTION_DATA
+
+	EXIT_PROCS_NEXT:	dw 0,0
+	EXIT_CODE:		dw 0
+
+__?SECT?__
+
+%endmacro
+
+
+%imacro  EXIT_PROCS 0
+
+	%ifndef EXIT_PROCS_INTERNAL_DEFINED
+		EXIT_PROCS_INTERNAL
+	%endif
+
+	call	EXIT_PROCS_PROC
+
+%endmacro
+
+%imacro ADD_EXIT_PROC 1
+
+%ifndef ADD_EXIT_PROC_DEFINED
+%define ADD_EXIT_PROC_DEFINED
+
+SECTION_PROC
+
+ADD_EXIT_PROC_PROC:
+	push		ax
+	mov		ax, [EXIT_PROCS_NEXT]
+	mov		[di], ax
+	mov		ax, [EXIT_PROCS_NEXT + 2]
+	mov		[di + 2], ax
+	push		cs
+	pop		ax
+	mov		[EXIT_PROCS_NEXT + 2], ax
+	pop		ax
+	mov		[EXIT_PROCS_NEXT], ax
+	ret
+REMOVE_EXIT_PROC_PROC:
+	RegsPreserve	ax
+	mov		ax, [di]
+	mov		[EXIT_PROCS_NEXT], ax
+	mov		ax, [di + 2]
+	mov		[EXIT_PROCS_NEXT + 2], ax
+	RegsRestore	ax
+	ret
+
+%endif
+
+SECTION_BSS
+
+EXIT_PROC_BEFORE_%1:
+	resw 2
+
+__?SECT?__
+
+	RegsPreserve 	ax
+	push		di
+	movndef		ax, %1
+	mov		di, EXIT_PROC_BEFORE_%1
+	call		ADD_EXIT_PROC_PROC
+	pop		di
+	RegsRestore 	ax
+
+%endmacro
+
+%imacro REMOVE_EXIT_PROC 1
+
+__?SECT?__
+
+	push		di
+	mov		di, EXIT_PROC_BEFORE_%1
+	call		REMOVE_EXIT_PROC_PROC
+	pop		di
+
+%endmacro
+
+%endif

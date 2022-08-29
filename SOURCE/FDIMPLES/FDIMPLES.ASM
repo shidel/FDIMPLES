@@ -31,13 +31,13 @@
 
 ; NASM 2.15.05, or later
 
-use16
+use16				; Use 16-bit code.
 
-cpu 8086
+cpu 8086			; Limit to 8086 instruction set
 
-org 0x100
+org 0x100			; Making a COM file.
 
-SECTION .text
+SECTION .text			; Not required. It's the default. Used anyhow.
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
@@ -62,7 +62,7 @@ SECTION .text
 				; prevent accidentally using a macro that you
 				; did may have prevented from being initialized.
 
-SECTION_CODE
+SECTION_CODE			; Already here. Going to reference it anyhow.
 
 	call			Initialize
 	call			DrawMainWindow
@@ -268,10 +268,11 @@ Theme_StatusBarAttr:	db 0x47
 ; Some other default data
 MinimumGroupAreaSize:	dw 0x0712
 
-; Include any additional LIB function code that is needed and has not yet been
+; Include any additional LIB function code that is needed and have not yet been
 ; included. Basically, this is code required by any functions that were used
-; for the first time after the most recent previous "Include_LIB_Functions" or
-; "Terminate" macros.
+; for the first time after the latest "Include_LIB_Functions" or "Terminate"
+; macros. There might not be any. However, no code would be generated when
+; that is the case.
 Include_LIB_Functions
 
 SECTION_BSS

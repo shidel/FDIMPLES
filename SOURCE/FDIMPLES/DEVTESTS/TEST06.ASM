@@ -1,3 +1,5 @@
+; FreeDOS Installer (FDI) - My Package List Editor Software
+
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -28,67 +30,60 @@
 ; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ; NASM 2.15.05, or later
-%ifndef TERMINAT_INC_DEFINED
-%define TERMINAT_INC_DEFINED
-; -----------------------------------------------------------------------------
-; Terminate Program
-; MACRO:  Terminate 1-*
-; INPUT:
-; 	%1  = DOS Exit Code (prefers al)
-; 	%2+ = Any message sent to STDOUT at exit
-; OUTPUT:
-; 	None: Does not return
-; -----------------------------------------------------------------------------
-%imacro Terminate 1-*
 
-%if %0 > 1
-	regpush			ax
-	%rep  %0 - 1
-	%rotate 1
-		push		si
-		StdOutStr_SUBMAC %1
-		pop		si
-	%endrep
-	%rotate 1
-	regpop			ax
-%endif
+use16
 
-%ifnum %1
-	; Don't save, it gets hard coded
-%elifidni %1, al
-	push			ax
-%elifidni %1, ah
-	push			ax
-%endif
+cpu 8086
 
-%ifdef ADD_EXIT_PROC_DEFINED
-	EXIT_PROCS
-%endif
+org 0x100
 
-%ifdef MouseInitialize_REQUIRED
-	MouseFinalize
-%endif
+SECTION .text
 
-%ifnum %1
-%elifidni %1, al
-	pop			ax
-%elifidni %1, ah
-	pop			ax
-%endif
+%include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%ifnum %1
-	mov			ax, 0x4c00 + %1
-%else
-	mov			ah, 0x4c
-	movndef			al, %1
-%endif
+%undef Preserve_Registers
+; %undef DOS_BUG_FIXES
+%undef DOSCRT_Range_Check
+%undef Support_BIOS_Timer
+%undef Support_BIOS_Video
+%undef Support_Direct_Video
+%undef Support_Mouse
+%undef Video_MCGA
+%undef Video_VGA
+%undef Video_VESA
 
-	int			0x21
+%include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
+				; initialization routines. Some calls for those
+				; routines gets inserted automatically. For
+				; example DOSCRT requires preparation. If those
+				; are not needed, you can save some bytes by
+				; including only the required LIBS directly.
 
-	%define  DO_NOT_INITIALIZE_LIBS
-	%include 'DOSLIBS.INC'
-	Include_LIB_Functions
+; NOTE: Some LIBS have Initialization and Shutdown routines that are compiled
+; in or excluded through DEFINES (like Mouse Support). Those types of LIBS
+; do not use the EXIT_PROC process and are shut down after any EXIT PROCS are
+; called.
 
-%endmacro
-; -----------------------------------------------------------------------------
-%endif
+Main:
+	StdOutStr		'ExitProcTest-'
+	ADD_EXIT_PROC		Exit_1
+	ADD_EXIT_PROC		Exit_2
+	ADD_EXIT_PROC		Exit_3
+
+Finished:
+	Terminate		0 ; Automatically includes used LIB functions
+
+Exit_1:
+	REMOVE_EXIT_PROC  	Exit_1 	;Must remove first or risk infinite loop
+	StdOutChar		'1'
+	retf				;These Use Far Calls
+
+Exit_2:
+	REMOVE_EXIT_PROC  Exit_2
+	StdOutChar		'2'
+	retf
+
+Exit_3:
+	REMOVE_EXIT_PROC  Exit_3
+	StdOutChar		'3'
+	retf
