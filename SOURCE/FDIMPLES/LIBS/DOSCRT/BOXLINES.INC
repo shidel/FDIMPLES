@@ -102,7 +102,10 @@ DrawLine_PROC:
 	xor		di, di
 	RegsPreserve	bx
 
-	%ifdef 		Support_BIOS_Video
+	%ifdef 	Support_BIOS_Video
+		; Although, when using direct mode, this is not needed.
+		; But, it won't hurt much to save and restore the cursor
+		; position in direct mode when bios support is included.
 		pushm		ax, cx
 		mov		bh, [Video_Page]
 		mov		ah, 0x03
@@ -149,19 +152,38 @@ DrawLine_PROC:
 	jz		%%DoneDrawing
 	dec		cl
 
-	mov		ah, 0x02
-	int		0x10			; move cursor to xy position
+	%ifdef BIOS_AND_DIRECT_VIDEO
+		test 	[Video_Options], byte vcbDirect
+		jnz	%%DoDrawing_DIRECT
+	%endif
+
+	%ifdef	Support_BIOS_Video
+		mov		ah, 0x02
+		int		0x10		; move cursor to xy position
+		mov		ah, 0x08
+		int		0x10		; fetch char/attr at xy position
+		mov		ah, al
+	%endif
+
+	%ifdef BIOS_AND_DIRECT_VIDEO
+		jmp		%%DoDrawing_DONE
+	%endif
+
+	%ifdef	Support_Direct_Video
+%%DoDrawing_DIRECT:
+		pushm	es, di
+		Calc_Video_Pointer dx
+		mov	ah, [es:di]
+		popm	es, di
+	%endif
+
+%%DoDrawing_DONE:
+
+	push		bx			; save page/textattr
 	mov		al, [si]
 	test		ch, lnNoConnect
 	jnz		%%NoConnect
 
-	push		bx			; save page/textattr
-	push		ax
-	mov		ah, 0x08
-	int		0x10			; fetch char/attr at xy position
-	mov		bl, al
-	pop		ax
-	mov		ah, bl			; ah is now char at position
 	xor		bx, bx
 	cmp		ah, [si + 1]
 	jne		%%SecondTest
@@ -181,15 +203,40 @@ DrawLine_PROC:
 %%ChangeCharDone:
 	mov		al, [si+bx]
 %%NoChangeChar:
-	pop		bx			; restore page/textattr
 
 %%NoConnect:
-	inc		di
-	push		cx
-	mov		ah, 0x09
-	mov		cx, 0x0001
-	int		0x10			; pu line/box char on screen
-	pop		cx
+	pop		bx			; restore page/textattr
+
+	%ifdef BIOS_AND_DIRECT_VIDEO
+		test 	[Video_Options], byte vcbDirect
+		jnz	%%PutChar_DIRECT
+	%endif
+
+	%ifdef	Support_BIOS_Video
+		push		cx
+		mov		ah, 0x09
+		mov		cx, 0x0001
+		int		0x10		; pu line/box char on screen
+		pop		cx
+	%endif
+
+	%ifdef BIOS_AND_DIRECT_VIDEO
+		jmp		%%PutChar_DONE
+	%endif
+
+	%ifdef	Support_Direct_Video
+	%%PutChar_DIRECT:
+		pushm	es, di
+		mov	ah, bl
+		push	ax
+		Calc_Video_Pointer dx
+		pop	ax
+		mov	[es:di], ax
+		popm	es, di
+	%endif
+
+%%PutChar_DONE:
+	inc		di			; total chars written in line
 	cmp		dh, [Video_WindMaxY]
 	ja		%%OutOfBounds
 	cmp		dx, [Video_WindMaxX]
@@ -198,6 +245,7 @@ DrawLine_PROC:
 	jz		%%NotVerticalMove
 	inc		dh
 	jmp		%%DoDrawing
+
 %%NotVerticalMove:
 	inc		dl
 	jmp		%%DoDrawing
@@ -205,7 +253,7 @@ DrawLine_PROC:
 %%OutOfBounds:
 %%DoneDrawing:
 
-	%ifdef 		Support_BIOS_Video
+	%ifdef 	Support_BIOS_Video
 		pop		dx
 		mov		ah, 0x02
 		int		0x10		; restore cursor position
@@ -278,13 +326,15 @@ DrawBox_PROC:
 		pop		cx
 	%endif
 
-	pushm		dx, cx
-	mov		bh, [Video_Page]
-	mov		ah, 0x03
-	int		0x10			; get cursor position
-	mov		ax, dx
-	popm		dx, cx
-	push		ax			; save cursor position for later
+	%ifdef 	Support_BIOS_Video
+		pushm		dx, cx
+		mov		bh, [Video_Page]
+		mov		ah, 0x03
+		int		0x10		; get cursor position
+		mov		ax, dx
+		popm		dx, cx
+		push		ax		; save cursor position for later
+	%endif
 
 	mov		ah, [Video_Attr]
 	cld
@@ -345,9 +395,11 @@ DrawBox_PROC:
 	ret
 %%DrawDone:
 
-	pop		dx
-	mov		ah, 0x02
-	int		0x10			; restore cursor position
+	%ifdef 	Support_BIOS_Video
+		pop		dx		; was ax
+		mov		ah, 0x02
+		int		0x10		; restore cursor position
+	%endif
 	%ifdef Support_Mouse
 		PostWriteMouse
 	%endif

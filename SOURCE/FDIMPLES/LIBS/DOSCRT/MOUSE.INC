@@ -312,7 +312,11 @@ MouseDraw_PROC:
 	; Basically save then move cursor to mouse position. Then ether
 	; read or write charattr. Then move cursor back to previous position.
 
-BIOSorDIRECT MouseDrawing
+MouseDrawing:
+%ifdef BIOS_AND_DIRECT_VIDEO
+	test 	[Video_Options], byte vcbDirect
+	jnz	MouseDrawing_DIRECT
+%endif
 
 %ifdef Support_BIOS_Video
 MouseDrawing_BIOS:

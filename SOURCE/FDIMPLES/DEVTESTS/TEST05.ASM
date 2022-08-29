@@ -45,7 +45,7 @@ SECTION .text
 ; %undef DOS_BUG_FIXES
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
-%undef Support_BIOS_Video
+; %undef Support_BIOS_Video
 ; %undef Support_Direct_Video
 %undef Support_Mouse
 %undef Video_MCGA
@@ -58,6 +58,9 @@ SECTION .text
 				; example DOSCRT requires preparation. If those
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
+
+	; Force BIOS  mode when both methods are included.
+	; and [Video_Options], byte 11111110b
 
 	ClrScr
 	WriteStr	'Box Test'
@@ -77,7 +80,7 @@ SECTION .text
 	call		BoxTest
 
 Finished:
-	GotoXY		0, 23
+	GotoXY		0, 24
 	TextAttr	0x07
 
 	Terminate		0 ; Automatically includes used LIB functions

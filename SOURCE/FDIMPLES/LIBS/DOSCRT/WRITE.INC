@@ -36,7 +36,13 @@
 
 SECTION_PROC
 
-BIOSorDIRECT PutChar_PROC
+PutChar_PROC:
+
+%ifdef BIOS_AND_DIRECT_VIDEO
+	test 	[Video_Options], byte vcbDirect
+	jnz	PutChar_PROC_DIRECT
+%endif
+
 
 %ifdef Support_BIOS_Video
 PutChar_PROC_BIOS:
