@@ -36,11 +36,10 @@
 
 SECTION_PROC
 
-PutChar_PROC:
+BIOSorDIRECT PutChar_PROC
 
 %ifdef Support_BIOS_Video
-
-PutChar_BIOS:
+PutChar_PROC_BIOS:
 	pushm			cx, bx
 	mov			bl, ah		; write char/attr
 	mov			ah, 0x02	; move cursor to xy
@@ -49,6 +48,17 @@ PutChar_BIOS:
 	mov			cx, 0x0001
 	int			0x10
 	popm			cx, bx
+	ret
+%endif
+
+%ifdef Support_Direct_Video
+PutChar_PROC_DIRECT:
+	pushm			es, di
+	push			ax
+	Calc_Video_Pointer	dx
+	pop			ax
+	mov			[es:di], ax
+	popm			es, di
 	ret
 %endif
 

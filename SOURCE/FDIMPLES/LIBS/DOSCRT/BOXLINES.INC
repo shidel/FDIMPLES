@@ -93,7 +93,6 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 %macro DrawLine_INTERNAL 0
 
-
 SECTION_PROC
 
 DrawLine_PROC:
@@ -126,7 +125,6 @@ DrawLine_PROC:
 	mov		bh, [Video_Page]
 
 	%ifdef Support_Mouse
-
 		push	cx
 		inc	cl
 		test	ch, lnVertical
