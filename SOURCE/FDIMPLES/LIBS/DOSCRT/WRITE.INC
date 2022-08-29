@@ -38,10 +38,10 @@ SECTION_PROC
 
 PutChar_PROC:
 
-; %ifdef BIOS_AND_DIRECT_VIDEO
-;	test 	[Video_Options], byte vcbDirect
-;	jnz	PutChar_PROC_DIRECT
-;%endif
+%ifdef BIOS_AND_DIRECT_VIDEO
+	test 	[Video_Options], byte vcbDirect
+	jnz	PutChar_PROC_DIRECT
+%endif
 
 
 %ifdef Support_BIOS_Video
@@ -57,16 +57,16 @@ PutChar_PROC_BIOS:
 	ret
 %endif
 
-;%ifdef Support_Direct_Video
-; PutChar_PROC_DIRECT:
-;	pushm			es, di
-;	push			ax
-;	Calc_Video_Pointer	dx
-;	pop			ax
-;	mov			[es:di], ax
-;	popm			es, di
-;	ret
-;%endif
+%ifdef Support_Direct_Video
+PutChar_PROC_DIRECT:
+	pushm			es, di
+	push			ax
+	Calc_Video_Pointer	dx
+	pop			ax
+	mov			[es:di], ax
+	popm			es, di
+	ret
+%endif
 
 __?SECT?__
 
