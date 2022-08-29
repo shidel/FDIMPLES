@@ -43,13 +43,22 @@ function build_tests () {
 	done
 }
 
+function wct () {
+
+	local t=$(wc ${@} FDIMPLES.ASM LIBS/*.INC LIBS/*/*.INC 2>/dev/null | grep -i ' total')
+	echo ${t% *}
+}
+
 function build_main () {
+
 
 	local i
 	for i in *.ASM ; do
 		[[ ! -e "${i}" ]] && continue
 		build "${i}"
 	done
+
+	echo "$(wct -l) lines of source code ($(( $(wct -c) / 1024 )) kbytes)"
 }
 
 if [[ $# -eq 0 ]] ; then
