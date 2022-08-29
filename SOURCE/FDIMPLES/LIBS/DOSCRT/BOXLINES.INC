@@ -239,7 +239,7 @@ DrawLine_PROC:
 	inc		di			; total chars written in line
 	cmp		dh, [Video_WindMaxY]
 	ja		%%OutOfBounds
-	cmp		dx, [Video_WindMaxX]
+	cmp		dl, [Video_WindMaxX]
 	ja		%%OutOfBounds
 	test		ch, lnVertical
 	jz		%%NotVerticalMove

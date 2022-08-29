@@ -47,6 +47,8 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 %undef Support_BIOS_Timer	; disable attempts to use int15 timer
 ; %undef Support_BIOS_Video	; keep BIOS video support
 ; %undef Support_Direct_Video	; keep Direct video addressing
+%undef Support_Wide_Screens	; disable direct video support on >80 columns
+				; requires some more work on my part.
 ; %undef Support_Mouse		; keep Mouse support
 %undef Video_MCGA		; disable MCGA check/support
 %undef Video_VGA		; disable VGA check/support

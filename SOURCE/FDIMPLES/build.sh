@@ -38,7 +38,7 @@ function build_tests () {
 		x="${i##*/}"
 		x="${x%%.*}"
 		x="${x//TEST}"
-		[[ ${x} -lt 5 ]] && continue
+		[[ ${x} -lt 7 ]] && continue
 		build "${i}"
 	done
 }

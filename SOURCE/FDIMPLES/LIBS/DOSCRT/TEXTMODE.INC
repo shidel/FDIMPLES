@@ -209,6 +209,15 @@ VideoInitializeState_PROC:
 		MouseDataReset
 	%endif
 	pop	es
+
+	%ifndef Support_Wide_Screens
+		%ifdef Support_Direct_Video
+			cmp	[Video_MaxX], byte 80
+			jna	%%NotAWideMode
+			and	[Video_Options], byte 11111110b
+		%%NotAWideMode:
+		%endif
+	%endif
 	ret
 
 
