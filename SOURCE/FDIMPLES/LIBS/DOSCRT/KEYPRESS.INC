@@ -125,8 +125,43 @@ __?SECT?__
 	%endif
 
 %endmacro
+; -----------------------------------------------------------------------------
+; Discard any and all key presses that may be waiting in the buffer.
+; MACRO:  PurgeKey 0
+; INPUT:  none
+; OUTPUT: none
+; REGS:	  none
+; -----------------------------------------------------------------------------
+%macro PurgeKey_INTERNAL 0
+
+SECTION_PROC
+
+PurgeKey_PROC:
+	push		ax
+%%Check:
+	Keypressed	%%Purge
+	pop		ax
+	ret
+%%Purge:
+	ReadKey		ax
+	jmp		%%Check
+
+__?SECT?__
+
+%endmacro
+
+%imacro PurgeKey 0
+
+	PROC_REQUIRE 		KeyPressed
+	PROC_REQUIRE 		ReadKey
+	PROC_REQUIRE 		PurgeKey
+
+	call 			PurgeKey_PROC
+
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE 		KeyPressed
 	PROC_PROVIDE 		ReadKey
+	PROC_PROVIDE 		PurgeKey
 %endif

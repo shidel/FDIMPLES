@@ -821,6 +821,38 @@ __?SECT?__
 %endif
 
 %endmacro
+; -----------------------------------------------------------------------------
+; Discard any and all mouse clicks that may be waiting in the buffer.
+; MACRO:  PurgeMouse 0
+; INPUT:  none
+; OUTPUT: none
+; REGS:	  none
+; -----------------------------------------------------------------------------
+%macro PurgeMouse_INTERNAL 0
+
+SECTION_PROC
+
+PurgeMouse_PROC:
+	pushm		bx, dx, si
+%%Purge:
+	ReadMouseClick	bx, dx
+	jc		%%Purge
+	popm		bx, dx, si
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro PurgeMouse 0
+
+	PROC_REQUIRE		MouseInitialize
+	PROC_REQUIRE		ReadMouseClick
+	PROC_REQUIRE 		PurgeMouse
+
+	call 			PurgeMouse_PROC
+
+%endmacro
 
 ; *****************************************************************************
 %else
@@ -834,8 +866,9 @@ __?SECT?__
 	PROC_PROVIDE		ReadMouseMove
 
 	PROC_PROVIDE		MouseClicked
-	; PROC_PROVIDE		NotMousewClicked
+	; PROC_PROVIDE		NotMousewClicked	; no internal proc
 	PROC_PROVIDE		ReadMouseClick
+	PROC_PROVIDE		PurgeMouse
 
 
 %endif

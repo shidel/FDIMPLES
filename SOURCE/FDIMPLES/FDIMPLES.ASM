@@ -70,7 +70,6 @@ SECTION_CODE			; Already here. Going to reference it anyhow.
 	call			DrawMainWindow
 
 MainLoop:
-	NotKeyPressed		MainLoop
 	ReadKey			ax
 
 Finished:

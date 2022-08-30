@@ -103,6 +103,10 @@
 ; OUTPUT: %1 is key press (prefers ax)
 ; REGS:	  ax
 
+; Discard any and all key presses that may be waiting in the buffer.
+; MACRO:  PurgeKey 0
+; REGS:	  none
+
 %include "DOSCRT/KEYPRESS.INC"
 
 ; Set the foreground color for text writes
@@ -345,6 +349,10 @@
 ; INPUT:  %1 = [Optional] jump address if a mouse button event has not occurred.
 ; OUTPUT: Carry Flag Set if a button event is waiting. (Same as MouseClicked)
 ; REGS:	  ax
+
+; Discard any and all mouse clicks that may be waiting in the buffer.
+; MACRO:  PurgeMouse 0
+; REGS:	  none
 
 %include "DOSCRT/MOUSE.INC"
 
