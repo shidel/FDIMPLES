@@ -47,8 +47,7 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 %undef Support_BIOS_Timer	; disable attempts to use int15 timer
 ; %undef Support_BIOS_Video	; keep BIOS video support
 ; %undef Support_Direct_Video	; keep Direct video addressing
-%undef Support_Wide_Screens	; disable direct video support on >80 columns
-				; requires some more work on my part.
+; %undef Support_Wide_Screens	; keep direct video support on >80 columns
 ; %undef Support_Mouse		; keep Mouse support
 %undef Video_MCGA		; disable MCGA check/support
 %undef Video_VGA		; disable VGA check/support
@@ -76,6 +75,7 @@ Finished:
 ; Resets video to normal (if needed), clears the screen and terminates the
 ; program.
 	VideoResetSettings		; Reset TextMode, Cursor, etc if needed
+	Window			max
 	TextAttr		0x07
 	ClrScr
 	Terminate		0	; Also includes needed LIB function code
@@ -255,7 +255,7 @@ Text_ProgShort: 	db 'FDIMPLES',0
 Text_ProgVersion:	db '1.0.0',0
 
 ; Default theme settings
-Theme_TextMode:		db 0xff
+Theme_TextMode:		db 0x54 ;0xff
 Theme_TitleBarVisible:	db TRUE
 Theme_WindowBoxVisible:	db TRUE
 Theme_StatusBarVisible:	db TRUE

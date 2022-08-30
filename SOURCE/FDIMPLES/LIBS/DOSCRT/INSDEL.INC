@@ -236,12 +236,12 @@ ScrollWindowLeftRight_PROC_BIOS:
 		int			0x10
 
 		sub			dx, si
-		call			PutChar_BIOS
+		call			PutChar_PROC_BIOS
 		add			dx, si
 		loop			%%BIOSLineLoop
 		mov			ah, [Video_Attr]
 		mov			al, 0x20
-		call			PutChar_BIOS
+		call			PutChar_PROC_BIOS
 
 		popm			cx, dx
 		inc			dh

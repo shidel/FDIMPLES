@@ -44,29 +44,33 @@
 SECTION_PROC
 
 Calc_Video_Pointer_PROC:
-	; %1 = XY coor of screen position
+
+; jmp .Alt
+	; ax = XY coor of screen position
 	pushm		cx, dx
-	shl		ax, 1
 	push		ax
 	xor		ah, ah
-	mov		di, ax
+	shl		ax, 1
+	mov		di, ax			; di = X bytes
 	pop		ax
-	mov		al, ah
+	mov		cl, ah
 	xor		ah, ah
 	mov		ch, ah
-	mov		cl, [Video_MaxX]
-	inc		cl
-	mul		cx
-	add		di, ax
-	mov		ax, cx
-	shl		ax, 1
-	add		di, [Video_Offset]
+	mov		al, [Video_MaxX]
+	inc		ax
+	shl		ax, 1			; ax = bytes / line
+	push		ax
+	mul		cx			; ax = chars to start line
+	add		di, ax			; ax = bytes to start pos
+	add		di, [Video_Offset]	; di = start offset
+	pop		ax
 	mov		dx, [Video_Segment]
 	push		dx
 	pop		es
 	popm		cx, dx
 	; ES:DI Video Pointer
 	; AX is bytes per line
+
 	ret
 
 __?SECT?__

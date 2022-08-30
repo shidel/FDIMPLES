@@ -66,11 +66,9 @@
 ; Probably. We will see.
 %define Support_Direct_Video
 
-; This directive will probably go away. Basically when not defined, modes with
-; more than 80 columns default to BIOS mode instead of Direct video.
-; I need to fix the mouse driver and box/line drawing math for the wide modes.
-; it is a signed/unsigned 8 bit number issue.
-%undef Support_Wide_Screens
+; When using modes with more than 80 columns will default to using the
+; Direct video. If not defined, default to using the BIOS
+%define Support_Wide_Screens
 
 ; Include mouse support
 %define Support_Mouse

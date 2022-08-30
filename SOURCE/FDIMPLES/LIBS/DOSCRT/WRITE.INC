@@ -124,7 +124,7 @@ WriteChar_PROC:
 	test			al, al
 	jz			%%StartPosition
 	dec			al
-	%%StartPosition:
+%%StartPosition:
 	dec			cl
 	div			cl
 	inc			al
