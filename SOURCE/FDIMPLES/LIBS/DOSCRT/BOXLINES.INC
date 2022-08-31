@@ -85,7 +85,7 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-; Display a horizontal line
+; Display a horizontal or vertical line
 ; MACRO:  DrawLine 3
 ; INPUT:  %1 = XY, %2 = Count, %3 = Options (Prefers AX, DX, CX)
 ; OUTPUT: none

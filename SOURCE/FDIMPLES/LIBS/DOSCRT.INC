@@ -362,6 +362,20 @@
 
 %include "DOSCRT/MOUSE.INC"
 
+; (see Box and Frame line constants below for available options)
+
+; Display a horizontal or vertical line
+; MACRO:  DrawLine 3
+; INPUT:  %1 = XY, %2 = Count, %3 = Options (Prefers AX, DX, CX)
+; OUTPUT: none
+; REGS:	  ax, bx, cx, dx
+
+; Display a Box
+; MACRO:  DrawBox 3
+; INPUT:  %1 = MinXY, %2 = MaxXY, %3 = Options (Prefers AX, DX, CX)
+; OUTPUT: none
+; REGS:	  ax, bx, cx, dx
+
 %include "DOSCRT/BOXLINES.INC"
 
 ; -----------------------------------------------------------------------------
@@ -371,6 +385,8 @@
 %idefine tmBW80		2	; 80x25 B/W on Color adapter
 %idefine tmCO80		3	; 80x25 Color on Color adapter
 %idefine tmMono		7	; 80x25 on Monochrome adapter
+%idefine tmCO132x25	0x55	; 132x25 Color in DOSBox, maybe others
+%idefine tmCO132x50	0x54	; 132x50 Color in DOSBox, maybe others
 
 ; Foreground and background color constants
 %idefine clBlack	0
@@ -393,16 +409,16 @@
 %idefine clWhite	15
 
 ; Box and Frame line constants
-%idefine lnConnect	0
-%idefine lnNoConnect	00001b
-%idefine lnHorizontal   0
-%idefine lnVertical     00010b
-%idefine lnSingle	0
+%idefine lnConnect	0	; If intersects another box/line connect them.
+%idefine lnNoConnect	00001b	; Do not connect to other lines/boxes
+%idefine lnHorizontal   0	; draw a horizontal line
+%idefine lnVertical     00010b	; draw a vertical line
+%idefine lnSingle	0	; single line or box
 %idefine lnSingleHorz	0
 %idefine lnSingleVert	0
-%idefine lnDoubleHorz	0100b
-%idefine lnDoubleVert	1000b
-%idefine lnDouble	1100b
+%idefine lnDoubleHorz	0100b	; double line or box with double top/bottom lines
+%idefine lnDoubleVert	1000b   ; double line or box with double side lines
+%idefine lnDouble	1100b   ; double line or box with all double lines
 
 ; -----------------------------------------------------------------------------
 ; Automatically initialize video display and other settings

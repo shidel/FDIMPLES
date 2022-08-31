@@ -102,7 +102,7 @@ SECTION_PROC
 
 VideoInitializeState_PROC:
 
-; Assume at least monochrome MDA
+	; Assume at least monochrome MDA
 	%ifdef Support_Direct_Video
 		PROC_REQUIRE	Calc_Video_Pointer
 		mov		[Video_Segment], word 0xb000
@@ -112,7 +112,6 @@ VideoInitializeState_PROC:
 	mov			[Video_Cursor_State], word 0x0000
 
 	push			es
-; If color assume at least CGA
 	mov			ax, 0x0040
 	push 			ax
 	pop			es
@@ -141,6 +140,7 @@ VideoInitializeState_PROC:
 	mov			ax, [es:0x0063]
 	cmp			ax, 0x3d4
 	jne			%%ProbeHardware
+	; If color assume at least CGA
 	%ifdef Support_Direct_Video
 		mov		[Video_Segment], word 0xb800
 	%endif
