@@ -185,6 +185,13 @@
 	%endif
 %endmacro
 
+%imacro poppush 1-*
+; Performa a pop and push for each register
+	popm	%{1:-1}
+	pushm   %{1:-1}
+%endmacro
+
+; -----------------------------------------------------------------------------
 %imacro TempBuffer 1
 ; Include an extremely temporary application wide shared buffer of %1 bytes
 ; Care must be taken that multiple functions do not use the buffer while data
@@ -201,7 +208,7 @@
 
 	%endif
 %endmacro
-
+; -----------------------------------------------------------------------------
 %imacro RegsPreserve 0-*
 ; Used by macros. When enabled, macros will preserve (push) a list of registers
 ; they use internally.
@@ -232,16 +239,6 @@
 	%endif
 %endmacro
 
-%imacro poppush 1-*
-; Performa a pop and push for each register
-	%rep  %0
-		pop	%1
-		push    %1
-	%rotate 1
-	%endrep
-%endmacro
-
-
 %imacro regpush 0-*
 ; When Registers are not Preserved, perform push
 	%ifndef Preserve_Registers
@@ -269,7 +266,7 @@
 		%endif
 	%endif
 %endmacro
-
+; -----------------------------------------------------------------------------
 %imacro regmatch 2-*
 ; %1 = 16-bit register to check against
 ; %2+ = 8/16-bit possible matching registers
@@ -312,7 +309,7 @@
 		%undef  REGISTER_MATCH
 	%endif
 %endmacro
-
+; -----------------------------------------------------------------------------
 %imacro regtemp 2-*
 ; 1+ = List of needed 8/16-bit registers
 ; TEMP_REGISTER is defined as suggested unused register
@@ -377,7 +374,7 @@
 	%undef  REGISTER_DI_AVAILABLE
 	%undef  REGISTER_SI_AVAILABLE
 %endmacro
-
+; -----------------------------------------------------------------------------
 %imacro regtype 1
 	%ifidni %1, ax
 		%define REGISTER_TYPE_BITS 16
@@ -422,9 +419,8 @@
 	%else
 		%define REGISTER_TYPE_BITS 0
 	%endif
-
 %endmacro
-
+; -----------------------------------------------------------------------------
 %imacro movndef 2-*
 ; MOV if not Default.
 ; When not the default preferred register, generate a mov (or similar)
@@ -494,7 +490,7 @@
 
     %endif
 %endmacro
-
+; -----------------------------------------------------------------------------
 %imacro PROC_REQUIRE 1
 	%ifndef %1_REQUIRED
 		%define %1_REQUIRED 0
@@ -507,7 +503,7 @@
 		%1_INTERNAL
 	%endif
 %endmacro
-
+; -----------------------------------------------------------------------------
 %imacro DebugChar 1-*
 
 %ifndef DebugChar_DEFINED

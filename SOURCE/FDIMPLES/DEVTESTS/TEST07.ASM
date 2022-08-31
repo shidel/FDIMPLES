@@ -63,21 +63,33 @@ SECTION .text
 	TextMode		0x54
 
 Main:
-	mov 			cx, 100
+	mov 			cx, 2000
 .Alphabet:
 	WriteStr		'abcdefghijklmnopqrstuvwxyz_'
 	loop			.Alphabet
 	call 			WaitEvent
+	Delay			500
 
 Finished:
 	VideoResetSettings
 	Terminate		0
 
 WaitEvent:
+	WriteCRLF
+	WriteStr		'Press a key'
+	MouseAvailable		.OrMouseClick
+	jmp			.Waiting
+.OrMouseClick:
+	WriteStr		' (or mouse click)'
+.Waiting:
 	Keypressed		.Done
 	MouseClicked		.Done
-	jmp			WaitEvent
+	jmp			.Waiting
 .Done:
+	WhereXY			ax
+	xor			al, al
+	GotoXY			ax
+	ClrEOL
 	PurgeKey
 	PurgeMouse
 	ret

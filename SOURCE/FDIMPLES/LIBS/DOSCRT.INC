@@ -305,6 +305,12 @@
 
 %include "DOSCRT/CURSOR.INC"
 
+; Test if mouse was found and initialized.
+; MACRO:  MouseAvailable 0-1
+; OUTPUT: Carry Flag set if Mouse was found. If a mouse is available, %1 can be
+;	  provided as a jump target.
+; REGS:	  ax
+
 ; Check if mouse button event has occurred and remove it from the buffer.
 ; Generally, this is the only mouse macro you will absolutely need to use.
 ; However, if you want to do things like hover-over highlighting. You will

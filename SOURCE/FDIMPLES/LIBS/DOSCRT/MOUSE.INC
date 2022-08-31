@@ -854,6 +854,48 @@ __?SECT?__
 
 %endmacro
 
+; -----------------------------------------------------------------------------
+; Test if mouse was found and initialized.
+; MACRO:  MouseAvailable 0-1
+; OUTPUT: Carry Flag set if Mouse was found. If mouse is available, %1 can be
+;	  provided as a jump target.
+; REGS:	  ax
+; -----------------------------------------------------------------------------
+%macro MouseAvailable_INTERNAL 0
+
+SECTION_PROC
+
+%ifdef Support_Mouse
+MouseAvailable_PROC:
+	RegsPreserve 	ax
+	clc
+	mov		ax, [Mouse_Button_Count]
+	test		ax, ax
+	jz		%%NoMouse
+	stc
+%%NoMouse:
+	RegsRestore 	ax
+	ret
+%endif
+
+__?SECT?__
+
+%endmacro
+%imacro MouseAvailable 0-1
+
+	%ifdef Support_Mouse
+		PROC_REQUIRE		MouseAvailable
+		call			MouseAvailable_PROC
+		%if %0 = 1
+			jnc			%%NoMouse
+			jmp			%1
+		%%NoMouse:
+		%endif
+	%else
+		clc
+	%endif
+
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE		MouseDataReset
@@ -869,6 +911,6 @@ __?SECT?__
 	; PROC_PROVIDE		NotMousewClicked	; no internal proc
 	PROC_PROVIDE		ReadMouseClick
 	PROC_PROVIDE		PurgeMouse
-
+	PROC_PROVIDE		MouseAvailable
 
 %endif
