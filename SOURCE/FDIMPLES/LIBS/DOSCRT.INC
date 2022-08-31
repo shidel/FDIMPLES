@@ -258,18 +258,17 @@
 ; INPUT: %1 = up, down, left or right
 ; REGS: ax, bx, cx, dx
 
-
 %include "DOSCRT/INSDEL.INC"
 
 ; Write individual characters to display
 ; MACRO:  WriteChar 1-*
-; INPUT:  %1+ = Characters (prefers al)
-; REG: 	  ax, bx, cx, dx
+; INPUT:  %1+ = Characters (prefers dl)
+; REG: 	  dl
 
 ; Write CRLF to display
 ; MACRO:  WriteCRLF 0-1
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
-; REG: 	  ax, bx, cx, dx
+; REG: 	  cx, dl
 
 ; Send ASCIIz string to display. When passed a memory reference, like a
 ; register or number, it will use the ES segment (like [ES:?]). When passed
@@ -277,17 +276,17 @@
 ; and it will automatically adjust ES to DS and back again.
 ; MACRO:  WriteStr 1-*
 ; INPUT:  ASCIIz string(s) to sent to display (prefers si)
-; REGS:   ax, bx, cx, dx, si
+; REGS:   al, dl
 
 ; Send byte as HEX to display
 ; MACRO:  WriteHexByte 1-*
 ; INPUT:  %1+ = byte to display (prefers al)
-; REGS:   ax, bx, cx, dx
+; REGS:   cx, dl
 
-; Send word as HEX to display
-; MACRO:  WriteHexWord 1-*
-; INPUT:  %1+ = word to display (prefers ax)
-; REGS:   ax, bx, cx, dx
+; Send byte as HEX to display
+; MACRO:  WriteHexByte 1-*
+; INPUT:  %1+ = byte to display (prefers al)
+; REGS:   cx, dl
 
 %include "DOSCRT/WRITE.INC"
 

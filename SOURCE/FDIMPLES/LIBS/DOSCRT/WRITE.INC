@@ -72,15 +72,15 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-%macro WriteChar_INTERNAL 0
+%macro WRITER_DISPLAY_INTERNAL 0
 ; AL = character to display
 
 SECTION_PROC
 
-WriteChar_PROC:
-
-; al = character to display
-	RegsPreserve		bx, cx, dx
+WRITER_DISPLAY_PROC:
+	; dl = Character
+	pushm			ax, bx, cx, dx
+	mov			al, dl
 	; push ax,  see - https://fd.lod.bz/rbil/interrup/video/1003.html
 	push			ax			; Some BIOS clear AX
 	mov			ah, 0x03		; Get Cursor Pos & Size
@@ -207,7 +207,7 @@ DisplayChar_PROC_DIRECT:
 	; mov			bh, [Video_Page]	; already set
 	; mov			dx, "Cursor position"
 	int			0x10
-	RegsRestore		bx, cx, dx
+	popm			ax, bx, cx, dx
 	ret
 
 __?SECT?__
@@ -216,40 +216,40 @@ __?SECT?__
 ; -----------------------------------------------------------------------------
 ; Write individual characters to display
 ; MACRO:  WriteChar 1-*
-; INPUT:  %1+ = Characters (prefers al)
-; REG: 	  ax, bx, cx, dx
+; INPUT:  %1+ = Characters (prefers dl)
+; REG: 	  dl
 ; -----------------------------------------------------------------------------
 %imacro WriteChar 1-*
 
-	PROC_REQUIRE WriteChar
+	PROC_REQUIRE WRITER_DISPLAY
 
-	RegsPreserve		ax
+	RegsPreserve		dx
 	%rep  %0
-		movndef		al, %1
-		call 		WriteChar_PROC
+		movndef		dl, %1
+		call 		WRITER_DISPLAY_PROC
 	%rotate 1
 	%endrep
-	RegsRestore		ax
+	RegsRestore		dx
 %endmacro
 ; -----------------------------------------------------------------------------
 ; Write CRLF to display
 ; MACRO:  WriteCRLF 0-1
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
-; REG: 	  ax, bx, cx, dx
+; REG: 	  cx, dx
 ; -----------------------------------------------------------------------------
 %macro WriteCRLF_INTERNAL 0
 
-	PROC_REQUIRE WriteChar
+	PROC_REQUIRE WRITER_DISPLAY
 
 SECTION_PROC
 
 WriteCRLF_PROC:
-	RegsPreserve		ax
-	mov			al, CR
-	call			WriteChar_PROC
-	mov			al, LF
-	call			WriteChar_PROC
-	RegsRestore		ax
+	RegsPreserve		dx
+	mov			dl, CR
+	call			WRITER_DISPLAY_PROC
+	mov			dl, LF
+	call			WRITER_DISPLAY_PROC
+	RegsRestore		dx
 	ret
 
 __?SECT?__
@@ -258,15 +258,15 @@ __?SECT?__
 
 %macro WriteCR_INTERNAL 0
 
-	PROC_REQUIRE WriteChar
+	PROC_REQUIRE WRITER_DISPLAY
 
 SECTION_PROC
 
 WriteCR_PROC:
-	RegsPreserve		ax
-	mov			al, CR
-	call			WriteChar_PROC
-	RegsRestore		ax
+	RegsPreserve		dx
+	mov			dl, CR
+	call			WRITER_DISPLAY_PROC
+	RegsRestore		dx
 	ret
 
 __?SECT?__
@@ -275,15 +275,15 @@ __?SECT?__
 
 %macro WriteLF_INTERNAL 0
 
-	PROC_REQUIRE WriteChar
+	PROC_REQUIRE WRITER_DISPLAY
 
 SECTION_PROC
 
 WriteLF_PROC:
-	RegsPreserve		ax
-	mov			al, LF
-	call			WriteChar_PROC
-	RegsRestore		ax
+	RegsPreserve		dx
+	mov			dl, LF
+	call			WRITER_DISPLAY_PROC
+	RegsRestore		dx
 	ret
 
 __?SECT?__
@@ -315,47 +315,19 @@ __?SECT?__
 ; and it will automatically adjust ES to DS and back again.
 ; MACRO:  WriteStr 1-*
 ; INPUT:  ASCIIz string(s) to sent to display (prefers si)
-; REGS:   ax, bx, cx, dx, si
+; REGS:   al, dl
 ; -----------------------------------------------------------------------------
-%macro WriteStr_INTERNAL 0
-
-	PROC_REQUIRE WriteChar
-
-SECTION_PROC
-
-WriteStr_PROC:
-	RegsPreserve		ax
-	cld
-%%DisplayMessage:
-	es lodsb
-	test			al, al
-	jz 			%%NoDisplayChar
-	call			WriteChar_PROC
-	jmp			%%DisplayMessage
-%%NoDisplayChar:
-	RegsRestore		ax
-	ret
-
-__?SECT?__
-
+%macro WriteStrES_INTERNAL 0
+	DATAOUT_PROC DISPLAY, STR_ES, WriteStrES
 %endmacro
 
 %macro WriteStrDS_INTERNAL 0
-
-WriteStrDS_PROC:
-	push		es
-	push		ds
-	pop		es
-	call		WriteStr_PROC
-	pop		es
-	ret
+	DATAOUT_PROC DISPLAY, STR_DS, WriteStrDS
 %endmacro
 
 %macro WriteStr_SUBMAC 1
 
-	PROC_REQUIRE WriteStrDS
-	PROC_REQUIRE WriteChar
-	PROC_REQUIRE WriteStr
+	USES_WRITER  DISPLAY, STR_ES, WriteStrES
 
 SECTION_DATA
 
@@ -368,27 +340,30 @@ SECTION_DATA
 
 __?SECT?__
 
-	RegsPreserve		si
+	%ifnidni %1, si
+		push	si
+	%endif
 	%ifstr %1
+		USES_WRITER  	DISPLAY, STR_DS, WriteStrDS
 		movndef		si, %%str
 		call		WriteStrDS_PROC
 	%else
 		movndef		si, %1
-		call		WriteStr_PROC
+		call		WriteStrES_PROC
 	%endif
-	RegsRestore		si
+	%ifnidni %1, si
+		pop	si
+	%endif
 
 %endmacro
 
 %imacro WriteStr 1-*
-
-	PROC_REQUIRE WriteCR
-	PROC_REQUIRE WriteLF
-
 	%rep  %0
 		%ifidni %1, CR
+			PROC_REQUIRE WriteCR
 			call	WriteCR_PROC
 		%elifidni %1, LF
+			PROC_REQUIRE WriteLF
 			call	WriteLF_PROC
 		%else
 			WriteStr_SUBMAC %1
@@ -400,58 +375,28 @@ __?SECT?__
 ; Send byte as HEX to display
 ; MACRO:  WriteHexByte 1-*
 ; INPUT:  %1+ = byte to display (prefers al)
-; REGS:   ax, bx, cx, dx
+; REGS:   cx, dl
 ; -----------------------------------------------------------------------------
 %macro WriteHexByte_INTERNAL 0
 
-	PROC_REQUIRE WriteChar
-
-SECTION_PROC
-
-WriteHexByte_PROC:
-	RegsPreserve		dx, cx
-
-	mov			cx, 0x0204	; ch = count, cl = bit rotate
-	mov			ah, ch		; mov ah, 0x02
-%%Loopy:
-	ror			al, cl		; rotate first to do high bits
-	mov			dl, al
-	and			dl, 0x0f
-	add			dl, 0x30	; make numbers ascii numbers
-	cmp			dl, 0x39
-	jbe			%%Display	; <= to asciii 9
-	add			dl, 0x27	; make value ascii letter
-
-%%Display:
-	regpush			cx
-	push			ax
-	mov			al, dl
-	call			WriteChar_PROC
-	pop			ax
-	regpop			cx
-	dec			ch
-	jnz			%%Loopy
-
-	RegsRestore		dx, cx
-
-	ret
-
-__?SECT?__
+DATAOUT_PROC DISPLAY, HEXBYTE, WriteHexByte
 
 %endmacro
 
 %imacro WriteHexByte 1-*
 
+	PROC_REQUIRE WRITER_DISPLAY
+	PROC_REQUIRE DATAOUT_HEXBYTE
 	PROC_REQUIRE WriteHexByte
 
 	%rep  %0
 		%ifnidni %1, al
-			RegsPreserve 	ax
+			push	ax
 			mov	al, %1
 		%endif
 		call		WriteHexByte_PROC
 		%ifnidni %1, al
-			RegsRestore 	ax
+			pop	ax
 		%endif
 	%rotate 1
 	%endrep
@@ -461,20 +406,28 @@ __?SECT?__
 ; Send word as HEX to display
 ; MACRO:  WriteHexWord 1-*
 ; INPUT:  %1+ = word to display (prefers ax)
-; REGS:   ax, bx, cx, dx
+; REGS:   none
 ; -----------------------------------------------------------------------------
+%macro WriteHexWord_INTERNAL 0
+
+DATAOUT_PROC DISPLAY, HEXWORD, WriteHexWord
+
+%endmacro
+
 %imacro WriteHexWord 1-*
+
+	PROC_REQUIRE WRITER_DISPLAY
+	PROC_REQUIRE DATAOUT_HEXWORD
+	PROC_REQUIRE WriteHexWord
+
 	%rep  %0
 		%ifnidni %1, ax
-			RegsPreserve	ax
+			push	ax
 			mov	ax, %1
 		%endif
-		regpush		ax
-		WriteHexByte	ah
-		regpop		ax
-		WriteHexByte	al
+		call		WriteHexWord_PROC
 		%ifnidni %1, ax
-			RegsRestore	ax
+			pop	ax
 		%endif
 	%rotate 1
 	%endrep
@@ -482,11 +435,12 @@ __?SECT?__
 ; *****************************************************************************
 %else
 	PROC_PROVIDE		PutChar
-	PROC_PROVIDE		WriteChar
+	PROC_PROVIDE		WRITER_DISPLAY
 	PROC_PROVIDE		WriteCRLF
 	PROC_PROVIDE		WriteCR
 	PROC_PROVIDE		WriteLF
-	PROC_PROVIDE		WriteStr
+	PROC_PROVIDE		WriteStrES
 	PROC_PROVIDE		WriteStrDS
 	PROC_PROVIDE		WriteHexByte
+	PROC_PROVIDE		WriteHexWord
 %endif

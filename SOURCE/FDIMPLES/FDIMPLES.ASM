@@ -47,7 +47,7 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 %undef Support_BIOS_Timer	; disable attempts to use int15 timer
 ; %undef Support_BIOS_Video	; keep BIOS video support
 ; %undef Support_Direct_Video	; keep Direct video addressing
-; %undef Support_Wide_Screens	; keep direct video support on >80 columns
+; %undef Support_Wide_Screens	; keep direct video support on >80 columns modes
 ; %undef Support_Mouse		; keep Mouse support
 %undef Video_MCGA		; disable MCGA check/support
 %undef Video_VGA		; disable VGA check/support
@@ -65,6 +65,7 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 
 SECTION_CODE			; Already here. Going to reference it anyhow.
 
+	; jmp			ProbeModes
 	call			Initialize
 	call			DrawMainWindow
 
@@ -72,13 +73,17 @@ MainLoop:
 	ReadKey			ax
 
 Finished:
+	call			ResetDisplay
+	Terminate		0	; Also includes needed LIB function code
+
+ResetDisplay:
 ; Resets video to normal (if needed), clears the screen and terminates the
 ; program.
 	VideoResetSettings		; Reset TextMode, Cursor, etc if needed
 	Window			max
 	TextAttr		0x07
 	ClrScr
-	Terminate		0	; Also includes needed LIB function code
+	ret
 
 DrawMainWindow:
 ; Draws the title bar and framing. Also clears the statusbar, group, item list
@@ -247,6 +252,84 @@ Initialize:
 	call			CalculateScreenPositions
 	ret
 
+ProbeModes:
+; At some point after stack handling is added, will do this there instead of
+; wasting bytes in the BSS.
+	mov			cx, 0x7f
+	mov			di, MODE_PROBING
+	mov			si, di
+	cld
+.Probing:
+	dec			cx
+	cmp			cx, 0xffff
+	je			.ProbeDone
+	cmp			cl, 0x13
+	ja			.Probe
+	cmp			cl, 0x07
+	je			.Probe
+	cmp			cl, 0x03
+	jbe			.Probe
+	jmp			.Probing
+.Probe:
+	push			cx
+	TextMode		cl
+	Delay			50
+	pop			cx
+	xor			ah, ah
+	mov			al, [Video_Mode]
+	cmp			al, cl
+	jne			.Probing
+	; check height against known possibilities
+	cmp			[Video_MaxY], byte 0x18
+	je			.HeightOK
+	cmp			[Video_MaxY], byte 0x2a
+	je			.HeightOK
+	cmp			[Video_MaxY], byte 0x31
+	je			.HeightOK
+	jmp			.Probing
+.HeightOK:
+	; check width against known possibilities
+	cmp			[Video_MaxX], byte 0x27
+	je			.WidthOK
+	cmp			[Video_MaxX], byte 0x4f
+	je			.WidthOK
+	cmp			[Video_MaxX], byte 0x83
+	je			.WidthOK
+	jmp			.Probing
+.WidthOK:
+	inc			ah
+	stosw
+	mov			ax, [Video_Max]
+	add			ax, 0x0101
+	stosw
+	jmp			.Probing
+.ProbeDone:
+	xor			ax, ax
+	stosw
+	call			ResetDisplay
+	StdOutStr		'Detected video modes:', CRLF, CRLF
+.Displaying:
+	lodsw
+	test			ah, ah
+	jz			.Done
+	push			ax
+	StdOutStr		'	0x'
+	pop			ax
+	StdOutHexByte		al
+	StdOutChar		' '
+	lodsb
+	StdOutUIntByte		al
+	StdOutStr		' x '
+	lodsb
+	StdOutUIntByte		al
+	StdOutCRLF
+	jmp			.Displaying
+.Done:
+	StdOutCRLF
+	Terminate		0
+
+
+
 SECTION_DATA
 
 ; Hard coded text
@@ -289,3 +372,5 @@ XY_HorizontalBar:	resw 2
 XY_GroupArea:		resw 2
 XY_ItemArea:		resw 2
 XY_DataArea:		resw 2
+
+MODE_PROBING:		resw 0x100

@@ -32,10 +32,29 @@
 %ifndef STDOUT_INC_DEFINED
 %define STDOUT_INC_DEFINED
 ; -----------------------------------------------------------------------------
+; Internal data output to STDOUT
+; -----------------------------------------------------------------------------
+%macro WRITER_STDOUT_INTERNAL 0
+
+SECTION_PROC
+
+WRITER_STDOUT_PROC:
+	; dl = character
+	push		ax
+	mov		ah, 0x02
+	int		0x21
+	pop		ax
+	ret
+
+__?SECT?__
+
+
+%endmacro
+; -----------------------------------------------------------------------------
 ; Send individual characters to standard output device
 ; MACRO:  StdOutChar 1-*
 ; INPUT:  %1+ = Characters (prefers dl)
-; OUTPUT: ah, dl
+; REGS: ax, dl
 ; -----------------------------------------------------------------------------
 %imacro StdOutChar 1-*
 	RegsPreserve		ax, dx
@@ -57,7 +76,7 @@
 ; Send CRLF to standard output device
 ; MACRO:  StdOutCRLF 0-1
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
-; OUTPUT: ah, dl, cx
+; REGS: ax, dl, cx
 ; -----------------------------------------------------------------------------
 %macro StdOutCRLF_INTERNAL 0
 
@@ -131,46 +150,19 @@ __?SECT?__
 ; and it will automatically adjust ES to DS and back again.
 ; MACRO:  StdOutStr 1+
 ; INPUT:  %1+ = ASCIIz string sent to STDOUT (prefers si)
-; OUTPUT: ah, dl
+; REGS: al, dl
 ; -----------------------------------------------------------------------------
-%macro StdOutStr_INTERNAL 0
-
-SECTION_PROC
-
-StdOutStr_PROC:
-	RegsPreserve		ax, dx
-	mov			ah, 0x02
-%%DisplayMessage:
-	mov			dl, [es:si]
-	test			dl, dl
-	jz 			%%NoDisplayChar
-	inc			si
-	int			0x21
-	jmp			%%DisplayMessage
-%%NoDisplayChar:
-	RegsRestore		ax, dx
-	ret
-
-__?SECT?__
-
+%macro StdOutStrES_INTERNAL 0
+	DATAOUT_PROC STDOUT, STR_ES, StdOutStrES
 %endmacro
 
 %macro StdOutStrDS_INTERNAL 0
-
-StdOutStrDS_PROC:
-	push		es
-	push		ds
-	pop		es
-	call		StdOutStr_PROC
-	pop		es
-	ret
+	DATAOUT_PROC STDOUT, STR_DS, StdOutStrDS
 %endmacro
-
 
 %macro StdOutStr_SUBMAC 1
 
-	PROC_REQUIRE StdOutStr
-	PROC_REQUIRE StdOutStrDS
+	USES_WRITER  STDOUT, STR_ES, StdOutStrES
 
 SECTION_DATA
 
@@ -183,30 +175,33 @@ SECTION_DATA
 
 __?SECT?__
 
+	%ifnidni %1, si
+		push	si
+	%endif
 	%ifstr %1
+		USES_WRITER  	STDOUT, STR_DS, StdOutStrDS
 		movndef		si, %%str
 		call		StdOutStrDS_PROC
 	%else
-		mov		si, %1
-		call		StdOutStr_PROC
+		movndef		si, %1
+		call		StdOutStrES_PROC
+	%endif
+	%ifnidni %1, si
+		pop	si
 	%endif
 
 %endmacro
 
 %imacro StdOutStr 1-*
-
-	PROC_REQUIRE	StdOutCR
-	PROC_REQUIRE	StdOutLF
-
 	%rep  %0
 		%ifidni %1, CR
+			PROC_REQUIRE StdOutCR
 			call	StdOutCR_PROC
 		%elifidni %1, LF
+			PROC_REQUIRE StdOutLF
 			call	StdOutLF_PROC
 		%else
-			push		si
 			StdOutStr_SUBMAC %1
-			pop		si
 		%endif
 	%rotate 1
 	%endrep
@@ -215,43 +210,18 @@ __?SECT?__
 ; Send byte as HEX to standard output device
 ; MACRO:  StdOutHexByte 1-*
 ; INPUT:  %1+ = byte to print (prefers al)
-; OUTPUT: none
+; REGS:	  cx, dl
 ; -----------------------------------------------------------------------------
 %macro StdOutHexByte_INTERNAL 0
 
-SECTION_PROC
-
-StdOutHexByte_PROC:
-	pushm			dx, cx, ax
-
-	mov			cx, 0x0204	; ch = count, cl = bit rotate
-	mov			ah, ch		; mov ah, 0x02
-%%Loopy:
-	ror			al, cl		; rotate first to do high bits
-	mov			dl, al
-	and			dl, 0x0f
-	add			dl, 0x30	; make numbers ascii numbers
-	cmp			dl, 0x39
-	jbe			%%Display	; <= to asciii 9
-	add			dl, 0x27	; make value ascii letter
-
-%%Display:
-	push			ax
-	int			0x21
-	pop			ax
-	dec			ch
-	jnz			%%Loopy
-
-	popm			dx, cx, ax
-
-	ret
-
-__?SECT?__
+DATAOUT_PROC STDOUT, HEXBYTE, StdOutHexByte
 
 %endmacro
 
 %macro StdOutHexByte 1-*
 
+	PROC_REQUIRE WRITER_STDOUT
+	PROC_REQUIRE DATAOUT_HEXBYTE
 	PROC_REQUIRE StdOutHexByte
 
 	%rep  %0
@@ -271,20 +241,52 @@ __?SECT?__
 ; Send word as HEX to standard output device
 ; MACRO:  StdOutHexWord 1-*
 ; INPUT:  %1+ = word to print (prefers ax)
-; OUTPUT: none
+; REGS:	  cx, dl
 ; -----------------------------------------------------------------------------
+%macro StdOutHexWord_INTERNAL 0
+
+DATAOUT_PROC STDOUT, HEXWORD, StdOutHexWord
+
+%endmacro
+
 %imacro StdOutHexWord 1-*
 
-	PROC_REQUIRE StdOutHexByte
+	PROC_REQUIRE WRITER_STDOUT
+	PROC_REQUIRE DATAOUT_HEXWORD
+	PROC_REQUIRE StdOutHexWord
 
 	%rep  %0
 		%ifnidni %1, ax
 			push	ax
 			mov	ax, %1
 		%endif
-		StdOutHexByte	ah
-		StdOutHexByte	al
+		call		StdOutHexWord_PROC
 		%ifnidni %1, ax
+			pop	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send byte as Unsigned Integer to standard output device
+; MACRO:  StdOutUIntByte 1-*
+; INPUT:  %1+ = word to print (prefers al)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%imacro StdOutUIntByte 1-*
+
+	PROC_REQUIRE StdOutHexByte
+
+	%rep  %0
+		%ifnidni %1, al
+			push	ax
+			movndef	al, %1
+		%endif
+		push		ax
+		StdOutChar	'0', 'x'
+		pop		ax
+		StdOutHexByte	al
+		%ifnidni %1, al
 			pop	ax
 		%endif
 	%rotate 1
@@ -292,10 +294,13 @@ __?SECT?__
 %endmacro
 ; *****************************************************************************
 %else
+	PROC_PROVIDE WRITER_STDOUT
+
 	PROC_PROVIDE StdOutCRLF
 	PROC_PROVIDE StdOutCR
 	PROC_PROVIDE StdOutLF
 	PROC_PROVIDE StdOutStr
 	PROC_PROVIDE StdOutStrDS
 	PROC_PROVIDE StdOutHexByte
+	PROC_PROVIDE StdOutHexWord
 %endif

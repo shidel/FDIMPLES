@@ -32,15 +32,16 @@ function build () {
 
 function build_tests () {
 
-	local i x
+	local i x h
 	for i in DEVTESTS/*.ASM ; do
 		[[ ! -e "${i}" ]] && continue
 		x="${i##*/}"
 		x="${x%%.*}"
 		x="${x//TEST}"
-		[[ ${x} -lt 7 ]] && continue
-		build "${i}"
+		h="${i}"
+		# build "${h}"
 	done
+	build "${h}"
 }
 
 function wct () {

@@ -41,17 +41,16 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-; %undef Preserve_Registers
+%undef Preserve_Registers
 ; %undef DOS_BUG_FIXES
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
-;%undef Support_BIOS_Video
-;%undef Support_Direct_Video
-; %undef Support_Mouse
+; %undef Support_BIOS_Video
+; %undef Support_Direct_Video
+%undef Support_Mouse
 %undef Video_MCGA
 %undef Video_VGA
 %undef Video_VESA
-
 
 %include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
 				; initialization routines. Some calls for those
@@ -60,38 +59,60 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-	TextMode		0x07
+%imacro CheckRegisters 0-1
+	%if %0 = 0
+		DebugRegisters
+	%endif
+	xor	ax, ax
+	not	ax
+	mov	bx, ax
+	mov	cx, ax
+	mov 	dx, ax
+	mov 	si, ax
+	mov	di, ax
+%endmacro
 
 Main:
-	mov 			cx, 2000
-.Alphabet:
-	WriteStr		'abcdefghijklmnopqrstuvwxyz_'
-	loop			.Alphabet
-	call 			WaitEvent
-	Delay			500
+	CheckRegisters			Initial
+	TextAttr			0x1f
+	StdOutStr			'Hello'
+	CheckRegisters
+	StdOutChar			'!'
+	CheckRegisters
+	StdOutCRLF
+	CheckRegisters
+	StdOutHexByte			0x56
+	CheckRegisters
+	STDOUTCRLF
+	CheckRegisters
+	StdOutHexWord			0x1234
+	CheckRegisters
+	STDOUTCRLF
+	CheckRegisters
+	StdOutChar			'b', 'y', 'e', '!'
+	STDOUTCRLF
+	CheckRegisters
+	WriteStr			'Hello'
+	CheckRegisters
+	WriteChar			'!'
+	CheckRegisters
+	WriteCRLF
+	CheckRegisters
+	WriteHexByte			0x56
+	CheckRegisters
+	WriteCRLF
+	CheckRegisters
+	WriteHexWord			0x1234
+	CheckRegisters
+	WriteCRLF
+	CheckRegisters
+	WriteChar			'b', 'y', 'e', '!'
+	CheckRegisters
+	TextAttr			0x07
+	WriteCRLF
 
 Finished:
-	VideoResetSettings
-	Terminate		0
+	Terminate		0 ; Automatically includes used LIB functions
 
-WaitEvent:
-	WriteCRLF
-	WriteStr		'Press a key'
-	MouseAvailable		.OrMouseClick
-	jmp			.Waiting
-.OrMouseClick:
-	WriteStr		' (or mouse click)'
-.Waiting:
-	Keypressed		.Done
-	MouseClicked		.Done
-	jmp			.Waiting
-.Done:
-	WhereXY			ax
-	xor			al, al
-	GotoXY			ax
-	ClrEOL
-	PurgeKey
-	PurgeMouse
-	ret
+	; Include_LIB_Functions
 
-	Include_LIB_Functions

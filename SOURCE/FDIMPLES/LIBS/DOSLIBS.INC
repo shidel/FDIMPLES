@@ -37,6 +37,7 @@
 	%macro DOSLIBS_INCLUDE_ALL 0
 		%include "NASMEXT.INC"
 		%include "FEATURES.INC"
+		%include "DATAOUT.INC"
 		%include "DOSMEM.INC"
 		%include "DOSSYS.INC"
 		%ifndef NO_VIDEO_SUPPORT

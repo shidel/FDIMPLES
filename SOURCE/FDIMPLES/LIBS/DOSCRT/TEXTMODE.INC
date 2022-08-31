@@ -237,6 +237,7 @@ Video_Options:	resb 		1
 %endif
 
 Video_ScreenMax:
+Video_Max:
 Video_MaxX:		resb		1
 Video_MaxY:		resb		1
 
@@ -262,6 +263,8 @@ Video_Page:		resb		1
 Video_Mode:		resb		1
 
 %ifdef Video_VESA
+; At some point after stack handling is added, will do this there instead of
+; wasting bytes in the BSS.
 	TempBuffer 256
 %endif
 

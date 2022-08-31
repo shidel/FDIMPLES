@@ -44,7 +44,7 @@
 ; Send individual characters to standard output device
 ; MACRO:  StdOutChar 1-*
 ; INPUT:  %1+ = Characters (prefers dl)
-; OUTPUT: ah, dl
+; REGS: ax, dl
 
 ; Send ASCIIz string to standard output device. When passed a memory reference,
 ; like a register or number, it will use the ES segment (like [ES:?]). When
@@ -52,29 +52,29 @@
 ; and it will automatically adjust ES to DS and back again.
 ; MACRO:  StdOutStr 1+
 ; INPUT:  %1+ = ASCIIz string sent to STDOUT (prefers si)
-; OUTPUT: ah, dl
+; REGS: al, dl
 
 ; Send CRLF to standard output device
 ; MACRO:  StdOutCRLF 0-1
 ; INPUT:  %1 = Number of CRLF to output device (default 1, prefers cx)
-; OUTPUT: ah, dl
+; REGS: ax, dl, cx
 
 ; Send byte as HEX to standard output device
 ; MACRO:  StdOutHexByte 1-*
 ; INPUT:  %1+ = byte to print (prefers al)
-; OUTPUT: none
+; REGS:	  cx, dl
 
 ; Send word as HEX to standard output device
 ; MACRO:  StdOutHexWord 1-*
 ; INPUT:  %1+ = word to print (prefers ax)
-; OUTPUT: none
+; REGS:	  cx, dl
+
 %include "DOSSYS/STDOUT.INC"
 
-; Terminate Program
+; Terminate Program, DOES NOT RETURN
 ; MACRO:  Terminate 1-2+
 ; INPUT:
 ; 	%1  = DOS Exit Code (prefers al)
 ; 	%2+ = Any message sent to STDOUT at exit
-; OUTPUT:
-; 	None: Does not return
+; OUTPUT: Exits to DOS
 %include "DOSSYS/TERMINAT.INC"

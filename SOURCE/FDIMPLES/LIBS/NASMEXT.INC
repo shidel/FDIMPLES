@@ -510,10 +510,12 @@
 	%define  DebugChar_DEFINED
 	jmp	%%Over
 DebugChar_PROC:
+	pushf
 	push			ax
 	mov			ah, 0x02
 	int			0x21
 	pop			ax
+	popf
 	ret
 %endif
 %%Over:
@@ -537,6 +539,7 @@ DebugChar_PROC:
 	%define  DebugHexByte_DEFINED
 	jmp	%%Over
 DebugHexByte_PROC:
+	pushf
 	pushm			dx, cx, ax
 
 	mov			cx, 0x0204	; ch = count, cl = bit rotate
@@ -556,6 +559,7 @@ DebugHexByte_PROC:
 	dec			ch
 	jnz			%%Loopy
 	popm			dx, cx, ax
+	popf
 	ret
 %endif
 
@@ -595,6 +599,7 @@ DebugHexByte_PROC:
 	jmp	%%Over
 
 DebugCRLF_PROC:
+	pushf
 	pushm			dx, ax
 	mov			ah, 0x02
 	mov			dl, 0x0d
@@ -602,11 +607,88 @@ DebugCRLF_PROC:
 	mov			dl, 0x0a
 	int			0x21
 	popm			dx, ax
+	popf
 	ret
 %endif
 %%Over:
 	call	DebugCRLF_PROC
 %endmacro
+
+%imacro DebugText 1
+
+%ifndef DebugText_DEFINED
+	%define  DebugText_DEFINED
+	jmp	%%Over
+DebugText_PROC:
+	pushf
+	cld
+	pushm 		ds, ax, dx
+	push 		cs
+	pop		ds
+	mov		ah, 0x02
+%%Display:
+	lodsb
+	test		al, al
+	jz		%%Done
+	mov		dl, al
+	int		0x21
+	jmp		%%Display
+%%Done:
+	popm		ds, ax, dx
+	popf
+	ret
+
+%endif
+
+SECTION_DATA
+
+	%ifstr %1
+
+	%%str:
+		db		%1
+		db		0
+	%endif
+
+__?SECT?__
+
+%%Over:
+	push		si
+	mov		si, %%str
+	call		DebugText_PROC
+	pop		si
+%endmacro
+
+%imacro DebugRegisters 0-*
+
+%ifndef DebugRegisters_DEFINED
+	%define  DebugRegisters_DEFINED
+	jmp	%%Over
+
+DebugRegisters_PROC:
+	DebugText '	AX='
+	DebugHexWord ax
+	DebugText '	BX='
+	DebugHexWord bx
+	DebugText '	CX='
+	DebugHexWord cx
+	DebugText '	DX='
+	DebugHexWord dx
+	DebugText '	DS:SI='
+	DebugHexWord ds
+	DebugChar ':'
+	DebugHexWord si
+	DebugText '	ES:DI='
+	DebugHexWord es
+	DebugChar ':'
+	DebugHexWord di
+	DebugCRLF
+	ret
+%endif
+
+%%Over:
+	call	DebugRegisters_PROC
+%endmacro
+
 
 ; -----------------------------------------------------------------------------
 
