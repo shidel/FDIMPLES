@@ -213,7 +213,86 @@ DATAOUT_HEXWORD_PROC:
 __?SECT?__
 
 %endmacro
+; -----------------------------------------------------------------------------
+%macro DATAOUT_UINTBYTE_INTERNAL 0
 
+	PROC_REQUIRE DATAOUT_UINTDWORD
+
+SECTION_PROC
+
+DATAOUT_UINTBYTE_PROC:
+	; al = unsigned byte to output
+	pushm	ax, dx
+	xor	ah, ah
+	xor	dx, dx
+	call	DATAOUT_UINTDWORD_PROC
+	popm	ax, dx
+	ret
+
+__?SECT?__
+
+%endmacro
+; -----------------------------------------------------------------------------
+%macro DATAOUT_UINTWORD_INTERNAL 0
+
+	PROC_REQUIRE DATAOUT_UINTDWORD
+
+SECTION_PROC
+
+DATAOUT_UINTWORD_PROC:
+	; ax = unsigned word to output
+	push	dx
+	xor	dx, dx
+	call	DATAOUT_UINTDWORD_PROC
+	pop	dx
+	ret
+
+__?SECT?__
+
+%endmacro
+; -----------------------------------------------------------------------------
+%macro DATAOUT_UINTDWORD_INTERNAL 0
+
+SECTION_PROC
+
+DATAOUT_UINTDWORD_PROC:
+	; dx:ax = unsigned dword to output
+	; works by repeatedly dividing the dx:ax pair by 10 and placing the
+	; remainder onto the stack. then the remainders are played back in the
+	; reverse order the division was performed. The technique works well
+	; for integers of any bit size. I'll probably add a Int64 (or variable
+	; size) bin integer math library for 8086 at some point to better show
+	; methods of displaying and doing basic math on really big integers. :-)
+	pushm	ax, bx, cx, dx, si
+	mov	cx, 0x000a
+	push	cx
+	mov	si, ax
+	mov	bx, dx
+%%Dividing:
+	xor	dx, dx
+	xchg	ax, bx
+	div	cx
+	xchg	ax, bx
+	xchg	ax, si
+	div	cx
+	mov	si, ax
+	push	dx
+	or	ax, bx
+	jnz	%%Dividing
+%%Displaying:
+	pop	dx
+	cmp	dx, cx
+	je	%%Finished
+	add	dl, 0x30
+	call	di		; display digit
+	jmp	%%Displaying
+%%Finished:
+	popm	ax, bx, cx, dx, si
+	ret
+
+__?SECT?__
+
+%endmacro
 ; -----------------------------------------------------------------------------
 %else
 ; -----------------------------------------------------------------------------
@@ -225,4 +304,7 @@ __?SECT?__
 	PROC_PROVIDE 	DATAOUT_STR_DS
 	PROC_PROVIDE 	DATAOUT_HEXBYTE
 	PROC_PROVIDE 	DATAOUT_HEXWORD
+	PROC_PROVIDE 	DATAOUT_UINTBYTE
+	PROC_PROVIDE 	DATAOUT_UINTWORD
+	PROC_PROVIDE 	DATAOUT_UINTDWORD
 %endif

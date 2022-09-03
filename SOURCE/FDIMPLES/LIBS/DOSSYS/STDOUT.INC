@@ -213,9 +213,7 @@ __?SECT?__
 ; REGS:	  cx, dl
 ; -----------------------------------------------------------------------------
 %macro StdOutHexByte_INTERNAL 0
-
-DATAOUT_PROC STDOUT, HEXBYTE, StdOutHexByte
-
+	DATAOUT_PROC STDOUT, HEXBYTE, StdOutHexByte
 %endmacro
 
 %macro StdOutHexByte 1-*
@@ -242,9 +240,7 @@ DATAOUT_PROC STDOUT, HEXBYTE, StdOutHexByte
 ; REGS:	  cx, dl
 ; -----------------------------------------------------------------------------
 %macro StdOutHexWord_INTERNAL 0
-
-DATAOUT_PROC STDOUT, HEXWORD, StdOutHexWord
-
+	DATAOUT_PROC STDOUT, HEXWORD, StdOutHexWord
 %endmacro
 
 %imacro StdOutHexWord 1-*
@@ -264,26 +260,79 @@ DATAOUT_PROC STDOUT, HEXWORD, StdOutHexWord
 	%endrep
 %endmacro
 ; -----------------------------------------------------------------------------
-; Send byte as Unsigned Integer to standard output device
+; Send BYTE as Unsigned Integer to standard output device
 ; MACRO:  StdOutUIntByte 1-*
-; INPUT:  %1+ = word to print (prefers al)
+; INPUT:  %1+ = byte to print (prefers al)
 ; OUTPUT: none
 ; -----------------------------------------------------------------------------
+%macro StdOutUIntByte_INTERNAL 0
+	DATAOUT_PROC STDOUT, UINTBYTE, StdOutUIntByte
+%endmacro
+
 %imacro StdOutUIntByte 1-*
 
-	PROC_REQUIRE StdOutHexByte
+	USES_WRITER STDOUT, UINTBYTE, StdOutUIntByte
 
 	%rep  %0
-		%ifnidni %1, al
+		%ifnidni %1, ax
 			push	ax
-			movndef	al, %1
+			mov	al, %1
 		%endif
-		push		ax
-		StdOutChar	'0', 'x'
-		pop		ax
-		StdOutHexByte	al
-		%ifnidni %1, al
+		call		StdOutUIntByte_PROC
+		%ifnidni %1, ax
 			pop	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send WORD as Unsigned Integer to standard output device
+; MACRO:  StdOutUIntWord 1-*
+; INPUT:  %1+ = word to print (prefers ax)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro StdOutUIntWord_INTERNAL 0
+	DATAOUT_PROC STDOUT, UINTWORD, StdOutUIntWord
+%endmacro
+
+%imacro StdOutUIntWord 1-*
+
+	USES_WRITER STDOUT, UINTWORD, StdOutUIntWord
+
+	%rep  %0
+		%ifnidni %1, ax
+			push	ax
+			mov	ax, %1
+		%endif
+		call		StdOutUIntWord_PROC
+		%ifnidni %1, ax
+			pop	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send DWORD pair as Unsigned Integer to standard output device
+; MACRO:  StdOutUIntDWord 1-*
+; INPUT:  %1+ = word to print (prefers dx:ax)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro StdOutUIntDWord_INTERNAL 0
+	DATAOUT_PROC STDOUT, UINTDWORD, StdOutUIntDWord
+%endmacro
+
+%imacro StdOutUIntDWord 1-*
+
+	USES_WRITER STDOUT, UINTDWORD, StdOutUIntDWord
+
+	%rep  %0
+		%ifnidni %1, dx:ax
+			pushm	ax
+			mov	ax, %1	; this will cause an error
+		%endif
+		call		StdOutUIntDWord_PROC
+		%ifnidni %1, ax
+			popm	ax
 		%endif
 	%rotate 1
 	%endrep
@@ -299,4 +348,7 @@ DATAOUT_PROC STDOUT, HEXWORD, StdOutHexWord
 	PROC_PROVIDE StdOutStrDS
 	PROC_PROVIDE StdOutHexByte
 	PROC_PROVIDE StdOutHexWord
+	PROC_PROVIDE StdOutUIntByte
+	PROC_PROVIDE StdOutUIntWord
+	PROC_PROVIDE StdOutUIntDWord
 %endif

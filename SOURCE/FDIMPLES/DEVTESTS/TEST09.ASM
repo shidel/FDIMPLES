@@ -60,7 +60,15 @@ SECTION .text
 				; including only the required LIBS directly.
 
 Main:
-	StdOutStr		'Basic size test', CRLF
+
+	StdOutUIntByte		132
+	StdOutCRLF
+	StdOutUIntWord		59876
+	StdOutCRLF
+	mov			dx, 0x1234
+	mov			ax, 0x5678
+	StdOutUIntDWord		dx:ax
+	StdOutCRLF
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions

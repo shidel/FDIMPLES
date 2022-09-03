@@ -73,7 +73,6 @@ __?SECT?__
 %endmacro
 ; -----------------------------------------------------------------------------
 %macro WRITER_DISPLAY_INTERNAL 0
-; AL = character to display
 
 SECTION_PROC
 
