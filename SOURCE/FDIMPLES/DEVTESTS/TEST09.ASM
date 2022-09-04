@@ -44,8 +44,8 @@ SECTION .text
 ; %undef Preserve_Registers
 ; %undef DOS_BUG_FIXES
 %undef DOSCRT_Range_Check
-%undef Support_BIOS_Timer
-%undef Support_BIOS_Video
+; %undef Support_BIOS_Timer
+; %undef Support_BIOS_Video
 %undef Support_Direct_Video
 %undef Support_Mouse
 %undef Video_MCGA
@@ -61,16 +61,16 @@ SECTION .text
 
 Main:
 
-	StdOutUIntByte		132
-	StdOutCRLF
-	StdOutUIntWord		59876
-	StdOutCRLF
+	WriteUIntByte		132
+	WriteCRLF
+	WriteUIntWord		59876
+	WriteCRLF
 	mov			dx, 0x1234
 	mov			ax, 0x5678
-	StdOutUIntDWord		dx:ax
-	StdOutCRLF
-	StdOutHexDWord		dx:ax
-	StdOutCRLF
+	WriteUIntDWord		dx:ax
+	WriteCRLF
+	WriteHexDWord		dx:ax
+	WriteCRLF
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions

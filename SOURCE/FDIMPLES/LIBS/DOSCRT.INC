@@ -283,10 +283,27 @@
 ; INPUT:  %1+ = byte to display (prefers al)
 ; REGS:   cx, dl
 
-; Send byte as HEX to display
-; MACRO:  WriteHexByte 1-*
-; INPUT:  %1+ = byte to display (prefers al)
+; Send word as HEX to display
+; MACRO:  WriteHexWord 1-*
+; INPUT:  %1+ = word to display (prefers ax)
 ; REGS:   cx, dl
+
+; Send DWORD word pair as HEX to display
+; MACRO:  WriteHexDWord 1-*
+; INPUT:  %1+ = word to print (prefers dx:ax)
+; REGS:	  cx, dl
+
+; Send BYTE as Unsigned Integer to display
+; MACRO:  WriteUIntByte 1-*
+; INPUT:  %1+ = byte to print (prefers al)
+
+; Send WORD as Unsigned Integer to display
+; MACRO:  WriteUIntWord 1-*
+; INPUT:  %1+ = word to print (prefers ax)
+
+; Send DWORD pair as Unsigned Integer to display
+; MACRO:  WriteUIntDWord 1-*
+; INPUT:  %1+ = word to print (prefers dx:ax)
 
 %include "DOSCRT/WRITE.INC"
 

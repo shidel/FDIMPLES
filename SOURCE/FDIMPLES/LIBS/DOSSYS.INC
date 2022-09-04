@@ -69,7 +69,7 @@
 ; INPUT:  %1+ = word to print (prefers ax)
 ; REGS:	  cx, dl
 
-; Send word pair as HEX to standard output device
+; Send DWORD word pair as HEX to standard output device
 ; MACRO:  StdOutHexDWord 1-*
 ; INPUT:  %1+ = word to print (prefers dx:ax)
 ; REGS:	  cx, dl

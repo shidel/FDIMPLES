@@ -403,7 +403,7 @@ DATAOUT_PROC DISPLAY, HEXBYTE, WriteHexByte
 ; Send word as HEX to display
 ; MACRO:  WriteHexWord 1-*
 ; INPUT:  %1+ = word to display (prefers ax)
-; REGS:   none
+; REGS:   cx, dl
 ; -----------------------------------------------------------------------------
 %macro WriteHexWord_INTERNAL 0
 
@@ -427,6 +427,112 @@ DATAOUT_PROC DISPLAY, HEXWORD, WriteHexWord
 	%rotate 1
 	%endrep
 %endmacro
+; -----------------------------------------------------------------------------
+; Send DWORD word pair as HEX to display
+; MACRO:  WriteHexDWord 1-*
+; INPUT:  %1+ = word to print (prefers dx:ax)
+; REGS:	  cx, dl
+; -----------------------------------------------------------------------------
+%macro WriteHexDWord_INTERNAL 0
+	DATAOUT_PROC DISPLAY, HEXDWORD, WriteHexDWord
+%endmacro
+
+%imacro WriteHexDWord 1-*
+
+	USES_WRITER DISPLAY, HEXDWORD, WriteHexDWord
+	PROC_REQUIRE DATAOUT_HEXBYTE
+	PROC_REQUIRE DATAOUT_HEXWORD
+
+	%rep  %0
+		%ifnidni %1, dx:ax
+			pushm	dx, ax
+			movndef	dx:ax, %1	; this will cause an error
+		%endif
+		call		WriteHexDWord_PROC
+		%ifnidni %1, dx:ax
+			popm	dx, ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send BYTE as Unsigned Integer to display
+; MACRO:  WriteUIntByte 1-*
+; INPUT:  %1+ = byte to print (prefers al)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro WriteUIntByte_INTERNAL 0
+	DATAOUT_PROC DISPLAY, UINTBYTE, WriteUIntByte
+%endmacro
+
+%imacro WriteUIntByte 1-*
+
+	USES_WRITER DISPLAY, UINTBYTE, WriteUIntByte
+
+	%rep  %0
+		%ifnidni %1, ax
+			push	ax
+			mov	al, %1
+		%endif
+		call		WriteUIntByte_PROC
+		%ifnidni %1, ax
+			pop	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send WORD as Unsigned Integer to display
+; MACRO:  WriteUIntWord 1-*
+; INPUT:  %1+ = word to print (prefers ax)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro WriteUIntWord_INTERNAL 0
+	DATAOUT_PROC DISPLAY, UINTWORD, WriteUIntWord
+%endmacro
+
+%imacro WriteUIntWord 1-*
+
+	USES_WRITER DISPLAY, UINTWORD, WriteUIntWord
+
+	%rep  %0
+		%ifnidni %1, ax
+			push	ax
+			mov	ax, %1
+		%endif
+		call		WriteUIntWord_PROC
+		%ifnidni %1, ax
+			pop	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send DWORD pair as Unsigned Integer to display
+; MACRO:  WriteUIntDWord 1-*
+; INPUT:  %1+ = word to print (prefers dx:ax)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro WriteUIntDWord_INTERNAL 0
+	DATAOUT_PROC DISPLAY, UINTDWORD, WriteUIntDWord
+%endmacro
+
+%imacro WriteUIntDWord 1-*
+
+	USES_WRITER DISPLAY, UINTDWORD, WriteUIntDWord
+
+	%rep  %0
+		%ifnidni %1, dx:ax
+			pushm	dx, ax
+			movndef	dx:ax, %1	; this will cause an error
+		%endif
+		call		WriteUIntDWord_PROC
+		%ifnidni %1, dx:ax
+			popm	dx, ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE		PutChar
@@ -438,4 +544,8 @@ DATAOUT_PROC DISPLAY, HEXWORD, WriteHexWord
 	PROC_PROVIDE		WriteStrDS
 	PROC_PROVIDE		WriteHexByte
 	PROC_PROVIDE		WriteHexWord
+	PROC_PROVIDE		WriteHexDWord
+	PROC_PROVIDE		WriteUIntByte
+	PROC_PROVIDE		WriteUIntWord
+	PROC_PROVIDE		WriteUIntDWord
 %endif
