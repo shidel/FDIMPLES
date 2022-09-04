@@ -69,6 +69,23 @@
 ; INPUT:  %1+ = word to print (prefers ax)
 ; REGS:	  cx, dl
 
+; Send word pair as HEX to standard output device
+; MACRO:  StdOutHexDWord 1-*
+; INPUT:  %1+ = word to print (prefers dx:ax)
+; REGS:	  cx, dl
+
+; Send BYTE as Unsigned Integer to standard output device
+; MACRO:  StdOutUIntByte 1-*
+; INPUT:  %1+ = byte to print (prefers al)
+
+; Send WORD as Unsigned Integer to standard output device
+; MACRO:  StdOutUIntWord 1-*
+; INPUT:  %1+ = word to print (prefers ax)
+
+; Send DWORD pair as Unsigned Integer to standard output device
+; MACRO:  StdOutUIntDWord 1-*
+; INPUT:  %1+ = word to print (prefers dx:ax)
+
 %include "DOSSYS/STDOUT.INC"
 
 ; Terminate Program, DOES NOT RETURN

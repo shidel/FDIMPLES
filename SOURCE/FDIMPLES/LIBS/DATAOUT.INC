@@ -214,6 +214,25 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
+%macro DATAOUT_HEXDWORD_INTERNAL 0
+
+	PROC_REQUIRE DATAOUT_HEXBYTE
+	PROC_REQUIRE DATAOUT_HEXWORD
+
+SECTION_PROC
+
+DATAOUT_HEXDWORD_PROC:
+	; ax = word to output
+	xchg	dx, ax
+	call	DATAOUT_HEXWORD_PROC
+	xchg	dx, ax
+	call	DATAOUT_HEXWORD_PROC
+	ret
+
+__?SECT?__
+
+%endmacro
+; -----------------------------------------------------------------------------
 %macro DATAOUT_UINTBYTE_INTERNAL 0
 
 	PROC_REQUIRE DATAOUT_UINTDWORD
@@ -304,6 +323,7 @@ __?SECT?__
 	PROC_PROVIDE 	DATAOUT_STR_DS
 	PROC_PROVIDE 	DATAOUT_HEXBYTE
 	PROC_PROVIDE 	DATAOUT_HEXWORD
+	PROC_PROVIDE 	DATAOUT_HEXDWORD
 	PROC_PROVIDE 	DATAOUT_UINTBYTE
 	PROC_PROVIDE 	DATAOUT_UINTWORD
 	PROC_PROVIDE 	DATAOUT_UINTDWORD

@@ -246,6 +246,7 @@ __?SECT?__
 %imacro StdOutHexWord 1-*
 
 	USES_WRITER STDOUT, HEXWORD, StdOutHexWord
+	PROC_REQUIRE DATAOUT_HEXBYTE
 
 	%rep  %0
 		%ifnidni %1, ax
@@ -255,6 +256,34 @@ __?SECT?__
 		call		StdOutHexWord_PROC
 		%ifnidni %1, ax
 			pop	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send word pair as HEX to standard output device
+; MACRO:  StdOutHexDWord 1-*
+; INPUT:  %1+ = word to print (prefers dx:ax)
+; REGS:	  cx, dl
+; -----------------------------------------------------------------------------
+%macro StdOutHexDWord_INTERNAL 0
+	DATAOUT_PROC STDOUT, HEXDWORD, StdOutHexDWord
+%endmacro
+
+%imacro StdOutHexDWord 1-*
+
+	USES_WRITER STDOUT, HEXDWORD, StdOutHexDWord
+	PROC_REQUIRE DATAOUT_HEXBYTE
+	PROC_REQUIRE DATAOUT_HEXWORD
+
+	%rep  %0
+		%ifnidni %1, dx:ax
+			pushm	dx, ax
+			movndef	dx:ax, %1	; this will cause an error
+		%endif
+		call		StdOutHexDWord_PROC
+		%ifnidni %1, dx:ax
+			popm	dx, ax
 		%endif
 	%rotate 1
 	%endrep
@@ -327,12 +356,12 @@ __?SECT?__
 
 	%rep  %0
 		%ifnidni %1, dx:ax
-			pushm	ax
-			mov	ax, %1	; this will cause an error
+			pushm	dx, ax
+			movndef	dx:ax, %1	; this will cause an error
 		%endif
 		call		StdOutUIntDWord_PROC
-		%ifnidni %1, ax
-			popm	ax
+		%ifnidni %1, dx:ax
+			popm	dx, ax
 		%endif
 	%rotate 1
 	%endrep
@@ -348,6 +377,7 @@ __?SECT?__
 	PROC_PROVIDE StdOutStrDS
 	PROC_PROVIDE StdOutHexByte
 	PROC_PROVIDE StdOutHexWord
+	PROC_PROVIDE StdOutHexDWord
 	PROC_PROVIDE StdOutUIntByte
 	PROC_PROVIDE StdOutUIntWord
 	PROC_PROVIDE StdOutUIntDWord

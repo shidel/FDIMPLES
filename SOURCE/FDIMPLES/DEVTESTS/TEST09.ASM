@@ -41,7 +41,7 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers
+; %undef Preserve_Registers
 ; %undef DOS_BUG_FIXES
 %undef DOSCRT_Range_Check
 %undef Support_BIOS_Timer
@@ -68,6 +68,8 @@ Main:
 	mov			dx, 0x1234
 	mov			ax, 0x5678
 	StdOutUIntDWord		dx:ax
+	StdOutCRLF
+	StdOutHexDWord		dx:ax
 	StdOutCRLF
 
 Finished:
