@@ -61,16 +61,35 @@ SECTION .text
 
 Main:
 
-	WriteUIntByte		132
+	xor			ax, ax
+	mov			cx, 16
+LI_0:
+	test			cx, 3
+	jnz			NoNewLine_0
 	WriteCRLF
-	WriteUIntWord		59876
+NoNewLine_0:
+	sub			al, 1
+	WriteUIntByte		al
+	WriteStr		' (0x'
+	WriteHexByte		al
+	WriteStr		') '
+	loop			LI_0
 	WriteCRLF
-	mov			dx, 0x1234
-	mov			ax, 0x5678
-	WriteUIntDWord		dx:ax
+	xor			ax, ax
+	mov			cx, 16
+LI_1:
+	test			cx, 3
+	jnz			NoNewLine_1
 	WriteCRLF
-	WriteHexDWord		dx:ax
-	WriteCRLF
+NoNewLine_1:
+	sub			ax, 1
+	WriteUIntWord		ax
+	WriteStr		' (0x'
+	WriteHexWord		ax
+	WriteStr		') '
+	loop			LI_1
+	WriteCRLF		2
+
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions
