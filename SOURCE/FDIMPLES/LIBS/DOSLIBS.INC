@@ -46,7 +46,15 @@
 	%endmacro
 
 	%imacro Include_LIB_Functions 0
-		DOSLIBS_INCLUDE_ALL
+		; At present, sometimes more than one inclusion pass is required
+		; for all required macro PROC code to be included. Yes, there
+		; could be optimizations and code rearranged so only 1 pass is
+		; needed. But, don't have the time or energy for that now.
+		; Maybe later sometime. A couple passes through and all the
+		; requirements should sort themselves out nicely.
+		%rep 2
+			DOSLIBS_INCLUDE_ALL
+		%endrep
 	%endmacro
 
 %endif

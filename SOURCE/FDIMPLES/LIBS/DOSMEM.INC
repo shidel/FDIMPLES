@@ -35,7 +35,30 @@
 ; -----------------------------------------------------------------------------
 %include "FEATURES.INC"
 %include "NASMEXT.INC"
+; *****************************************************************************
+%ifndef DOSMEM_INC_DEFINED
+%define DOSMEM_INC_DEFINED
 ; -----------------------------------------------------------------------------
+%macro Memory_INTERNAL 0
+
+SECTION_PROC
+
+Memory_PROC:
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro Memory 3
+	PROC_PROVIDE		Memory
+%endmacro
+; -----------------------------------------------------------------------------
+%else
+; -----------------------------------------------------------------------------
+; -----------------------------------------------------------------------------
+%endif
+; *****************************************************************************
 ; List of macros and functions provided by this file.
 ; Note: Macros often have have preferred register to use when passing when
 ; passing them a parameter. Using the preferred register will result in saving

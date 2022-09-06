@@ -301,6 +301,8 @@ __?SECT?__
 %imacro StdOutUIntByte 1-*
 
 	USES_WRITER STDOUT, UINTBYTE, StdOutUIntByte
+	PROC_REQUIRE DATAOUT_UNITWORD
+	PROC_REQUIRE DATAOUT_UNITDWORD
 
 	%rep  %0
 		%ifnidni %1, ax
@@ -327,6 +329,7 @@ __?SECT?__
 %imacro StdOutUIntWord 1-*
 
 	USES_WRITER STDOUT, UINTWORD, StdOutUIntWord
+	PROC_REQUIRE DATAOUT_UNITDWORD
 
 	%rep  %0
 		%ifnidni %1, ax
@@ -366,6 +369,87 @@ __?SECT?__
 	%rotate 1
 	%endrep
 %endmacro
+; -----------------------------------------------------------------------------
+; Send BYTE as Signed Integer to standard output device
+; MACRO:  StdOutSIntByte 1-*
+; INPUT:  %1+ = byte to print (prefers al)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro StdOutSIntByte_INTERNAL 0
+	DATAOUT_PROC STDOUT, SINTBYTE, StdOutSIntByte
+%endmacro
+
+%imacro StdOutSIntByte 1-*
+
+	USES_WRITER STDOUT, SINTBYTE, StdOutSIntByte
+	PROC_REQUIRE DATAOUT_UNITDWORD
+
+	%rep  %0
+		%ifnidni %1, ax
+			push	ax
+			mov	al, %1
+		%endif
+		call		StdOutSIntByte_PROC
+		%ifnidni %1, ax
+			pop	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send WORD as Signed Integer to standard output device
+; MACRO:  StdOutSIntWord 1-*
+; INPUT:  %1+ = word to print (prefers ax)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro StdOutSIntWord_INTERNAL 0
+	DATAOUT_PROC STDOUT, SINTWORD, StdOutSIntWord
+%endmacro
+
+%imacro StdOutSIntWord 1-*
+
+	USES_WRITER STDOUT, SINTWORD, StdOutSIntWord
+	PROC_REQUIRE DATAOUT_UNITDWORD
+
+	%rep  %0
+		%ifnidni %1, ax
+			push	ax
+			mov	ax, %1
+		%endif
+		call		StdOutSIntWord_PROC
+		%ifnidni %1, ax
+			pop	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send DWORD pair as Signed Integer to standard output device
+; MACRO:  StdOutSIntDWord 1-*
+; INPUT:  %1+ = word to print (prefers dx:ax)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro StdOutSIntDWord_INTERNAL 0
+	DATAOUT_PROC STDOUT, SINTDWORD, StdOutSIntDWord
+%endmacro
+
+%imacro StdOutSIntDWord 1-*
+
+	USES_WRITER STDOUT, SINTDWORD, StdOutSIntDWord
+	PROC_REQUIRE DATAOUT_UNITDWORD
+
+	%rep  %0
+		%ifnidni %1, dx:ax
+			pushm	dx, ax
+			movndef	dx:ax, %1	; this will cause an error
+		%endif
+		call		StdOutSIntDWord_PROC
+		%ifnidni %1, dx:ax
+			popm	dx, ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE WRITER_STDOUT
@@ -381,4 +465,7 @@ __?SECT?__
 	PROC_PROVIDE StdOutUIntByte
 	PROC_PROVIDE StdOutUIntWord
 	PROC_PROVIDE StdOutUIntDWord
+	PROC_PROVIDE StdOutSIntByte
+	PROC_PROVIDE StdOutSIntWord
+	PROC_PROVIDE StdOutSIntDWord
 %endif

@@ -468,6 +468,8 @@ DATAOUT_PROC DISPLAY, HEXWORD, WriteHexWord
 %imacro WriteUIntByte 1-*
 
 	USES_WRITER DISPLAY, UINTBYTE, WriteUIntByte
+	PROC_REQUIRE DATAOUT_UINTBYTE
+	PROC_REQUIRE DATAOUT_UNITWORD
 
 	%rep  %0
 		%ifnidni %1, ax
@@ -494,6 +496,7 @@ DATAOUT_PROC DISPLAY, HEXWORD, WriteHexWord
 %imacro WriteUIntWord 1-*
 
 	USES_WRITER DISPLAY, UINTWORD, WriteUIntWord
+	PROC_REQUIRE DATAOUT_UNITWORD
 
 	%rep  %0
 		%ifnidni %1, ax
@@ -533,6 +536,87 @@ DATAOUT_PROC DISPLAY, HEXWORD, WriteHexWord
 	%rotate 1
 	%endrep
 %endmacro
+; -----------------------------------------------------------------------------
+; Send BYTE as Signed Integer to Display
+; MACRO:  WriteSIntByte 1-*
+; INPUT:  %1+ = byte to print (prefers al)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro WriteSIntByte_INTERNAL 0
+	DATAOUT_PROC DISPLAY, SINTBYTE, WriteSIntByte
+%endmacro
+
+%imacro WriteSIntByte 1-*
+
+	USES_WRITER DISPLAY, SINTBYTE, WriteSIntByte
+	PROC_REQUIRE DATAOUT_UNITDWORD
+
+	%rep  %0
+		%ifnidni %1, ax
+			push	ax
+			mov	al, %1
+		%endif
+		call		WriteSIntByte_PROC
+		%ifnidni %1, ax
+			pop	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send WORD as Signed Integer to Display
+; MACRO:  WriteSIntWord 1-*
+; INPUT:  %1+ = word to print (prefers ax)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro WriteSIntWord_INTERNAL 0
+	DATAOUT_PROC DISPLAY, SINTWORD, WriteSIntWord
+%endmacro
+
+%imacro WriteSIntWord 1-*
+
+	USES_WRITER DISPLAY, SINTWORD, WriteSIntWord
+	PROC_REQUIRE DATAOUT_UNITDWORD
+
+	%rep  %0
+		%ifnidni %1, ax
+			push	ax
+			mov	ax, %1
+		%endif
+		call		WriteSIntWord_PROC
+		%ifnidni %1, ax
+			pop	ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
+; -----------------------------------------------------------------------------
+; Send DWORD pair as Signed Integer to Display
+; MACRO:  WriteSIntDWord 1-*
+; INPUT:  %1+ = word to print (prefers dx:ax)
+; OUTPUT: none
+; -----------------------------------------------------------------------------
+%macro WriteSIntDWord_INTERNAL 0
+	DATAOUT_PROC DISPLAY, SINTDWORD, WriteSIntDWord
+%endmacro
+
+%imacro WriteSIntDWord 1-*
+
+	USES_WRITER DISPLAY, SINTDWORD, WriteSIntDWord
+	PROC_REQUIRE DATAOUT_UNITDWORD
+
+	%rep  %0
+		%ifnidni %1, dx:ax
+			pushm	dx, ax
+			movndef	dx:ax, %1	; this will cause an error
+		%endif
+		call		WriteSIntDWord_PROC
+		%ifnidni %1, dx:ax
+			popm	dx, ax
+		%endif
+	%rotate 1
+	%endrep
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE		PutChar
@@ -548,4 +632,7 @@ DATAOUT_PROC DISPLAY, HEXWORD, WriteHexWord
 	PROC_PROVIDE		WriteUIntByte
 	PROC_PROVIDE		WriteUIntWord
 	PROC_PROVIDE		WriteUIntDWord
+	PROC_PROVIDE		WriteSIntByte
+	PROC_PROVIDE		WriteSIntWord
+	PROC_PROVIDE		WriteSIntDWord
 %endif

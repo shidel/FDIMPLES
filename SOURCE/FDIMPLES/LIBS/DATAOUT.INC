@@ -233,43 +233,6 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
-%macro DATAOUT_UINTBYTE_INTERNAL 0
-
-	PROC_REQUIRE DATAOUT_UINTDWORD
-
-SECTION_PROC
-
-DATAOUT_UINTBYTE_PROC:
-	; al = unsigned byte to output
-	pushm	ax, dx
-	xor	ah, ah
-	xor	dx, dx
-	call	DATAOUT_UINTDWORD_PROC
-	popm	ax, dx
-	ret
-
-__?SECT?__
-
-%endmacro
-; -----------------------------------------------------------------------------
-%macro DATAOUT_UINTWORD_INTERNAL 0
-
-	PROC_REQUIRE DATAOUT_UINTDWORD
-
-SECTION_PROC
-
-DATAOUT_UINTWORD_PROC:
-	; ax = unsigned word to output
-	push	dx
-	xor	dx, dx
-	call	DATAOUT_UINTDWORD_PROC
-	pop	dx
-	ret
-
-__?SECT?__
-
-%endmacro
-; -----------------------------------------------------------------------------
 %macro DATAOUT_UINTDWORD_INTERNAL 0
 
 SECTION_PROC
@@ -313,6 +276,108 @@ __?SECT?__
 
 %endmacro
 ; -----------------------------------------------------------------------------
+%macro DATAOUT_UINTWORD_INTERNAL 0
+
+	PROC_REQUIRE DATAOUT_UINTDWORD
+
+SECTION_PROC
+
+DATAOUT_UINTWORD_PROC:
+	; ax = unsigned word to output
+	push	dx
+	xor	dx, dx
+	call	DATAOUT_UINTDWORD_PROC
+	pop	dx
+	ret
+
+__?SECT?__
+
+%endmacro
+; -----------------------------------------------------------------------------
+%macro DATAOUT_UINTBYTE_INTERNAL 0
+
+	PROC_REQUIRE DATAOUT_UINTDWORD
+
+SECTION_PROC
+
+DATAOUT_UINTBYTE_PROC:
+	; al = unsigned byte to output
+	pushm	ax, dx
+	xor	ah, ah
+	xor	dx, dx
+	call	DATAOUT_UINTDWORD_PROC
+	popm	ax, dx
+	ret
+
+__?SECT?__
+
+%endmacro
+; -----------------------------------------------------------------------------
+%macro DATAOUT_SINTBYTE_INTERNAL 0
+
+	PROC_REQUIRE DATAOUT_SINTDWORD
+	PROC_REQUIRE DATAOUT_UINTDWORD
+
+SECTION_PROC
+
+DATAOUT_SINTBYTE_PROC:
+	; al = unsigned byte to output
+	pushm	ax, dx
+	cbw
+	cwd
+	call	DATAOUT_SINTDWORD_PROC
+	popm	ax, dx
+	ret
+
+__?SECT?__
+
+%endmacro
+; -----------------------------------------------------------------------------
+%macro DATAOUT_SINTWORD_INTERNAL 0
+
+	PROC_REQUIRE DATAOUT_SINTDWORD
+	PROC_REQUIRE DATAOUT_UINTDWORD
+
+SECTION_PROC
+
+DATAOUT_SINTWORD_PROC:
+	; ax = unsigned word to output
+	push	dx
+	cwd
+	call	DATAOUT_SINTDWORD_PROC
+	pop	dx
+	ret
+
+__?SECT?__
+
+%endmacro
+; -----------------------------------------------------------------------------
+%macro DATAOUT_SINTDWORD_INTERNAL 0
+
+	PROC_REQUIRE DATAOUT_UINTDWORD
+
+SECTION_PROC
+
+DATAOUT_SINTDWORD_PROC:
+	; dx:ax = unsigned dword to output
+	pushm	dx, ax
+	test	dx, 0x8000
+	jz	%%Display	; Is a Positive Number
+	push	dx
+	mov	dl, '-'
+	call	di
+	pop	dx
+	not dx
+	not ax
+%%Display:
+	call	DATAOUT_UINTDWORD_PROC
+	popm	dx, ax
+	ret
+
+__?SECT?__
+
+%endmacro
+; -----------------------------------------------------------------------------
 %else
 ; -----------------------------------------------------------------------------
 	PROC_PROVIDE 	DATAOUT_CHAR
@@ -327,4 +392,7 @@ __?SECT?__
 	PROC_PROVIDE 	DATAOUT_UINTBYTE
 	PROC_PROVIDE 	DATAOUT_UINTWORD
 	PROC_PROVIDE 	DATAOUT_UINTDWORD
+	PROC_PROVIDE 	DATAOUT_SINTBYTE
+	PROC_PROVIDE 	DATAOUT_SINTWORD
+	PROC_PROVIDE 	DATAOUT_SINTDWORD
 %endif

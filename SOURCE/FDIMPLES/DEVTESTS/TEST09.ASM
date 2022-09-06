@@ -69,9 +69,11 @@ LI_0:
 	WriteCRLF
 NoNewLine_0:
 	sub			al, 1
-	WriteUIntByte		al
+	WriteSIntByte		al
 	WriteStr		' (0x'
+	not			al
 	WriteHexByte		al
+	not 			al
 	WriteStr		') '
 	loop			LI_0
 	WriteCRLF
@@ -83,7 +85,7 @@ LI_1:
 	WriteCRLF
 NoNewLine_1:
 	sub			ax, 1
-	WriteUIntWord		ax
+	WriteSIntWord		ax
 	WriteStr		' (0x'
 	WriteHexWord		ax
 	WriteStr		') '
@@ -94,5 +96,5 @@ NoNewLine_1:
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions
 
-	; Include_LIB_Functions
+	 Include_LIB_Functions
 
