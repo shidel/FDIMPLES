@@ -52,6 +52,7 @@ ScrollWindowUpDown_PROC_BIOS:
 		pushm			es, di, si
 	%endif
 	RegsPreserve		bx, cx, dx
+	StackCheck
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
 	%endif
@@ -179,6 +180,7 @@ ScrollWindowLeftRight_PROC_BIOS:
 		push			di
 	%endif
 	RegsPreserve		bx, cx, dx
+	StackCheck
 	%ifdef DOS_BUG_FIXES
 		; See -- https://fd.lod.bz/rbil/interrup/video/1003.html#122
 	%endif

@@ -66,9 +66,7 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 
 SECTION_CODE			; Already here. Going to reference it anyhow.
 
-	Memory			4, 100, 1024	; Stack 4k
-						; Minimum Heap 100k
-						; Maximum Heep 1024k
+	Memory			4, 100	; Stack 4k, Minimum Heap 100k
 
 	; jmp			ProbeModes
 	call			Initialize
@@ -392,5 +390,5 @@ XY_DataArea:		resw 2
 
 MODE_PROBING:		resw 0x100
 
-MEMORY_STACK
-MEMORY_HEAP
+SECTION_STACK
+SECTION_HEAP

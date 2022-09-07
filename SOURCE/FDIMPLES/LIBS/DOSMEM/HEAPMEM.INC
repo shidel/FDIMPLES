@@ -32,14 +32,30 @@
 %ifndef HEAPMEM_INC_DEFINED
 %define HEAPMEM_INC_DEFINED
 ; *****************************************************************************
-%imacro MEMORY_HEAP 0
+%imacro SECTION_HEAP 0
 
 SECTION_BSS
 
-HEAP_BEGIN:
+HEAP_MEMORY_LIMIT: ; Pointer to last memory location available to program
+	resd 1
+HEAP_MEMORY_TOP:   ; Pointer to first free block above allocated space
+	resd 1
+HEAP_FIRST_FREE:   ; Pointer to next free block
+	resd 1
+
+HEAP_MEMORY_BEGIN: ; All of the heap
 	resb 0
 
 __?SECT?__
+
+%endmacro
+
+%imacro RESET_HEAP 0
+	call 	CALC_HEAP_SETTINGS
+	call	STORE_HEAP_SETTINGS	; For now, it does not reset the HEAP
+					; MEMORY LIMIT. If the program memory
+					; block wa resized. It will need
+					; adjusted.
 
 %endmacro
 

@@ -60,38 +60,63 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-	Memory			4, 100	; Stack 4k, Minimum Heap 100k
+	Memory			1, 400	; Stack 4k, Minimum Heap 100k
 
-	mov	cx, 50
-Main:
-	WriteStr		'Stack: '
-	StackAvail		ax
-	WriteUIntWord		ax
-	WriteChar		','
-	StackUsed		ax
-	WriteUIntWord		ax
-	WriteChar		','
-	StackPeak		ax
-	WriteUIntWord		ax
+	push		cs
+	pop		dx
+	WriteStr	'Code Segment: 0x'
+	WriteHexWord	dx
 	WriteCRLF
-	push			ax
+	WriteStr	'Memory Top: 0x'
+	mov		ax, [cs:0x0002]
+	WriteHexWord	ax
+	WriteCRLF
+	WriteStr	'Program Memory: '
+	sub		ax, dx
+	mov		cx, 16
+	mul		cx
+	WriteUIntDWord  dx:ax
+	WriteStr	' bytes', CRLF, CRLF
+
+
+	WriteStr	'Heap Offset: 0x'
+	WriteHexWord	HEAP_MEMORY_BEGIN
+	WriteCRLF
+	WriteStr	'Heap First Free: 0x'
+	mov		ax, [HEAP_FIRST_FREE + 2]
+	WriteHexWord	ax
+	WriteCRLF
+	WriteStr	'Heap Limit: 0x'
+	mov		ax, [HEAP_MEMORY_LIMIT + 2]
+	WriteHexWord	ax
+	WriteCRLF
+
+	WriteStr	'Heap Top: 0x'
+	mov		ax, [HEAP_MEMORY_TOP + 2]
+	WriteHexWord	ax
+	WriteCRLF
+
+	WriteStr	'Memory Offset: 0x'
+	WriteHexWord	PROGRAM_MEMORY_REGION
+	WriteCRLF
+
+	mov	cx, 5
+Main:
+	WriteStr		'Memory: '
+	;MemAvail		dx:ax
+	WriteUIntDWord		dx:ax
+	; WriteChar		','
+	WriteCRLF
 	loop			Main
 
-	WriteStr		'Stack Used: '
-	StackUsed		ax
-	WriteUIntWord		ax
-	WriteCRLF
-
-	WriteStr		'Stack Peak Used: '
-	StackPeak		ax
-	WriteUIntWord		ax
+	WriteStr		'Peak Memory Used: '
+	;MemPeak		dx:ax
+	WriteUIntDWord		dx:ax
 	WriteCRLF
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions
 
-	Include_LIB_Functions	  ; We don't want code above here. Just in case.
+SECTION_MEMORY
 
-SECTION_STACK
-SECTION_HEAP
 

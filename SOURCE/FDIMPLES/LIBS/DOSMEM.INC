@@ -38,9 +38,36 @@
 ; *****************************************************************************
 %ifndef DOSMEM_INC_DEFINED
 %define DOSMEM_INC_DEFINED
-
 ; -----------------------------------------------------------------------------
-%imacro Memory 3
+%imacro SECTION_MEMORY 0
+
+Include_LIB_Functions	  ; Ensure all macro proc code has been compiled.
+
+SECTION_BSS
+
+PROGRAM_MEMORY_REGION:
+	resw 0
+
+__?SECT?__
+
+SECTION_STACK
+SECTION_HEAP
+
+%endmacro
+; -----------------------------------------------------------------------------
+%imacro Memory 2
+
+	; COM file, SS is already CS
+	; The stack will need it's own segment if compiling to EXE.
+
+	; We may want to free all memory and reallocate a the STACK and HEAP
+	; into their own fresh segments.  That would permit a large stack and
+	; large code segment.
+
+	; Also, that would allow the "heap" to exist elsewhere. For example,
+	; if the program was loaded high. The Heap could be in low memory.
+
+
 
 	%ifdef MEMORY_REQUIREMENTS_DECLARED
 		%error Memory requirements can only be delcared once.
@@ -48,6 +75,56 @@
 	%define MEMORY_REQUIREMENTS_DECLARED
 
 	%define STACK_BYTE_SIZE %1 * 1024
+
+	call	CALC_HEAP_SETTINGS
+
+	; figure out seg required for min heap
+	mov	bx, %2 * 1024 / 16
+	add 	bx, ax
+
+	cmp	cx, bx
+	ja	%%Configure_Heap
+
+	; Not enough memory then die
+	mov	ah, 0x09
+	mov	dx, %%NoMemory_Message
+	int	0x21
+	mov	ax, 0x4cca
+	int	0x21
+
+CALC_HEAP_SETTINGS:
+	; figure out segment of HEAP
+	mov	ax, HEAP_MEMORY_BEGIN ; Why not / 16 + 1 as a constant...
+	mov	cl, 4
+	shr	ax, cl
+	inc	ax
+	push	cs
+	pop	cx
+	add	ax, cx
+
+	; check max seg avail to program against requirements
+	mov	cx, [0x0002]
+	dec	cx
+	ret
+
+STORE_HEAP_SETTINGS:
+	mov	[HEAP_FIRST_FREE + 2], ax
+	mov	[HEAP_MEMORY_TOP + 2], ax
+	xor	ax, ax
+	mov	[HEAP_FIRST_FREE], ax
+	mov	[HEAP_MEMORY_TOP], ax
+	ret
+
+%%NoMemory_Message:
+	db	'insufficient memory', CRLF, '$'
+
+%%Configure_Heap:
+	call 	STORE_HEAP_SETTINGS
+	mov	[HEAP_MEMORY_LIMIT + 2], cx
+	mov	[HEAP_MEMORY_LIMIT], ax
+
+%%Configure_Stack:
+	mov	sp, STACK_MEMORY_END
 
 	%ifdef Stack_Overflow_Check
 		%define STACK_OVERFLOW_TESTING
@@ -63,8 +140,6 @@
 		%undef STACK_OVERFLOW_TESTING
 	%endif
 
-	; COM file, SS already CS
-	mov	sp, STACK_MEMORY_END
 
 %endmacro
 ; -----------------------------------------------------------------------------
