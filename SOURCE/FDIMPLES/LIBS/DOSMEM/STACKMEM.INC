@@ -106,16 +106,11 @@ __?SECT?__
 
 %endmacro
 
-%imacro StackCheck 0-1
+%imacro StackCheck 0
 
 %ifdef STACK_OVERFLOW_TESTING
 	PROC_REQUIRE	StackCheck
 	call		StackCheck_PROC
-
-
-%if %0 = 0
-%endif
-
 %endif
 
 %endmacro

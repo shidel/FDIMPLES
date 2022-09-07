@@ -48,7 +48,6 @@
 	%define MEMORY_REQUIREMENTS_DECLARED
 
 	%define STACK_BYTE_SIZE %1 * 1024
-	%define STACK_BYTE_SIZE 128
 
 	%ifdef Stack_Overflow_Check
 		%define STACK_OVERFLOW_TESTING
