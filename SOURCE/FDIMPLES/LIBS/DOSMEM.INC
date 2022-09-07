@@ -38,20 +38,35 @@
 ; *****************************************************************************
 %ifndef DOSMEM_INC_DEFINED
 %define DOSMEM_INC_DEFINED
+
 ; -----------------------------------------------------------------------------
-%macro Memory_INTERNAL 0
-
-SECTION_PROC
-
-Memory_PROC:
-	ret
-
-__?SECT?__
-
-%endmacro
-
 %imacro Memory 3
-	PROC_PROVIDE		Memory
+
+	%ifdef MEMORY_REQUIREMENTS_DECLARED
+		%error Memory requirements can only be delcared once.
+	%endif
+	%define MEMORY_REQUIREMENTS_DECLARED
+
+	%define STACK_BYTE_SIZE %1 * 1024
+	%define STACK_BYTE_SIZE 128
+
+	%ifdef Stack_Overflow_Check
+		%define STACK_OVERFLOW_TESTING
+		push	cs
+		pop	ax
+		xor	ax, STACK_OVERFLOW_DATA
+		mov	[STACK_OVERFLOW_DATA], ax
+		not	ax
+		mov	[STACK_OVERFLOW_DATA + 2], ax
+		mov	ax, STACK_MEMORY_END
+		mov	[STACK_MEMORY_PEAK], ax
+	%else
+		%undef STACK_OVERFLOW_TESTING
+	%endif
+
+	; COM file, SS already CS
+	mov	sp, STACK_MEMORY_END
+
 %endmacro
 ; -----------------------------------------------------------------------------
 %else
@@ -63,6 +78,8 @@ __?SECT?__
 ; Note: Macros often have have preferred register to use when passing when
 ; passing them a parameter. Using the preferred register will result in saving
 ; a few bytes of code. However, it is not required.
+
+%include "DOSMEM/STACKMEM.INC"
 
 %include "DOSMEM/HEAPMEM.INC"
 

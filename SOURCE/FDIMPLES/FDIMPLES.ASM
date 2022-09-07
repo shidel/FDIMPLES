@@ -44,6 +44,7 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 ; %undef Preserve_Registers	; disable preserving registers in macros
 ; %undef DOS_BUG_FIXES		; keep some fixes for various DOS and BIOS bugs
 %undef DOSCRT_Range_Check	; disable out of bounds coordinate checking
+; %undef Stack_Overflow_Check
 %undef Support_BIOS_Timer	; disable attempts to use int15 timer
 ; %undef Support_BIOS_Video	; keep BIOS video support
 ; %undef Support_Direct_Video	; keep Direct video addressing
@@ -65,6 +66,10 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 
 SECTION_CODE			; Already here. Going to reference it anyhow.
 
+	Memory			4, 100, 1024	; Stack 4k
+						; Minimum Heap 100k
+						; Maximum Heep 1024k
+
 	; jmp			ProbeModes
 	call			Initialize
 	call			DrawMainWindow
@@ -74,6 +79,18 @@ MainLoop:
 
 Finished:
 	call			ResetDisplay
+
+	%ifdef Stack_Overflow_Check
+		WriteStr		'Peak Stack Used: '
+		StackPeak		ax
+		WriteUIntWord		ax
+		WriteCRLF
+		WriteStr		'Peak RAM Used: '
+		StackPeak		ax
+		WriteUIntWord		ax
+		WriteCRLF
+	%endif
+
 	Terminate		0	; Also includes needed LIB function code
 
 ResetDisplay:
@@ -374,3 +391,6 @@ XY_ItemArea:		resw 2
 XY_DataArea:		resw 2
 
 MODE_PROBING:		resw 0x100
+
+MEMORY_STACK
+MEMORY_HEAP

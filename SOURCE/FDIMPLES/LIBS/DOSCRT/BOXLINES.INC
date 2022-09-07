@@ -101,6 +101,7 @@ DrawLine_PROC:
 	pushm		si, di
 	xor		di, di
 	RegsPreserve	bx
+	StackCheck
 
 	%ifdef 	Support_BIOS_Video
 		; Although, when using direct mode, this is not needed.
@@ -301,6 +302,7 @@ SECTION_PROC
 DrawBox_PROC:
 	pushm		si, di
 	RegsPreserve	bx
+	StackCheck
 
 	mov		si, BoxFrameData_DATA.HSVS
 	test		cx, lnDouble

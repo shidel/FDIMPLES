@@ -82,6 +82,7 @@ WRITER_DISPLAY_PROC:
 	mov			al, dl
 	; push ax,  see - https://fd.lod.bz/rbil/interrup/video/1003.html
 	push			ax			; Some BIOS clear AX
+	StackCheck
 	mov			ah, 0x03		; Get Cursor Pos & Size
 	mov			bx,[Video_PageAttr]
 	int			0x10

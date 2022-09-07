@@ -1,3 +1,5 @@
+; FreeDOS Installer (FDI) - My Package List Editor Software
+
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -29,21 +31,69 @@
 
 ; NASM 2.15.05, or later
 
-%ifndef HEAPMEM_INC_DEFINED
-%define HEAPMEM_INC_DEFINED
-; *****************************************************************************
-%imacro MEMORY_HEAP 0
+use16
 
-SECTION_BSS
+cpu 8086
 
-HEAP_BEGIN:
-	resb 0
+org 0x100
 
-__?SECT?__
+SECTION .text
 
-%endmacro
+%include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-; *****************************************************************************
-%else
-	; PROC_PROVIDE ReleaseHeap
-%endif
+; %undef Preserve_Registers
+; %undef DOS_BUG_FIXES
+; %undef DOSCRT_Range_Check
+; %undef Stack_Overflow_Check
+; %undef Support_BIOS_Timer
+; %undef Support_BIOS_Video
+%undef Support_Direct_Video
+%undef Support_Mouse
+%undef Video_MCGA
+%undef Video_VGA
+%undef Video_VESA
+
+%include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
+				; initialization routines. Some calls for those
+				; routines gets inserted automatically. For
+				; example DOSCRT requires preparation. If those
+				; are not needed, you can save some bytes by
+				; including only the required LIBS directly.
+
+	Memory			4, 100, 1024	; Stack 4k
+						; Minimum Heap 100k
+						; Maximum Heep 1024k
+
+	mov	cx, 100
+Main:
+	WriteStr		'Stack: '
+	StackAvail		ax
+	WriteUIntWord		ax
+	WriteChar		','
+	StackUsed		ax
+	WriteUIntWord		ax
+	WriteChar		','
+	StackPeak		ax
+	WriteUIntWord		ax
+	WriteCRLF
+	push			ax
+	loop			Main
+
+	WriteStr		'Stack Used: '
+	StackUsed		ax
+	WriteUIntWord		ax
+	WriteCRLF
+
+	WriteStr		'Stack Peak Used: '
+	StackPeak		ax
+	WriteUIntWord		ax
+	WriteCRLF
+
+Finished:
+	Terminate		0 ; Automatically includes used LIB functions
+
+	Include_LIB_Functions	  ; We don't want code above here. Just in case.
+
+MEMORY_STACK
+MEMORY_HEAP
+

@@ -41,6 +41,7 @@ SECTION_PROC
 WRITER_STDOUT_PROC:
 	; dl = character
 	push		ax
+	StackCheck
 	mov		ah, 0x02
 	int		0x21
 	pop		ax

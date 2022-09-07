@@ -53,6 +53,9 @@
 ; range and don't waste bytes. :-)
 %define DOSCRT_Range_Check
 
+; Include Stack overflow checks
+%define Stack_Overflow_Check
+
 ; Include support for additional Interrupt based timer. Disabling this can save
 ; a few bytes. It will then always use system TimerTicks and accuracy will be
 ; +/- 55ms.
