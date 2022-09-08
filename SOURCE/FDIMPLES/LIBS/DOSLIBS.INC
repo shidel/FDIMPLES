@@ -38,10 +38,10 @@
 		%include "NASMEXT.INC"
 		%include "FEATURES.INC"
 		%include "DATAOUT.INC"
-		%include "DOSMEM.INC"
+		%include "MEMORY.INC"
 		%include "DOSSYS.INC"
 		%ifndef NO_VIDEO_SUPPORT
-			%include "DOSCRT.INC"
+			%include "CRT.INC"
 		%endif
 	%endmacro
 

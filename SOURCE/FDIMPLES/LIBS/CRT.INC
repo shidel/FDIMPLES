@@ -84,7 +84,7 @@
 ; OUTPUT: Carry Flag set if error occurred.
 ; REGS:	  AX, BX, CX, DX, DI (NEVER preserved)
 
-%include "DOSCRT/TEXTMODE.INC"
+%include "CRT/TEXTMODE.INC"
 
 ; Test for key was pressed
 ; MACRO:  KeyPressed 0-1
@@ -107,7 +107,7 @@
 ; MACRO:  PurgeKey 0
 ; REGS:	  none
 
-%include "DOSCRT/KEYPRESS.INC"
+%include "CRT/KEYPRESS.INC"
 
 ; Set the foreground color for text writes
 ; MACRO:  TextColor 1
@@ -136,7 +136,7 @@
 ; MACRO:  NormVideo 0
 ; REGS:   none
 
-%include "DOSCRT/TEXTATTR.INC"
+%include "CRT/TEXTATTR.INC"
 
 ; Wait for a period of time to elapse. If Support_BIOS_Timer is enabled,
 ; it will first attempt to use the BIOS WAIT function. If that fails, it
@@ -145,7 +145,7 @@
 ; INPUT:  %1 = Milliseconds to wait, (prefers ax)
 ; REGS:   ax, cx, dx
 
-%include "DOSCRT/DELAY.INC"
+%include "CRT/DELAY.INC"
 
 ; Output sound through PC speaker
 ; MACRO:  Sound 1
@@ -156,7 +156,7 @@
 ; MACRO:  NoSound 0
 ; REGS:   ax, dx
 
-%include "DOSCRT/SOUND.INC"
+%include "CRT/SOUND.INC"
 
 ; Adjust the window to its maximum size. Does not move cursor. Automatically
 ; called at startup and with text mode changes.
@@ -208,7 +208,7 @@
 ; INPUT: %1 - Y (prefers dx)
 ; REGS:  ax, bx, cx, dx
 
-%include "DOSCRT/WINDOW.INC"
+%include "CRT/WINDOW.INC"
 
 ; Clear the remaining portion of the current line
 ; MACRO: ClrEOL 0
@@ -218,7 +218,7 @@
 ; MACRO: ClrScr 0
 ; REGS: ax, bx, cx, dx
 
-%include "DOSCRT/CLEAR.INC"
+%include "CRT/CLEAR.INC"
 
 ; Delete the current line and add fresh one at the bottom of the window
 ; MACRO: DelLine 0
@@ -258,7 +258,7 @@
 ; INPUT: %1 = up, down, left or right
 ; REGS: ax, bx, cx, dx
 
-%include "DOSCRT/INSDEL.INC"
+%include "CRT/INSDEL.INC"
 
 ; Write individual characters to display
 ; MACRO:  WriteChar 1-*
@@ -305,7 +305,7 @@
 ; MACRO:  WriteUIntDWord 1-*
 ; INPUT:  %1+ = word to print (prefers dx:ax)
 
-%include "DOSCRT/WRITE.INC"
+%include "CRT/WRITE.INC"
 
 ; Return the current cursor shape
 ; MACRO:  GetCursor 1
@@ -319,7 +319,7 @@
 ;	  Like the cursor itself, the counters are reset on mode changes.
 ; REGS:   ax, cx
 
-%include "DOSCRT/CURSOR.INC"
+%include "CRT/CURSOR.INC"
 
 ; Test if mouse was found and initialized.
 ; MACRO:  MouseAvailable 0-1
@@ -376,7 +376,7 @@
 ; MACRO:  PurgeMouse 0
 ; REGS:	  none
 
-%include "DOSCRT/MOUSE.INC"
+%include "CRT/MOUSE.INC"
 
 ; (see Box and Frame line constants below for available options)
 
@@ -392,7 +392,7 @@
 ; OUTPUT: none
 ; REGS:	  ax, bx, cx, dx
 
-%include "DOSCRT/BOXLINES.INC"
+%include "CRT/BOXLINES.INC"
 
 ; -----------------------------------------------------------------------------
 ; Standard text video display mode constants

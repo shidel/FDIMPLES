@@ -110,9 +110,19 @@ CALC_HEAP_SETTINGS:
 STORE_HEAP_SETTINGS:
 	mov	[HEAP_FIRST_FREE + 2], ax
 	mov	[HEAP_MEMORY_TOP + 2], ax
+	push 	cx
+	xchg	ax, cx
+	sub	ax, cx
+	mov	cx, 16
+	mul	cx
+	mov	[HEAP_TOTAL_FREE], ax
+	mov	[HEAP_TOTAL_FREE + 2], dx
+	pop	cx
 	xor	ax, ax
 	mov	[HEAP_FIRST_FREE], ax
 	mov	[HEAP_MEMORY_TOP], ax
+	mov	[HEAP_MEMORY_USED], ax
+	mov	[HEAP_MEMORY_USED + 2], ax
 	ret
 
 %%NoMemory_Message:
@@ -122,6 +132,8 @@ STORE_HEAP_SETTINGS:
 	call 	STORE_HEAP_SETTINGS
 	mov	[HEAP_MEMORY_LIMIT + 2], cx
 	mov	[HEAP_MEMORY_LIMIT], ax
+	mov	[HEAP_PEAK_USED], ax
+	mov	[HEAP_PEAK_USED + 2], ax
 
 %%Configure_Stack:
 	mov	sp, STACK_MEMORY_END
@@ -139,8 +151,6 @@ STORE_HEAP_SETTINGS:
 	%else
 		%undef STACK_OVERFLOW_TESTING
 	%endif
-
-
 %endmacro
 ; -----------------------------------------------------------------------------
 %else
@@ -153,10 +163,10 @@ STORE_HEAP_SETTINGS:
 ; passing them a parameter. Using the preferred register will result in saving
 ; a few bytes of code. However, it is not required.
 
-%include "DOSMEM/STACKMEM.INC"
+%include "MEMORY/STACKMEM.INC"
 
-%include "DOSMEM/HEAPMEM.INC"
+%include "MEMORY/HEAPMEM.INC"
 
-%include "DOSMEM/XMSMEM.INC"
+%include "MEMORY/XMSMEM.INC"
 
-%include "DOSMEM/EMSMEM.INC"
+%include "MEMORY/EMSMEM.INC"

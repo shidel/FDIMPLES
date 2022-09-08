@@ -60,7 +60,7 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-	Memory			1, 400	; Stack 4k, Minimum Heap 100k
+	Memory			1, 16	; Stack 4k, Minimum Heap 16k
 
 	push		cs
 	pop		dx
@@ -76,10 +76,10 @@ SECTION .text
 	mov		cx, 16
 	mul		cx
 	WriteUIntDWord  dx:ax
-	WriteStr	' bytes', CRLF, CRLF
+	WriteStr	' bytes', CRLF
 
 
-	WriteStr	'Heap Offset: 0x'
+	WriteStr	'Heap Offset: cs:0x'
 	WriteHexWord	HEAP_MEMORY_BEGIN
 	WriteCRLF
 	WriteStr	'Heap First Free: 0x'
@@ -99,11 +99,12 @@ SECTION .text
 	WriteStr	'Memory Offset: 0x'
 	WriteHexWord	PROGRAM_MEMORY_REGION
 	WriteCRLF
+	WriteCRLF
 
 	mov	cx, 5
 Main:
 	WriteStr		'Memory: '
-	;MemAvail		dx:ax
+	HeapAvail		dx:ax
 	WriteUIntDWord		dx:ax
 	; WriteChar		','
 	WriteCRLF

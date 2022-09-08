@@ -40,8 +40,14 @@ HEAP_MEMORY_LIMIT: ; Pointer to last memory location available to program
 	resd 1
 HEAP_MEMORY_TOP:   ; Pointer to first free block above allocated space
 	resd 1
+HEAP_MEMORY_USED:  ; Current total heap memory in use
+	resd 1
 HEAP_FIRST_FREE:   ; Pointer to next free block
 	resd 1
+HEAP_TOTAL_FREE:
+	resd 1	   ; Total amount of free space in heap
+HEAP_PEAK_USED:
+	resd 1	   ; Max amount of used heap during program execution
 
 HEAP_MEMORY_BEGIN: ; All of the heap
 	resb 0
@@ -51,14 +57,51 @@ __?SECT?__
 %endmacro
 
 %imacro RESET_HEAP 0
+	RegsPreserve	ax, cx, dx
 	call 	CALC_HEAP_SETTINGS
 	call	STORE_HEAP_SETTINGS	; For now, it does not reset the HEAP
 					; MEMORY LIMIT. If the program memory
 					; block wa resized. It will need
 					; adjusted.
-
+					; Also, HEAP PEAK USED is not reset.
+	RegsRestore 	ax, cx, dx
 %endmacro
 
+%imacro HeapAvail 1-2
+	%ifidni %1, dx:ax
+		movndef		ax, [HEAP_TOTAL_FREE]
+		movndef		dx, [HEAP_TOTAL_FREE + 2]
+	%else
+		RegsPreserve 	dx, ax
+		movndef		%2, [HEAP_TOTAL_FREE]
+		movndef		%1, [HEAP_TOTAL_FREE + 2]
+		RegsRestore 	dx, ax
+	%endif
+%endmacro
+
+%imacro HeapUsed 1-2
+	%ifidni %1, dx:ax
+		movndef		ax, [HEAP_TOTAL_FREE]
+		movndef		dx, [HEAP_TOTAL_FREE + 2]
+	%else
+		RegsPreserve 	dx, ax
+		movndef		%2, [HEAP_TOTAL_FREE]
+		movndef		%1, [HEAP_TOTAL_FREE + 2]
+		RegsRestore 	dx, ax
+	%endif
+%endmacro
+
+%imacro HeapPeak 1-2
+	%ifidni %1, dx:ax
+		movndef		ax, [HEAP_TOTAL_FREE]
+		movndef		dx, [HEAP_TOTAL_FREE + 2]
+	%else
+		RegsPreserve 	dx, ax
+		movndef		%2, [HEAP_TOTAL_FREE]
+		movndef		%1, [HEAP_TOTAL_FREE + 2]
+		RegsRestore 	dx, ax
+	%endif
+%endmacro
 ; *****************************************************************************
 %else
 	; PROC_PROVIDE ReleaseHeap
