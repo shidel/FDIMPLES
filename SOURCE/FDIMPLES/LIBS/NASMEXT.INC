@@ -689,7 +689,69 @@ DebugRegisters_PROC:
 	call	DebugRegisters_PROC
 %endmacro
 
+%imacro RegisterPair 1
+	%ifidni %1, dx:ax
+		%define REGISTER_PAIR_HIGH 	dx
+		%define REGISTER_PAIR_LOW 	ax
+	%elifidni %1, ds:si
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	si
+	%elifidni %1, es:di
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	di
+	%elifidni %1, ss:bp
+		%define REGISTER_PAIR_HIGH 	ss
+		%define REGISTER_PAIR_LOW 	bp
 
+	%elifidni %1, dx:bx
+		%define REGISTER_PAIR_HIGH 	dx
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, dx:cx
+		%define REGISTER_PAIR_HIGH 	dx
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, dx:si
+		%define REGISTER_PAIR_HIGH 	dx
+		%define REGISTER_PAIR_LOW 	si
+	%elifidni %1, dx:di
+		%define REGISTER_PAIR_HIGH 	dx
+		%define REGISTER_PAIR_LOW 	di
+
+	%elifidni %1, ds:ax
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	ax
+	%elifidni %1, ds:bx
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, ds:cx
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, ds:dx
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	dx
+	%elifidni %1, ds:di
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	di
+
+	%elifidni %1, es:ax
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	ax
+	%elifidni %1, es:bx
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, es:cx
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, es:dx
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	dx
+	%elifidni %1, es:si
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	si
+
+	%else
+		%error Undefined register pair %1
+	%endif
+%endmacro
 ; -----------------------------------------------------------------------------
 
 %endif

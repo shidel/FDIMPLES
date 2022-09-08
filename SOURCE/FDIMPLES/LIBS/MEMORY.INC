@@ -108,21 +108,25 @@ CALC_HEAP_SETTINGS:
 	ret
 
 STORE_HEAP_SETTINGS:
-	mov	[HEAP_FIRST_FREE + 2], ax
-	mov	[HEAP_MEMORY_TOP + 2], ax
+	mov	[HEAP_CONTROL.TOP + 2], ax
+	mov	[HEAP_CONTROL.BOTTOM + 2], ax
+	mov	[HEAP_CONTROL.AVAIL + 2], ax
 	push 	cx
 	xchg	ax, cx
 	sub	ax, cx
 	mov	cx, 16
 	mul	cx
-	mov	[HEAP_TOTAL_FREE], ax
-	mov	[HEAP_TOTAL_FREE + 2], dx
+	mov	[HEAP_CONTROL.FREE], ax
+	mov	[HEAP_CONTROL.FREE + 2], dx
+	mov	[HEAP_CONTROL.MAX], ax
+	mov	[HEAP_CONTROL.MAX + 2], dx
 	pop	cx
 	xor	ax, ax
-	mov	[HEAP_FIRST_FREE], ax
-	mov	[HEAP_MEMORY_TOP], ax
-	mov	[HEAP_MEMORY_USED], ax
-	mov	[HEAP_MEMORY_USED + 2], ax
+	mov	[HEAP_CONTROL.TOP], ax
+	mov	[HEAP_CONTROL.BOTTOM], ax
+	mov	[HEAP_CONTROL.AVAIL], ax
+	mov	[HEAP_CONTROL.USED], ax
+	mov	[HEAP_CONTROL.USED + 2], ax
 	ret
 
 %%NoMemory_Message:
@@ -130,10 +134,10 @@ STORE_HEAP_SETTINGS:
 
 %%Configure_Heap:
 	call 	STORE_HEAP_SETTINGS
-	mov	[HEAP_MEMORY_LIMIT + 2], cx
-	mov	[HEAP_MEMORY_LIMIT], ax
-	mov	[HEAP_PEAK_USED], ax
-	mov	[HEAP_PEAK_USED + 2], ax
+	mov	[HEAP_CONTROL.LIMIT + 2], cx
+	mov	[HEAP_CONTROL.LIMIT], ax
+	mov	[HEAP_CONTROL.PEAK], ax
+	mov	[HEAP_CONTROL.PEAK + 2], ax
 
 %%Configure_Stack:
 	mov	sp, STACK_MEMORY_END

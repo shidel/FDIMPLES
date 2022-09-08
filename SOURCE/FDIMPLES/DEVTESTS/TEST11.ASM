@@ -62,6 +62,7 @@ SECTION .text
 
 	Memory			1, 16	; Stack 4k, Minimum Heap 16k
 
+
 	push		cs
 	pop		dx
 	WriteStr	'Code Segment: 0x'
@@ -78,38 +79,40 @@ SECTION .text
 	WriteUIntDWord  dx:ax
 	WriteStr	' bytes', CRLF
 
-
 	WriteStr	'Heap Offset: cs:0x'
 	WriteHexWord	HEAP_MEMORY_BEGIN
 	WriteCRLF
-	WriteStr	'Heap First Free: 0x'
-	mov		ax, [HEAP_FIRST_FREE + 2]
-	WriteHexWord	ax
-	WriteCRLF
-	WriteStr	'Heap Limit: 0x'
-	mov		ax, [HEAP_MEMORY_LIMIT + 2]
-	WriteHexWord	ax
 	WriteCRLF
 
-	WriteStr	'Heap Top: 0x'
-	mov		ax, [HEAP_MEMORY_TOP + 2]
-	WriteHexWord	ax
-	WriteCRLF
-
-	WriteStr	'Memory Offset: 0x'
-	WriteHexWord	PROGRAM_MEMORY_REGION
-	WriteCRLF
-	WriteCRLF
-
+	xor 	ax, ax
+	pushm   dx,ax
 	mov	cx, 5
-Main:
-	WriteStr		'Memory: '
-	HeapAvail		dx:ax
-	WriteUIntDWord		dx:ax
-	; WriteChar		','
+StepOne:
+	call			MemoryStatus
+	WriteStr		' -> '
+	HeapAlloc		dx:ax, 1024
+	WriteHexWord		dx
+	WriteChar		':'
+	WriteHexWord		ax
 	WriteCRLF
-	loop			Main
+	pushm	dx,ax
+	loop			StepOne
 
+StepTwo:
+	popm    		dx, ax
+	test 			dx, dx
+	jz			StepThree
+	HeapRelease		dx:ax, 1024
+	WriteHexWord		dx
+	WriteChar		':'
+	WriteHexWord		ax
+	WriteStr		' -> '
+	call			MemoryStatus
+	WriteCRLF
+	jmp			StepTwo
+
+StepThree:
+	WriteCRLF
 	WriteStr		'Peak Memory Used: '
 	;MemPeak		dx:ax
 	WriteUIntDWord		dx:ax
@@ -117,6 +120,18 @@ Main:
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions
+
+MemoryStatus:
+	WriteStr		'Memory: '
+	HeapMaxAvail		dx:ax
+	WriteUIntDWord		dx:ax
+	WriteChar		','
+	HeapMemAvail		dx:ax
+	WriteUIntDWord		dx:ax
+	WriteChar		'/'
+	HeapMemUsed		dx:ax
+	WriteUIntDWord		dx:ax
+	ret
 
 SECTION_MEMORY
 

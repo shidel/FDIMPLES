@@ -36,20 +36,26 @@
 
 SECTION_BSS
 
-HEAP_MEMORY_LIMIT: ; Pointer to last memory location available to program
-	resd 1
-HEAP_MEMORY_TOP:   ; Pointer to first free block above allocated space
-	resd 1
-HEAP_MEMORY_USED:  ; Current total heap memory in use
-	resd 1
-HEAP_FIRST_FREE:   ; Pointer to next free block
-	resd 1
-HEAP_TOTAL_FREE:
-	resd 1	   ; Total amount of free space in heap
-HEAP_PEAK_USED:
-	resd 1	   ; Max amount of used heap during program execution
+HEAP_CONTROL:
 
-HEAP_MEMORY_BEGIN: ; All of the heap
+.LIMIT:	; Pointer to last memory location available to program
+	resd 1
+.BOTTOM:; First possible, starting point of heap
+	resd 1
+.TOP:	; Pointer to first free block above allocated space
+	resd 1
+.AVAIL:	; Pointer to next free block
+	resd 1
+.PEAK:	; Max amount of used heap during program execution
+	resd 1
+.USED:  ; Current total heap memory in use
+	resd 1
+.FREE:	; Total amount of free space in heap
+	resd 1
+.MAX:	; Largest block of free space in heap
+	resd 1
+
+HEAP_MEMORY_BEGIN: ; All of the heap is past here. Starts at next paragraph.
 	resb 0
 
 __?SECT?__
@@ -67,41 +73,43 @@ __?SECT?__
 	RegsRestore 	ax, cx, dx
 %endmacro
 
-%imacro HeapAvail 1-2
-	%ifidni %1, dx:ax
-		movndef		ax, [HEAP_TOTAL_FREE]
-		movndef		dx, [HEAP_TOTAL_FREE + 2]
-	%else
-		RegsPreserve 	dx, ax
-		movndef		%2, [HEAP_TOTAL_FREE]
-		movndef		%1, [HEAP_TOTAL_FREE + 2]
-		RegsRestore 	dx, ax
-	%endif
+%imacro HeapMemAvail 1
+	RegisterPair	%1
+	mov		REGISTER_PAIR_LOW,  [HEAP_CONTROL.FREE]
+	mov		REGISTER_PAIR_HIGH, [HEAP_CONTROL.FREE + 2]
 %endmacro
 
-%imacro HeapUsed 1-2
-	%ifidni %1, dx:ax
-		movndef		ax, [HEAP_TOTAL_FREE]
-		movndef		dx, [HEAP_TOTAL_FREE + 2]
-	%else
-		RegsPreserve 	dx, ax
-		movndef		%2, [HEAP_TOTAL_FREE]
-		movndef		%1, [HEAP_TOTAL_FREE + 2]
-		RegsRestore 	dx, ax
-	%endif
+%imacro HeapMaxAvail 1
+	RegisterPair	%1
+	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.MAX]
+	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.MAX + 2]
 %endmacro
 
-%imacro HeapPeak 1-2
-	%ifidni %1, dx:ax
-		movndef		ax, [HEAP_TOTAL_FREE]
-		movndef		dx, [HEAP_TOTAL_FREE + 2]
-	%else
-		RegsPreserve 	dx, ax
-		movndef		%2, [HEAP_TOTAL_FREE]
-		movndef		%1, [HEAP_TOTAL_FREE + 2]
-		RegsRestore 	dx, ax
-	%endif
+%imacro HeapMemUsed 1
+	RegisterPair	%1
+	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.USED]
+	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.USED + 2]
 %endmacro
+
+%imacro HeapPeakUsed 1
+	RegisterPair	%1
+	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.PEAK]
+	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.PEAK + 2]
+%endmacro
+
+%imacro HeapAlloc 2
+	RegisterPair	%1
+	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.PEAK]
+	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.PEAK + 2]
+%endmacro
+
+%imacro HeapRelease 2
+	RegisterPair	%1
+	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.PEAK]
+	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.PEAK + 2]
+%endmacro
+
+
 ; *****************************************************************************
 %else
 	; PROC_PROVIDE ReleaseHeap
