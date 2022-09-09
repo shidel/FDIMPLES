@@ -38,11 +38,11 @@
 		%include "NASMEXT.INC"
 		%include "FEATURES.INC"
 		%include "DATAOUT.INC"
-		%include "MEMORY.INC"
 		%include "DOSSYS.INC"
 		%ifndef NO_VIDEO_SUPPORT
 			%include "CRT.INC"
 		%endif
+		%include "MEMORY.INC"
 	%endmacro
 
 	%imacro Include_LIB_Functions 0
@@ -163,6 +163,74 @@ __?SECT?__
 	call		REMOVE_EXIT_PROC_PROC
 	pop		di
 
+%endmacro
+
+%imacro Die 1-*
+	%ifnum %1
+		; Don't save, it gets hard coded
+	%elifidni %1, al
+		push			ax
+	%elifidni %1, ah
+		push			ax
+	%endif
+
+	%ifdef ADD_EXIT_PROC_DEFINED
+		EXIT_PROCS
+	%endif
+
+	%ifdef MouseInitialize_REQUIRED
+		MouseFinalize
+	%endif
+
+	%if %0 > 1
+		mov	ah, 0x02
+		cld
+		%if %0 > 2
+			mov     cx, %0 - 1
+		%endif
+		mov	si, %%Messages
+		push	cs
+		pop	ds
+	%%Display:
+		lodsb
+		test	al, al
+		jz	%%DisplayDone
+		mov	dl, al
+		int	0x21
+		jmp	%%Display
+	%%DisplayDone:
+		mov	dl, 0x0d
+		int 	0x21
+		mov	dl, 0x0a
+		int 	0x21
+		%if %0 > 2
+			loop	%%Display
+		%endif
+	%endif
+
+	%ifnum %1
+	%elifidni %1, al
+		pop			ax
+	%elifidni %1, ah
+		pop			ax
+	%endif
+
+	%ifnum %1
+		mov			ax, 0x4c00 + %1
+	%else
+		mov			ah, 0x4c
+		movndef			al, %1
+	%endif
+	int	0x21
+
+	%if %0 > 1
+	%%Messages:
+		%rep  %0 - 1
+		%rotate 1
+			db %1,0
+		%endrep
+		%rotate 1
+	%endif
 %endmacro
 
 %endif

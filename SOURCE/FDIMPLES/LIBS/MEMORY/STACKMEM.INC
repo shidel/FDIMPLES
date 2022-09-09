@@ -83,24 +83,8 @@ StackCheck_PROC:
 	popf
 	ret
 %%Stack_Overflow:
-	mov	  sp, STACK_MEMORY_END
-
-	%ifdef ADD_EXIT_PROC_DEFINED
-		EXIT_PROCS
-	%endif
-
-	%ifdef MouseInitialize_REQUIRED
-		MouseFinalize
-	%endif
-
-	mov	ah, 0x09
-	mov	dx, %%Overflow_Message
-	int	0x21
-	mov	ax, 0x4cca
-	int	0x21
-
-%%Overflow_Message:
-	db	CRLF, '!! STACK OVERFLOW ERROR !!', CRLF, '$'
+	mov	sp, STACK_MEMORY_END
+	Die 	0xca, '!! STACK OVERFLOW ERROR !!'
 
 __?SECT?__
 

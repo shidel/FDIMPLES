@@ -86,11 +86,8 @@ SECTION_HEAP
 	ja	%%Configure_Heap
 
 	; Not enough memory then die
-	mov	ah, 0x09
-	mov	dx, %%NoMemory_Message
-	int	0x21
-	mov	ax, 0x4cca
-	int	0x21
+OUT_OF_MEMORY:
+	Die 	0xca, 'insufficient memory'
 
 CALC_HEAP_SETTINGS:
 	; figure out segment of HEAP
@@ -129,15 +126,14 @@ STORE_HEAP_SETTINGS:
 	mov	[HEAP_CONTROL.USED + 2], ax
 	ret
 
-%%NoMemory_Message:
-	db	'insufficient memory', CRLF, '$'
-
 %%Configure_Heap:
 	call 	STORE_HEAP_SETTINGS
 	mov	[HEAP_CONTROL.LIMIT + 2], cx
 	mov	[HEAP_CONTROL.LIMIT], ax
 	mov	[HEAP_CONTROL.PEAK], ax
 	mov	[HEAP_CONTROL.PEAK + 2], ax
+	mov	[HEAP_CONTROL.FAIL], ax
+	mov	[HEAP_CONTROL.FAIL + 2], ax
 
 %%Configure_Stack:
 	mov	sp, STACK_MEMORY_END

@@ -38,6 +38,8 @@ SECTION_BSS
 
 HEAP_CONTROL:
 
+.FAIL:	; Function to call on allocation failure
+	resd 1
 .LIMIT:	; Pointer to last memory location available to program
 	resd 1
 .BOTTOM:; First possible, starting point of heap
@@ -81,29 +83,67 @@ __?SECT?__
 
 %imacro HeapMaxAvail 1
 	RegisterPair	%1
-	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.MAX]
-	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.MAX + 2]
+	mov		REGISTER_PAIR_LOW,  [HEAP_CONTROL.MAX]
+	mov		REGISTER_PAIR_HIGH, [HEAP_CONTROL.MAX + 2]
 %endmacro
 
 %imacro HeapMemUsed 1
 	RegisterPair	%1
-	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.USED]
-	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.USED + 2]
+	mov		REGISTER_PAIR_LOW,  [HEAP_CONTROL.USED]
+	mov		REGISTER_PAIR_HIGH, [HEAP_CONTROL.USED + 2]
 %endmacro
 
 %imacro HeapPeakUsed 1
 	RegisterPair	%1
-	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.PEAK]
-	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.PEAK + 2]
+	mov		REGISTER_PAIR_LOW,  [HEAP_CONTROL.PEAK]
+	mov		REGISTER_PAIR_HIGH, [HEAP_CONTROL.PEAK + 2]
+%endmacro
+
+%macro HeapMemory_INTERNAL 0
+HeapAlloc_PROC:
+	call		HeapAdjustSize
+	jmp		OUT_OF_MEMORY
+	ret
+
+HeapAdjustSize:
+	pushm		dx, ax
+	mov		ax, - HEAP_BLOCK_SIZE
+	mov		dx, cx
+	and		dx, ax
+	mov		ax, HEAP_BLOCK_SIZE - 1
+	and		ax, cx
+	jz		%%SizeIsEven
+	add		dx, HEAP_BLOCK_SIZE
+%%SizeIsEven:
+	mov		cx, dx
+	popm		dx, ax
+	ret
 %endmacro
 
 %imacro HeapAlloc 2
+
+	PROC_REQUIRE HeapMemory
+
+	%ifnidni %2, cx
+		RegsPreserve	cx
+		mov	cx, %2
+	%endif
 	RegisterPair	%1
-	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.PEAK]
-	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.PEAK + 2]
+	%ifnidni %1, dx:ax
+		RegsPreserve	dx, ax
+	%endif
+	call		HeapAlloc_PROC
+	movndef		REGISTER_PAIR_LOW,  ax,	REGISTER_PAIR_HIGH, dx
+	%ifnidni %1, dx:ax
+		RegsRestore	dx, ax
+	%endif
+	%ifnidni %2, cx
+		RegsRestore	cx
+	%endif
 %endmacro
 
 %imacro HeapRelease 2
+	PROC_REQUIRE HeapMemory
 	RegisterPair	%1
 	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.PEAK]
 	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.PEAK + 2]
@@ -112,5 +152,5 @@ __?SECT?__
 
 ; *****************************************************************************
 %else
-	; PROC_PROVIDE ReleaseHeap
+	PROC_PROVIDE HeapMemory
 %endif

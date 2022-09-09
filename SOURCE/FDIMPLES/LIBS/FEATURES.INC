@@ -88,6 +88,11 @@
 %define Video_VGA 	4
 %define Video_VESA	5
 
+; When Memory Heap is used, this is the minimum allocated block size. Because
+; of the way blocks are sized and aligned, this must be 8, 16, 32 or 64.
+; But, 8 is probably best.
+%define HEAP_BLOCK_SIZE 8
+
 ; -----------------------------------------------------------------------------
 ; Video control option bits
 ; default is vcbDirectVideo + vcbScroll

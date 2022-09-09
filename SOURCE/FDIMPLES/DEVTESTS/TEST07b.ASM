@@ -1,3 +1,5 @@
+; FreeDOS Installer (FDI) - My Package List Editor Software
+
 ; BSD 3-Clause License
 ; Copyright (c) 2022, Jerome Shidel
 ; All rights reserved.
@@ -28,25 +30,56 @@
 ; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ; NASM 2.15.05, or later
-%ifndef TERMINAT_INC_DEFINED
-%define TERMINAT_INC_DEFINED
-; -----------------------------------------------------------------------------
-; Terminate Program
-; MACRO:  Terminate 1-*
-; INPUT:
-; 	%1  = DOS Exit Code (prefers al)
-; 	%2+ = Any message sent to STDOUT at exit
-; OUTPUT:
-; 	None: Does not return
-; -----------------------------------------------------------------------------
-%imacro Terminate 1-*
 
-	Die %{1:-1}
+use16
 
-	%define  DO_NOT_INITIALIZE_LIBS
-	%include 'DOSLIBS.INC'
+cpu 8086
+
+org 0x100
+
+SECTION .text
+
+%include "FEATURES.INC"		; Default DEFINES & options for library macros
+
+%undef Preserve_Registers
+; %undef DOS_BUG_FIXES
+%undef DOSCRT_Range_Check
+%undef Support_BIOS_Timer
+%undef Support_BIOS_Video
+;%undef Support_Direct_Video
+;%undef Support_Mouse
+%undef Video_MCGA
+%undef Video_VGA
+%undef Video_VESA
+
+
+%include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
+				; initialization routines. Some calls for those
+				; routines gets inserted automatically. For
+				; example DOSCRT requires preparation. If those
+				; are not needed, you can save some bytes by
+				; including only the required LIBS directly.
+
+Main:
+	call 			WaitEvent
+
+Finished:
+	VideoResetSettings
+	Terminate		0
+
+WaitEvent:
+	StdOutStr		'Press a key'
+	MouseAvailable		.OrMouseClick
+	jmp			.Waiting
+.OrMouseClick:
+	StdOutStr		' (or mouse click)'
+.Waiting:
+	Keypressed		.Done
+	MouseClicked		.Done
+	jmp			.Waiting
+.Done:
+	PurgeKey
+	PurgeMouse
+	ret
+
 	Include_LIB_Functions
-
-%endmacro
-; -----------------------------------------------------------------------------
-%endif

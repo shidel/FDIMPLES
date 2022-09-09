@@ -46,7 +46,7 @@ SECTION .text
 ; %undef DOSCRT_Range_Check
 ; %undef Stack_Overflow_Check
 ; %undef Support_BIOS_Timer
-; %undef Support_BIOS_Video
+%undef Support_BIOS_Video
 %undef Support_Direct_Video
 %undef Support_Mouse
 %undef Video_MCGA
@@ -62,39 +62,50 @@ SECTION .text
 
 	Memory			1, 16	; Stack 4k, Minimum Heap 16k
 
+	; mov ax, - HEAP_BLOCK_SIZE
+	; StdOutHexWord	ax
+	; StdOutCRLF
 
 	push		cs
 	pop		dx
-	WriteStr	'Code Segment: 0x'
-	WriteHexWord	dx
-	WriteCRLF
-	WriteStr	'Memory Top: 0x'
+	StdOutStr	'Code Segment: 0x'
+	StdOutHexWord	dx
+	StdOutCRLF
+	StdOutStr	'Memory Top: 0x'
 	mov		ax, [cs:0x0002]
-	WriteHexWord	ax
-	WriteCRLF
-	WriteStr	'Program Memory: '
+	StdOutHexWord	ax
+	StdOutCRLF
+	StdOutStr	'Program Memory: '
 	sub		ax, dx
 	mov		cx, 16
 	mul		cx
-	WriteUIntDWord  dx:ax
-	WriteStr	' bytes', CRLF
+	StdOutUIntDWord  dx:ax
+	StdOutStr	' bytes', CRLF
 
-	WriteStr	'Heap Offset: cs:0x'
-	WriteHexWord	HEAP_MEMORY_BEGIN
-	WriteCRLF
-	WriteCRLF
+	StdOutStr	'Heap Offset: cs:0x'
+	StdOutHexWord	HEAP_MEMORY_BEGIN
+	StdOutCRLF
+	StdOutCRLF
 
 	xor 	ax, ax
-	pushm   dx,ax
+	pushm   ax,ax
 	mov	cx, 5
 StepOne:
 	call			MemoryStatus
-	WriteStr		' -> '
-	HeapAlloc		dx:ax, 1024
-	WriteHexWord		dx
-	WriteChar		':'
-	WriteHexWord		ax
-	WriteCRLF
+	StdOutStr		' -> '
+	mov			bx, cx
+	add			bx, cx
+	add			bx, cx
+	add			bx, cx
+	add			bx, cx
+	HeapAlloc		dx:ax, bx
+	StdOutHexWord		dx
+	StdOutChar		':'
+	StdOutHexWord		ax
+	StdOutChar		'?'
+	StdOutHexWord		bx
+	StdOutCRLF
+	push	bx
 	pushm	dx,ax
 	loop			StepOne
 
@@ -102,35 +113,36 @@ StepTwo:
 	popm    		dx, ax
 	test 			dx, dx
 	jz			StepThree
-	HeapRelease		dx:ax, 1024
-	WriteHexWord		dx
-	WriteChar		':'
-	WriteHexWord		ax
-	WriteStr		' -> '
+	pop			cx
+	StdOutHexWord		dx
+	StdOutChar		':'
+	StdOutHexWord		ax
+	StdOutStr		' -> '
+	HeapRelease		dx:ax, cx
 	call			MemoryStatus
-	WriteCRLF
+	StdOutCRLF
 	jmp			StepTwo
 
 StepThree:
-	WriteCRLF
-	WriteStr		'Peak Memory Used: '
+	StdOutCRLF
+	StdOutStr		'Peak Memory Used: '
 	;MemPeak		dx:ax
-	WriteUIntDWord		dx:ax
-	WriteCRLF
+	StdOutUIntDWord		dx:ax
+	StdOutCRLF
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions
 
 MemoryStatus:
-	WriteStr		'Memory: '
+	StdOutStr		'Memory: '
 	HeapMaxAvail		dx:ax
-	WriteUIntDWord		dx:ax
-	WriteChar		','
+	StdOutUIntDWord		dx:ax
+	StdOutChar		','
 	HeapMemAvail		dx:ax
-	WriteUIntDWord		dx:ax
-	WriteChar		'/'
+	StdOutUIntDWord		dx:ax
+	StdOutChar		'/'
 	HeapMemUsed		dx:ax
-	WriteUIntDWord		dx:ax
+	StdOutUIntDWord		dx:ax
 	ret
 
 SECTION_MEMORY

@@ -60,7 +60,7 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-	TextMode		0x07
+	TextMode		tmCO80
 
 Main:
 	mov 			cx, 2000
