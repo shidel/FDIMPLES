@@ -62,10 +62,6 @@ SECTION .text
 
 	Memory			1, 16	; Stack 4k, Minimum Heap 16k
 
-	; mov ax, - HEAP_BLOCK_SIZE
-	; StdOutHexWord	ax
-	; StdOutCRLF
-
 Main:
 
 	push		cs

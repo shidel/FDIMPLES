@@ -126,9 +126,20 @@ SECTION_PROC
 
 HeapAlloc_PROC:
 	call		HeapAdjustSize
-	loddax		HEAP_CONTROL.FREE
 
-	; jmp		OUT_OF_MEMORY
+	loddax		HEAP_CONTROL.FREE
+	cmpdax		cx
+	jb		OUT_OF_MEMORY
+
+	; Adjust counters
+	subdax		cx
+	stodax		HEAP_CONTROL.FREE
+	loddax		HEAP_CONTROL.USED
+	adddax		cx
+	stodax		HEAP_CONTROL.USED
+
+	; Where to get block
+	loddax		HEAP_CONTROL.TOP
 	ret
 
 HeapAdjustSize:

@@ -48,6 +48,8 @@
 %idefine CRLF CR,LF
 %idefine FALSE 0
 %idefine TRUE  1
+
+%idefine CARRYFLAG_BIT		0x0001
 ; -----------------------------------------------------------------------------
 %define SECTION_CODE [section .text]
 %define SECTION_PROC [section .proc]
@@ -73,6 +75,155 @@
 
 %define NEW_SEGMENTS NEW_SECTIONS
 
+; -----------------------------------------------------------------------------
+%imacro regtype 1
+	%ifidni %1, ax
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, bx
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, cx
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, dx
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, si
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, di
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, bp
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, sp
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, es
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, ds
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, cs
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, ss
+		%define REGISTER_TYPE_BITS 16
+	%elifidni %1, ah
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, al
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, bh
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, bl
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, ch
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, cl
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, dh
+		%define REGISTER_TYPE_BITS 8
+	%elifidni %1, dl
+		%define REGISTER_TYPE_BITS 8
+	%else
+		%define REGISTER_TYPE_BITS 0
+	%endif
+%endmacro
+
+%imacro isregpair 1
+	%ifidni %1, dx:ax
+		%define REGISTER_PAIR_HIGH 	dx
+		%define REGISTER_PAIR_LOW 	ax
+	%elifidni %1, ds:si
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	si
+	%elifidni %1, es:di
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	di
+	%elifidni %1, ss:bp
+		%define REGISTER_PAIR_HIGH 	ss
+		%define REGISTER_PAIR_LOW 	bp
+
+	%elifidni %1, dx:bx
+		%define REGISTER_PAIR_HIGH 	dx
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, dx:cx
+		%define REGISTER_PAIR_HIGH 	dx
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, dx:si
+		%define REGISTER_PAIR_HIGH 	dx
+		%define REGISTER_PAIR_LOW 	si
+	%elifidni %1, dx:di
+		%define REGISTER_PAIR_HIGH 	dx
+		%define REGISTER_PAIR_LOW 	di
+
+	%elifidni %1, bx:ax
+		%define REGISTER_PAIR_HIGH 	bx
+		%define REGISTER_PAIR_LOW 	ax
+	%elifidni %1, bx:dx
+		%define REGISTER_PAIR_HIGH 	bx
+		%define REGISTER_PAIR_LOW 	dx
+	%elifidni %1, bx:cx
+		%define REGISTER_PAIR_HIGH 	bx
+		%define REGISTER_PAIR_LOW 	cx
+	%elifidni %1, bx:si
+		%define REGISTER_PAIR_HIGH 	bx
+		%define REGISTER_PAIR_LOW 	si
+	%elifidni %1, bx:di
+		%define REGISTER_PAIR_HIGH 	bx
+		%define REGISTER_PAIR_LOW 	di
+
+	%elifidni %1, cx:ax
+		%define REGISTER_PAIR_HIGH 	cx
+		%define REGISTER_PAIR_LOW 	ax
+	%elifidni %1, cx:dx
+		%define REGISTER_PAIR_HIGH 	cx
+		%define REGISTER_PAIR_LOW 	dx
+	%elifidni %1, cx:bx
+		%define REGISTER_PAIR_HIGH 	cx
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, cx:si
+		%define REGISTER_PAIR_HIGH 	cx
+		%define REGISTER_PAIR_LOW 	si
+	%elifidni %1, cx:di
+		%define REGISTER_PAIR_HIGH 	bx
+		%define REGISTER_PAIR_LOW 	di
+
+	%elifidni %1, ds:ax
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	ax
+	%elifidni %1, ds:bx
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, ds:cx
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, ds:dx
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	dx
+	%elifidni %1, ds:di
+		%define REGISTER_PAIR_HIGH 	ds
+		%define REGISTER_PAIR_LOW 	di
+
+	%elifidni %1, es:ax
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	ax
+	%elifidni %1, es:bx
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, es:cx
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	bx
+	%elifidni %1, es:dx
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	dx
+	%elifidni %1, es:si
+		%define REGISTER_PAIR_HIGH 	es
+		%define REGISTER_PAIR_LOW 	si
+	%else
+		%undef REGISTER_PAIR_HIGH
+		%undef REGISTER_PAIR_LOW
+	%endif
+%endmacro
+
+%imacro RegisterPair 1
+	isregpair %1
+	%ifndef REGISTER_PAIR_HIGH
+		%error Undefined register pair %1
+	%endif
+%endmacro
 ; -----------------------------------------------------------------------------
 %imacro movip 1
 ; mov	ip (+3 bytes) into register.
@@ -214,41 +365,147 @@
 %endmacro
 
 %imacro adddax 	1
-	push		cx
-	add		ax, [%1]
-	pushf
-	add		dx, [%1 + 2]
-	jc		%%Overflow
-	popf
-	jnc		%%Done
-	inc		dx
-	jmp		%%Done
-%%Overflow:
-	pop		cx
-%%Done:
-	pop		cx
+	regtype		%1
+	isregpair	%1
+	%ifdef REGISTER_PAIR_HIGH
+		push		cx
+		add		ax, REGISTER_PAIR_LOW
+		pushf
+		add		dx, REGISTER_PAIR_HIGH
+		jc		%%Overflow
+		popf
+		jnc		%%Done
+		inc		dx
+		jmp		%%Done
+	%%Overflow:
+		pop		cx
+		pushf
+		test		cx, CARRYFLAG_BIT
+		jz		%%NoInc
+		inc		dx
+	%%NoInc:
+		popf
+	%%Done:
+		pop		cx
+	%elif REGISTER_TYPE_BITS = 0
+		push		cx
+		add		ax, [%1]
+		pushf
+		add		dx, [%1 + 2]
+		jc		%%Overflow
+		popf
+		jnc		%%Done
+		inc		dx
+		jmp		%%Done
+	%%Overflow:
+		pop		cx
+		pushf
+		test		cx, CARRYFLAG_BIT
+		jz		%%NoInc
+		inc		dx
+	%%NoInc:
+		popf
+	%%Done:
+		pop		cx
+	%elif REGISTER_TYPE_BITS = 16
+		add		ax, %1
+		jnc		%%Done
+		inc		dx
+	%%Done:
+	%else
+		add		al, %1
+		jnc		%%Done
+		inc		ah
+		jnc		%%Done
+		inc		dx
+	%%Done:
+
+	%endif
+
 %endmacro
 
 %imacro subdax 	1
-	push		cx
-	sub		ax, [%1]
-	pushf
-	sub		dx, [%1 + 2]
-	jc		%%Overflow
-	popf
-	jnc		%%Done
-	dec		dx
-	jmp		%%Done
-%%Overflow:
-	pop		cx
-%%Done:
-	pop		cx
+	regtype		%1
+	isregpair	%1
+	%ifdef REGISTER_PAIR_HIGH
+		push		cx
+		sub		ax, REGISTER_PAIR_LOW
+		pushf
+		sub		dx, REGISTER_PAIR_HIGH
+		jc		%%Overflow
+		popf
+		jnc		%%Done
+		dec		dx
+		jmp		%%Done
+	%%Overflow:
+		pop		cx
+		pushf
+		test		cx, CARRYFLAG_BIT
+		jz		%%NoDec
+		dec		dx
+	%%NoDec:
+		popf
+	%%Done:
+		pop		cx
+	%elif REGISTER_TYPE_BITS = 0
+		push		cx
+		sub		ax, [%1]
+		pushf
+		sub		dx, [%1 + 2]
+		jc		%%Overflow
+		popf
+		jnc		%%Done
+		dec		dx
+		jmp		%%Done
+	%%Overflow:
+		pop		cx
+		pushf
+		test		cx, CARRYFLAG_BIT
+		jz		%%NoDec
+		dec		dx
+	%%NoDec:
+		popf
+	%%Done:
+		pop		cx
+	%elif REGISTER_TYPE_BITS = 16
+		sub		ax, %1
+		jnc		%%Done
+		dec		dx
+	%%Done:
+	%else
+		sub		al, %1
+		jnc		%%Done
+		dec		ah
+		jnc		%%Done
+		dec		dx
+	%%Done:
+
+	%endif
 %endmacro
 
 %imacro cmpdax 	1
-	cmp		dx, [%1 + 2]
-	jne		%%Done
-	cmp		ax, [%1]
+	regtype		%1
+	isregpair	%1
+	%ifdef REGISTER_PAIR_HIGH
+		cmp		dx, REGISTER_PAIR_HIGH
+		jne		%%Done
+		cmp		ax, REGISTER_PAIR_LOW
+	%elif REGISTER_TYPE_BITS = 0
+		cmp		dx, [%1 + 2]
+		jne		%%Done
+		cmp		ax, [%1]
+	%else
+		cmp		dx, 0x0000
+		jne		%%Done
+		%ifdef REGISTER_TYPE_BITS, 16
+			cmp		ax, %1
+		%else
+			cmp		ah, 0x00
+			jne		%%Done
+			cmp		al, %1
+		%endif
+
+	%endif
 %%Done:
 %endmacro
 
@@ -434,52 +691,6 @@
 	%undef  REGISTER_DX_AVAILABLE
 	%undef  REGISTER_DI_AVAILABLE
 	%undef  REGISTER_SI_AVAILABLE
-%endmacro
-; -----------------------------------------------------------------------------
-%imacro regtype 1
-	%ifidni %1, ax
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, bx
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, cx
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, dx
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, si
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, di
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, bp
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, sp
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, es
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, ds
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, cs
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, ss
-		%define REGISTER_TYPE_BITS 16
-	%elifidni %1, ah
-		%define REGISTER_TYPE_BITS 8
-	%elifidni %1, al
-		%define REGISTER_TYPE_BITS 8
-	%elifidni %1, bh
-		%define REGISTER_TYPE_BITS 8
-	%elifidni %1, bl
-		%define REGISTER_TYPE_BITS 8
-	%elifidni %1, ch
-		%define REGISTER_TYPE_BITS 8
-	%elifidni %1, cl
-		%define REGISTER_TYPE_BITS 8
-	%elifidni %1, dh
-		%define REGISTER_TYPE_BITS 8
-	%elifidni %1, dl
-		%define REGISTER_TYPE_BITS 8
-	%else
-		%define REGISTER_TYPE_BITS 0
-	%endif
 %endmacro
 ; -----------------------------------------------------------------------------
 %imacro movndef 2-*
@@ -750,69 +961,6 @@ DebugRegisters_PROC:
 	call	DebugRegisters_PROC
 %endmacro
 
-%imacro RegisterPair 1
-	%ifidni %1, dx:ax
-		%define REGISTER_PAIR_HIGH 	dx
-		%define REGISTER_PAIR_LOW 	ax
-	%elifidni %1, ds:si
-		%define REGISTER_PAIR_HIGH 	ds
-		%define REGISTER_PAIR_LOW 	si
-	%elifidni %1, es:di
-		%define REGISTER_PAIR_HIGH 	es
-		%define REGISTER_PAIR_LOW 	di
-	%elifidni %1, ss:bp
-		%define REGISTER_PAIR_HIGH 	ss
-		%define REGISTER_PAIR_LOW 	bp
-
-	%elifidni %1, dx:bx
-		%define REGISTER_PAIR_HIGH 	dx
-		%define REGISTER_PAIR_LOW 	bx
-	%elifidni %1, dx:cx
-		%define REGISTER_PAIR_HIGH 	dx
-		%define REGISTER_PAIR_LOW 	bx
-	%elifidni %1, dx:si
-		%define REGISTER_PAIR_HIGH 	dx
-		%define REGISTER_PAIR_LOW 	si
-	%elifidni %1, dx:di
-		%define REGISTER_PAIR_HIGH 	dx
-		%define REGISTER_PAIR_LOW 	di
-
-	%elifidni %1, ds:ax
-		%define REGISTER_PAIR_HIGH 	ds
-		%define REGISTER_PAIR_LOW 	ax
-	%elifidni %1, ds:bx
-		%define REGISTER_PAIR_HIGH 	ds
-		%define REGISTER_PAIR_LOW 	bx
-	%elifidni %1, ds:cx
-		%define REGISTER_PAIR_HIGH 	ds
-		%define REGISTER_PAIR_LOW 	bx
-	%elifidni %1, ds:dx
-		%define REGISTER_PAIR_HIGH 	ds
-		%define REGISTER_PAIR_LOW 	dx
-	%elifidni %1, ds:di
-		%define REGISTER_PAIR_HIGH 	ds
-		%define REGISTER_PAIR_LOW 	di
-
-	%elifidni %1, es:ax
-		%define REGISTER_PAIR_HIGH 	es
-		%define REGISTER_PAIR_LOW 	ax
-	%elifidni %1, es:bx
-		%define REGISTER_PAIR_HIGH 	es
-		%define REGISTER_PAIR_LOW 	bx
-	%elifidni %1, es:cx
-		%define REGISTER_PAIR_HIGH 	es
-		%define REGISTER_PAIR_LOW 	bx
-	%elifidni %1, es:dx
-		%define REGISTER_PAIR_HIGH 	es
-		%define REGISTER_PAIR_LOW 	dx
-	%elifidni %1, es:si
-		%define REGISTER_PAIR_HIGH 	es
-		%define REGISTER_PAIR_LOW 	si
-
-	%else
-		%error Undefined register pair %1
-	%endif
-%endmacro
 ; -----------------------------------------------------------------------------
 
 %endif
