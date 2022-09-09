@@ -191,6 +191,67 @@
 	pushm   %{1:-1}
 %endmacro
 
+%imacro loddax 	0-1
+	%if %0 = 0
+		mov		ax, [si]
+		mov		dx, [si + 2]
+		add		si, 4
+	%else
+		mov		ax, [%1]
+		mov		dx, [%1 + 2]
+	%endif
+%endmacro
+
+%imacro stodax 	0-1
+	%if %0 = 0
+		mov		[es:di], ax
+		mov		[es:di + 2], dx
+		add		di, 4
+	%else
+		mov		[%1], ax
+		mov		[%1 + 2], dx
+	%endif
+%endmacro
+
+%imacro adddax 	1
+	push		cx
+	add		ax, [%1]
+	pushf
+	add		dx, [%1 + 2]
+	jc		%%Overflow
+	popf
+	jnc		%%Done
+	inc		dx
+	jmp		%%Done
+%%Overflow:
+	pop		cx
+%%Done:
+	pop		cx
+%endmacro
+
+%imacro subdax 	1
+	push		cx
+	sub		ax, [%1]
+	pushf
+	sub		dx, [%1 + 2]
+	jc		%%Overflow
+	popf
+	jnc		%%Done
+	dec		dx
+	jmp		%%Done
+%%Overflow:
+	pop		cx
+%%Done:
+	pop		cx
+%endmacro
+
+%imacro cmpdax 	1
+	cmp		dx, [%1 + 2]
+	jne		%%Done
+	cmp		ax, [%1]
+%%Done:
+%endmacro
+
 ; -----------------------------------------------------------------------------
 %imacro TempBuffer 1
 ; Include an extremely temporary application wide shared buffer of %1 bytes

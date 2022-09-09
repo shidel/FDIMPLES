@@ -52,9 +52,9 @@ HEAP_CONTROL:
 	resd 1
 .USED:  ; Current total heap memory in use
 	resd 1
-.FREE:	; Total amount of free space in heap
+.FREE:	; Total amount of heap memory free space
 	resd 1
-.MAX:	; Largest block of free space in heap
+.MAX:	; Largest free block oinside heap
 	resd 1
 
 HEAP_MEMORY_BEGIN: ; All of the heap is past here. Starts at next paragraph.
@@ -77,14 +77,34 @@ __?SECT?__
 
 %imacro HeapMemAvail 1
 	RegisterPair	%1
-	mov		REGISTER_PAIR_LOW,  [HEAP_CONTROL.FREE]
-	mov		REGISTER_PAIR_HIGH, [HEAP_CONTROL.FREE + 2]
+	mov		ax, [HEAP_CONTROL.FREE]
+	mov		dx, [HEAP_CONTROL.FREE + 2]
+%endmacro
+
+%macro HeapMaxAvail_INTERNAL 0
+
+SECTION_PROC
+
+HeapMaxAvail_PROC:
+	mov		ax, [HEAP_CONTROL.MAX]
+	mov		dx, [HEAP_CONTROL.MAX + 2]
+	ret
+
+__?SECT?__
+
 %endmacro
 
 %imacro HeapMaxAvail 1
+	PROC_REQUIRE 	HeapMaxAvail
 	RegisterPair	%1
-	mov		REGISTER_PAIR_LOW,  [HEAP_CONTROL.MAX]
-	mov		REGISTER_PAIR_HIGH, [HEAP_CONTROL.MAX + 2]
+	%ifnidni %1, dx:ax
+		RegsPreserve dx, ax
+	%endif
+	call		HeapMaxAvail_PROC
+	movndef		REGISTER_PAIR_HIGH, dx, REGISTER_PAIR_LOW,  ax
+	%ifnidni %1, dx:ax
+		RegsRestore dx, ax
+	%endif
 %endmacro
 
 %imacro HeapMemUsed 1
@@ -99,10 +119,16 @@ __?SECT?__
 	mov		REGISTER_PAIR_HIGH, [HEAP_CONTROL.PEAK + 2]
 %endmacro
 
+
 %macro HeapMemory_INTERNAL 0
+
+SECTION_PROC
+
 HeapAlloc_PROC:
 	call		HeapAdjustSize
-	jmp		OUT_OF_MEMORY
+	loddax		HEAP_CONTROL.FREE
+
+	; jmp		OUT_OF_MEMORY
 	ret
 
 HeapAdjustSize:
@@ -118,6 +144,8 @@ HeapAdjustSize:
 	mov		cx, dx
 	popm		dx, ax
 	ret
+__?SECT?__
+
 %endmacro
 
 %imacro HeapAlloc 2
@@ -152,5 +180,6 @@ HeapAdjustSize:
 
 ; *****************************************************************************
 %else
+	PROC_PROVIDE HeapMaxAvail
 	PROC_PROVIDE HeapMemory
 %endif

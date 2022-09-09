@@ -66,6 +66,8 @@ SECTION .text
 	; StdOutHexWord	ax
 	; StdOutCRLF
 
+Main:
+
 	push		cs
 	pop		dx
 	StdOutStr	'Code Segment: 0x'
@@ -126,7 +128,7 @@ StepTwo:
 StepThree:
 	StdOutCRLF
 	StdOutStr		'Peak Memory Used: '
-	;MemPeak		dx:ax
+	HeapPeakUsed		dx:ax
 	StdOutUIntDWord		dx:ax
 	StdOutCRLF
 
@@ -143,6 +145,19 @@ MemoryStatus:
 	StdOutChar		'/'
 	HeapMemUsed		dx:ax
 	StdOutUIntDWord		dx:ax
+	ret
+
+Status_DXAX:
+	pushf
+	StdOutUIntDWord 	dx:ax
+	StdOutStr 		' (0x'
+	StdOutHexDWord 		dx:ax
+	StdOutChar		')'
+	popf
+	jnc			.NotCarry
+	StdOutChar 		'+'
+.NotCarry:
+	StdOutCRLF
 	ret
 
 SECTION_MEMORY
