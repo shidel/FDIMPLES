@@ -107,7 +107,6 @@ CALC_HEAP_SETTINGS:
 STORE_HEAP_SETTINGS:
 	mov	[HEAP_CONTROL.TOP + 2], ax
 	mov	[HEAP_CONTROL.BOTTOM + 2], ax
-	mov	[HEAP_CONTROL.AVAIL + 2], ax
 	push 	cx
 	xchg	ax, cx
 	sub	ax, cx
@@ -115,15 +114,18 @@ STORE_HEAP_SETTINGS:
 	mul	cx
 	mov	[HEAP_CONTROL.FREE], ax
 	mov	[HEAP_CONTROL.FREE + 2], dx
-	mov	[HEAP_CONTROL.MAX], ax
-	mov	[HEAP_CONTROL.MAX + 2], dx
+	mov	[HEAP_CONTROL.FREETOP], ax
+	mov	[HEAP_CONTROL.FREETOP + 2], dx
 	pop	cx
 	xor	ax, ax
 	mov	[HEAP_CONTROL.TOP], ax
 	mov	[HEAP_CONTROL.BOTTOM], ax
 	mov	[HEAP_CONTROL.AVAIL], ax
+	mov	[HEAP_CONTROL.AVAIL + 2], ax
 	mov	[HEAP_CONTROL.USED], ax
 	mov	[HEAP_CONTROL.USED + 2], ax
+	mov	[HEAP_CONTROL.MAX], ax
+	mov	[HEAP_CONTROL.MAX + 2], ax
 	ret
 
 %%Configure_Heap:

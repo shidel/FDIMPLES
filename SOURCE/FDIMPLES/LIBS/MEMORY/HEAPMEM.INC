@@ -54,7 +54,9 @@ HEAP_CONTROL:
 	resd 1
 .FREE:	; Total amount of heap memory free space
 	resd 1
-.MAX:	; Largest free block oinside heap
+.MAX:	; Largest free block inside heap
+	resd 1
+.FREETOP: ; Largest free block on top  of heap
 	resd 1
 
 HEAP_MEMORY_BEGIN: ; All of the heap is past here. Starts at next paragraph.
@@ -77,8 +79,8 @@ __?SECT?__
 
 %imacro HeapMemAvail 1
 	RegisterPair	%1
-	mov		ax, [HEAP_CONTROL.FREE]
-	mov		dx, [HEAP_CONTROL.FREE + 2]
+	mov		REGISTER_PAIR_LOW, [HEAP_CONTROL.FREE]
+	mov		REGISTER_PAIR_HIGH, [HEAP_CONTROL.FREE + 2]
 %endmacro
 
 %macro HeapMaxAvail_INTERNAL 0
@@ -86,8 +88,11 @@ __?SECT?__
 SECTION_PROC
 
 HeapMaxAvail_PROC:
-	mov		ax, [HEAP_CONTROL.MAX]
-	mov		dx, [HEAP_CONTROL.MAX + 2]
+	loddax		HEAP_CONTROL.FREETOP
+	cmpdax		HEAP_CONTROL.MAX
+	ja		%%NotLargerInside
+	loddax		HEAP_CONTROL.MAX
+%%NotLargerInside:
 	ret
 
 __?SECT?__
@@ -106,6 +111,28 @@ __?SECT?__
 		RegsRestore dx, ax
 	%endif
 %endmacro
+
+%imacro resegptr 1
+	RegisterPair	%1
+	%ifnidni %1, dx:ax
+		RegsPreserve dx, ax
+		movndef	dx, REGISTER_PAIR_HIGH, ax, REGISTER_PAIR_LOW
+	%endif
+	pushm 	bx, cx
+	mov	bx, ax
+	mov	cl, 4
+	shr	ax, cl
+	add	dx, ax
+	xchg	ax, bx
+	and	ax, 0x0f
+	popm	bx, cx
+
+	%ifnidni %1, dx:ax
+		movndef	REGISTER_PAIR_HIGH, dx, REGISTER_PAIR_LOW,  ax
+		RegsRestore dx, ax
+	%endif
+%endmacro
+
 
 %imacro HeapMemUsed 1
 	RegisterPair	%1
@@ -126,19 +153,37 @@ SECTION_PROC
 HeapAlloc_PROC:
 	call		HeapAdjustSize
 
-	loddax		HEAP_CONTROL.FREE
+	loddax		HEAP_CONTROL.MAX
+	cmpdax		cx
+	jb		%%NoReuseBlock
+	; Find Block inside heap
+
+%%NoReuseBlock:
+	; Try block on top of heap
+	loddax		HEAP_CONTROL.FREETOP
 	cmpdax		cx
 	jb		OUT_OF_MEMORY
+	; Put on top of heap
+	subdax		cx
+	stodax		HEAP_CONTROL.FREETOP
+	loddax		HEAP_CONTROL.TOP
+	pushm		dx, ax
+	adddax		cx
+	resegptr	dx:ax
+	stodax		HEAP_CONTROL.TOP
 
-	; Adjust counters
+	; Adjust FREE, USED and PEAK counters
+	loddax		HEAP_CONTROL.FREE
 	subdax		cx
 	stodax		HEAP_CONTROL.FREE
 	loddax		HEAP_CONTROL.USED
 	adddax		cx
 	stodax		HEAP_CONTROL.USED
-
-	; Where to get block
-	loddax		HEAP_CONTROL.TOP
+	cmpdax		HEAP_CONTROL.PEAK
+	jbe		%%NoPeakChange
+	stodax		HEAP_CONTROL.PEAK
+%%NoPeakChange:
+	popm		dx, ax
 	ret
 
 HeapAdjustSize:
