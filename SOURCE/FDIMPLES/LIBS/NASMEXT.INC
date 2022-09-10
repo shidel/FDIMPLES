@@ -77,6 +77,7 @@
 
 ; -----------------------------------------------------------------------------
 %imacro regtype 1
+; Internal macro is to determine size (bits) of a macro register parameter.
 	%ifidni %1, ax
 		%define REGISTER_TYPE_BITS 16
 	%elifidni %1, bx
@@ -123,6 +124,7 @@
 %endmacro
 
 %imacro isregpair 1
+; Internal macro to determine individual registers of a macro register pair.
 	%ifidni %1, dx:ax
 		%define REGISTER_PAIR_HIGH 	dx
 		%define REGISTER_PAIR_LOW 	ax
@@ -343,6 +345,9 @@
 %endmacro
 
 %imacro loddax 	0-1
+; Populates the register pair dx:ax from a memory location (ds:%1). When %1 is
+; not provided, ds:si is used and si is incremented to the next location.
+; Similar to lodsb, lodsw.
 	%if %0 = 0
 		mov		ax, [si]
 		mov		dx, [si + 2]
@@ -354,6 +359,9 @@
 %endmacro
 
 %imacro stodax 	0-1
+; Stores the register pair dx:ax to a memory location (ds:%1). When %1 is not
+; provided, es:di is used and di is incremented to the next location. Similar
+; to lodsb, lodsw.
 	%if %0 = 0
 		mov		[es:di], ax
 		mov		[es:di + 2], dx
@@ -365,6 +373,8 @@
 %endmacro
 
 %imacro adddax 	1
+; Adds to register pair DX:AX by a 8/16 bit register, different register pair
+; or a dword in memory (ds:%1).
 	regtype		%1
 	isregpair	%1
 	%ifdef REGISTER_PAIR_HIGH
@@ -425,6 +435,8 @@
 %endmacro
 
 %imacro subdax 	1
+; Subtracts register pair DX:AX by a 8/16 bit register, different register pair
+; or a dword in memory (ds:%1).
 	regtype		%1
 	isregpair	%1
 	%ifdef REGISTER_PAIR_HIGH
@@ -483,7 +495,10 @@
 	%endif
 %endmacro
 
+
 %imacro cmpdax 	1
+; Compares register pair DX:AX to a 8/16 bit register, different register pair
+; or a dword in memory (ds:%1).
 	regtype		%1
 	isregpair	%1
 	%ifdef REGISTER_PAIR_HIGH

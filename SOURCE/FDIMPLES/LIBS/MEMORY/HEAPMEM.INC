@@ -119,7 +119,6 @@ __?SECT?__
 	mov		REGISTER_PAIR_HIGH, [HEAP_CONTROL.PEAK + 2]
 %endmacro
 
-
 %macro HeapMemory_INTERNAL 0
 
 SECTION_PROC
