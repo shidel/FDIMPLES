@@ -524,6 +524,28 @@
 %%Done:
 %endmacro
 
+%imacro resegptr 1
+; provided a register pair, it moves as much of the offset as possible to
+; the segment portion of the pointer.
+	RegisterPair	%1
+	%ifnidni %1, dx:ax
+		RegsPreserve dx, ax
+		movndef	dx, REGISTER_PAIR_HIGH, ax, REGISTER_PAIR_LOW
+	%endif
+	pushm 	bx, cx
+	mov	bx, ax
+	mov	cl, 4
+	shr	ax, cl
+	add	dx, ax
+	xchg	ax, bx
+	and	ax, 0x0f
+	popm	bx, cx
+	%ifnidni %1, dx:ax
+		movndef	REGISTER_PAIR_HIGH, dx, REGISTER_PAIR_LOW,  ax
+		RegsRestore dx, ax
+	%endif
+%endmacro
+
 ; -----------------------------------------------------------------------------
 %imacro TempBuffer 1
 ; Include an extremely temporary application wide shared buffer of %1 bytes

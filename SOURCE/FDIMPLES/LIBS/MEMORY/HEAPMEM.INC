@@ -112,28 +112,6 @@ __?SECT?__
 	%endif
 %endmacro
 
-%imacro resegptr 1
-	RegisterPair	%1
-	%ifnidni %1, dx:ax
-		RegsPreserve dx, ax
-		movndef	dx, REGISTER_PAIR_HIGH, ax, REGISTER_PAIR_LOW
-	%endif
-	pushm 	bx, cx
-	mov	bx, ax
-	mov	cl, 4
-	shr	ax, cl
-	add	dx, ax
-	xchg	ax, bx
-	and	ax, 0x0f
-	popm	bx, cx
-
-	%ifnidni %1, dx:ax
-		movndef	REGISTER_PAIR_HIGH, dx, REGISTER_PAIR_LOW,  ax
-		RegsRestore dx, ax
-	%endif
-%endmacro
-
-
 %imacro HeapMemUsed 1
 	RegisterPair	%1
 	mov		REGISTER_PAIR_LOW,  [HEAP_CONTROL.USED]
