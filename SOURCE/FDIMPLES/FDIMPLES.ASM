@@ -79,13 +79,13 @@ Finished:
 	call			ResetDisplay
 
 	%ifdef Stack_Overflow_Check
-		WriteStr		'Peak Stack Used: '
+		WriteStr		'Peak stack usage: '
 		StackPeak		ax
 		WriteUIntWord		ax
 		WriteCRLF
-		WriteStr		'Peak RAM Used: '
-		StackPeak		ax
-		WriteUIntWord		ax
+		WriteStr		'Peak heap usage: '
+		HeapPeakUsed		dx:ax
+		WriteUIntDWord		dx:ax
 		WriteCRLF
 	%endif
 
