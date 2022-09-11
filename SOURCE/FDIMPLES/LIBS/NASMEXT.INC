@@ -344,6 +344,42 @@
 	pushm   %{1:-1}
 %endmacro
 
+%imacro lodreg 1
+	regtype		%1
+	isregpair	%1
+	%ifdef REGISTER_PAIR_HIGH
+		mov	REGISTER_PAIR_LOW, [si]
+		mov	REGISTER_PAIR_LOW, [si + 2]
+		add	si, 4
+	%elif REGISTER_TYPE_BITS = 16
+		mov	%1, [si]
+		add	si, 2
+	%elif REGISTER_TYPE_BITS = 8
+		mov	%1, [si]
+		inc	si
+	%else
+		%error invalid load register
+	%endif
+%endmacro
+
+%imacro storeg 1
+	regtype		%1
+	isregpair	%1
+	%ifdef REGISTER_PAIR_HIGH
+		mov	[es:di], REGISTER_PAIR_LOW
+		mov	[es:di + 2], REGISTER_PAIR_LOW
+		add	di, 4
+	%elif REGISTER_TYPE_BITS = 16
+		mov	[es:di], %1
+		add	di, 2
+	%elif REGISTER_TYPE_BITS = 8
+		mov	[es:di], %1
+		inc	di
+	%else
+		%error invalid load register
+	%endif
+%endmacro
+
 %imacro loddax 	0-1
 ; Populates the register pair dx:ax from a memory location (ds:%1). When %1 is
 ; not provided, ds:si is used and si is incremented to the next location.
@@ -527,6 +563,8 @@
 %imacro resegptr 1
 ; provided a register pair, it moves as much of the offset as possible to
 ; the segment portion of the pointer.
+	; debugchar '('
+	; debughexword dx, ax
 	RegisterPair	%1
 	%ifnidni %1, dx:ax
 		RegsPreserve dx, ax
@@ -544,6 +582,10 @@
 		movndef	REGISTER_PAIR_HIGH, dx, REGISTER_PAIR_LOW,  ax
 		RegsRestore dx, ax
 	%endif
+	;debugchar '>'
+	;debughexword dx, ax
+
+	; debugchar ')'
 %endmacro
 
 ; -----------------------------------------------------------------------------

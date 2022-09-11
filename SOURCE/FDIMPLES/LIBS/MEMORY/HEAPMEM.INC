@@ -135,7 +135,7 @@ HeapAlloc_PROC:
 	cmpdax		cx
 	jb		%%NoReuseBlock
 	; Find Block inside heap
-
+	ret
 %%NoReuseBlock:
 	; Try block on top of heap
 	loddax		HEAP_CONTROL.FREETOP
@@ -147,7 +147,6 @@ HeapAlloc_PROC:
 	loddax		HEAP_CONTROL.TOP
 	pushm		dx, ax
 	adddax		cx
-	resegptr	dx:ax
 	stodax		HEAP_CONTROL.TOP
 
 	; Adjust FREE, USED and PEAK counters
@@ -161,7 +160,8 @@ HeapAlloc_PROC:
 	jbe		%%NoPeakChange
 	stodax		HEAP_CONTROL.PEAK
 %%NoPeakChange:
-	popm		dx, ax
+	popm		dx,ax
+	resegptr	dx:ax
 	ret
 
 HeapAdjustSize:
@@ -194,6 +194,7 @@ __?SECT?__
 		RegsPreserve	dx, ax
 	%endif
 	call		HeapAlloc_PROC
+
 	movndef		REGISTER_PAIR_LOW,  ax,	REGISTER_PAIR_HIGH, dx
 	%ifnidni %1, dx:ax
 		RegsRestore	dx, ax

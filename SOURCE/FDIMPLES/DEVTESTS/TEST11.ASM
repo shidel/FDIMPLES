@@ -60,10 +60,23 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-	Memory			1, 16	; Stack 4k, Minimum Heap 16k
+	Memory			2, 16	; Stack 4k, Minimum Heap 16k
+
+	StdOutHexWord		sp
+	StdOutCRLF
+
+%idefine MAX_PTRS 256
+
+	xor 	ax, ax
+	mov	cx, MAX_PTRS * 3
+	cld
+	mov	di, Ptrs
+	mov	si, di
+	push	di
+	rep 	stosw
+	pop	di
 
 Main:
-
 	push		cs
 	pop		dx
 	StdOutStr	'Code Segment: 0x'
@@ -85,40 +98,24 @@ Main:
 	StdOutCRLF
 	StdOutCRLF
 
-	xor 	ax, ax
-	pushm   ax,ax
 	mov	cx, 5
 StepOne:
-	call			MemoryStatus
-	StdOutStr		' -> '
 	mov			bx, cx
 	add			bx, cx
 	add			bx, cx
 	add			bx, cx
 	add			bx, cx
-	HeapAlloc		dx:ax, bx
-	StdOutHexWord		dx
-	StdOutChar		':'
-	StdOutHexWord		ax
-	StdOutChar		'?'
-	StdOutHexWord		bx
-	StdOutCRLF
-	push	bx
-	pushm	dx,ax
+	call			AllocBlock
+	stodax
+	storeg			bx
 	loop			StepOne
 
 StepTwo:
-	popm    		dx, ax
+	loddax
+	lodreg			bx
 	test 			dx, dx
 	jz			StepThree
-	pop			cx
-	StdOutHexWord		dx
-	StdOutChar		':'
-	StdOutHexWord		ax
-	StdOutStr		' -> '
-	HeapRelease		dx:ax, cx
-	call			MemoryStatus
-	StdOutCRLF
+	call			FreeBlock
 	jmp			StepTwo
 
 StepThree:
@@ -127,11 +124,38 @@ StepThree:
 	HeapPeakUsed		dx:ax
 	StdOutUIntDWord		dx:ax
 	StdOutCRLF
+	StdOutHexWord		sp
+	StdOutCRLF
 
 Finished:
 	Terminate		0 ; Automatically includes used LIB functions
 
+AllocBlock:
+	HeapAlloc		dx:ax, bx
+	call			MemoryStatus
+	StdOutStr		' -> '
+	call			Ptr_Status
+	StdOutCRLF
+	ret
+
+FreeBlock:
+	call			Ptr_Status
+	StdOutStr		' -> '
+	HeapRelease		dx:ax, bx
+	call			MemoryStatus
+	StdOutCRLF
+	ret
+
+Ptr_Status:
+	StdOutHexWord		dx
+	StdOutChar		':'
+	StdOutHexWord		ax
+	StdOutChar		'+'
+	StdOutHexWord		bx
+	ret
+
 MemoryStatus:
+	pushm			dx,ax
 	StdOutStr		'Memory: '
 	HeapMaxAvail		dx:ax
 	StdOutUIntDWord		dx:ax
@@ -141,6 +165,7 @@ MemoryStatus:
 	StdOutChar		'/'
 	HeapMemUsed		dx:ax
 	StdOutUIntDWord		dx:ax
+	popm			dx,ax
 	ret
 
 Status_DXAX:
@@ -155,6 +180,11 @@ Status_DXAX:
 .NotCarry:
 	StdOutCRLF
 	ret
+
+SECTION_BSS
+
+Ptrs:
+	resq MAX_PTRS
 
 SECTION_MEMORY
 
