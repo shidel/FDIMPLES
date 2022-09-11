@@ -588,6 +588,15 @@
 	; debugchar ')'
 %endmacro
 
+%imacro moves 1
+	push	%1
+	pop	es
+%endmacro
+
+%imacro movds 1
+	push	%1
+	pop	ds
+%endmacro
 ; -----------------------------------------------------------------------------
 %imacro TempBuffer 1
 ; Include an extremely temporary application wide shared buffer of %1 bytes
@@ -1038,6 +1047,19 @@ DebugRegisters_PROC:
 
 %%Over:
 	call	DebugRegisters_PROC
+%endmacro
+
+%imacro DebugPointer 1-2
+	%if %0 = 2
+		DebugHexWord %1
+		DebugChar    ':'
+		DebugHexWord %2
+	%else
+		RegisterPair %1
+		DebugHexWord REGISTER_PAIR_HIGH
+		DebugChar    ':'
+		DebugHexWord REGISTER_PAIR_LOW
+	%endif
 %endmacro
 
 ; -----------------------------------------------------------------------------

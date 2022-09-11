@@ -41,7 +41,7 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-; %undef Preserve_Registers	; disable preserving registers in macros
+%undef Preserve_Registers	; disable preserving registers in macros
 ; %undef DOS_BUG_FIXES		; keep some fixes for various DOS and BIOS bugs
 %undef DOSCRT_Range_Check	; disable out of bounds coordinate checking
 ; %undef Stack_Overflow_Check
@@ -100,6 +100,8 @@ ResetDisplay:
 	ClrScr
 	ret
 
+	DebugPointer dx:ax
+
 DrawMainWindow:
 ; Draws the title bar and framing. Also clears the statusbar, group, item list
 ; and data windows.
@@ -118,6 +120,7 @@ DrawMainWindow:
 	shr			ax, 1
 	RelativeX		ax
 	TextAttr		[Theme_ProgLongName]
+	; DebugPointer		es, Text_ProgLong
 	WriteStr		Text_ProgLong
 	RelativeX		+1
 	TextAttr		[Theme_ProgVersion]
@@ -163,6 +166,7 @@ DrawMainWindow:
 	ret
 
 CalculateScreenPositions:
+	moves			cs ; Set ES to CS for hard-coded program strings
 ; Needs called at startup and when/if resolution is changed.
 	Window			max
 	WindMin			ax
@@ -344,10 +348,9 @@ ProbeModes:
 	Terminate		0
 
 
-
 SECTION_DATA
 
-; Hard coded text
+; Hard coded program text strings
 Text_ProgLong:		db 'FreeDOS Installer - My Package List Editor Software',0
 Text_ProgShort: 	db 'FDIMPLES',0
 Text_ProgVersion:	db '1.0.0',0

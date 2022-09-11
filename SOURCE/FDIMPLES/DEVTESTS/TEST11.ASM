@@ -41,12 +41,12 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-; %undef Preserve_Registers
+%undef Preserve_Registers
 ; %undef DOS_BUG_FIXES
 ; %undef DOSCRT_Range_Check
 ; %undef Stack_Overflow_Check
 ; %undef Support_BIOS_Timer
-%undef Support_BIOS_Video
+;%undef Support_BIOS_Video
 %undef Support_Direct_Video
 %undef Support_Mouse
 %undef Video_MCGA
