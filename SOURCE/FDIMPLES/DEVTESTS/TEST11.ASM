@@ -41,7 +41,7 @@ SECTION .text
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers
+; %undef Preserve_Registers
 ; %undef DOS_BUG_FIXES
 ; %undef DOSCRT_Range_Check
 ; %undef Stack_Overflow_Check
@@ -105,9 +105,9 @@ StepOne:
 	add			bx, cx
 	add			bx, cx
 	add			bx, cx
+	push			cx
 	call			AllocBlock
-	stodax
-	storeg			bx
+	pop			cx
 	loop			StepOne
 
 StepTwo:
@@ -132,8 +132,12 @@ Finished:
 
 AllocBlock:
 	HeapAlloc		dx:ax, bx
+	stodax
+	storeg			bx
 	call			MemoryStatus
+	pushm			dx, ax, bx
 	StdOutStr		' -> '
+	popm			dx, ax, bx
 	call			Ptr_Status
 	StdOutCRLF
 	ret
@@ -147,8 +151,10 @@ FreeBlock:
 	ret
 
 Ptr_Status:
+	push			ax
 	StdOutHexWord		dx
 	StdOutChar		':'
+	pop			ax
 	StdOutHexWord		ax
 	StdOutChar		'+'
 	StdOutHexWord		bx
