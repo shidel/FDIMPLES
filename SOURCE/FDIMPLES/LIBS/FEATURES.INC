@@ -56,6 +56,12 @@
 ; Include Stack overflow checks
 %define Stack_Overflow_Check
 
+; Check pointers passed to macros are valid and not null. Mostly this check
+; is for validating heap pointers. Please note that when this is enabled,
+; passing a pointer with segment 0000 will result in "invalid pointer" error
+; and the program will abort.
+%define Valid_Pointer_Check
+
 ; Include support for additional Interrupt based timer. Disabling this can save
 ; a few bytes. It will then always use system TimerTicks and accuracy will be
 ; +/- 55ms.

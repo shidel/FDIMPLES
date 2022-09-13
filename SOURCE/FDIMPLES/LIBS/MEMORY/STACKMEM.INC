@@ -84,7 +84,7 @@ StackCheck_PROC:
 	ret
 %%Stack_Overflow:
 	mov	sp, STACK_MEMORY_END
-	Die 	0xca, '!! STACK OVERFLOW ERROR !!'
+	Die 	0xca, '!! STACK OVERFLOW ERROR !!' ; same as PASCAL error 202
 
 __?SECT?__
 

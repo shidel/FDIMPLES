@@ -65,10 +65,10 @@ SECTION .text
 	StdOutHexWord		sp
 	StdOutCRLF
 
-%idefine MAX_PTRS 256
+%idefine MAX_PTRS 3 ;  4096
 
 	xor 	ax, ax
-	mov	cx, MAX_PTRS * 3
+	mov	cx, (MAX_PTRS + 1) * 3
 	cld
 	mov	di, Ptrs
 	mov	si, di
@@ -98,13 +98,14 @@ Main:
 	StdOutCRLF
 	StdOutCRLF
 
-	mov	cx, 5
+	mov	cx, MAX_PTRS
 StepOne:
-	mov			bx, cx
-	add			bx, cx
-	add			bx, cx
-	add			bx, cx
-	add			bx, cx
+	mov			bx, 1
+	; mov			bx, cx
+	; add			bx, cx
+	;add			bx, cx
+	;add			bx, cx
+	;add			bx, cx
 	push			cx
 	call			AllocBlock
 	pop			cx
@@ -140,9 +141,11 @@ AllocBlock:
 	popm			dx, ax, bx
 	call			Ptr_Status
 	StdOutCRLF
+	DebugHeapPtrs
 	ret
 
 FreeBlock:
+	inc			ax
 	call			Ptr_Status
 	StdOutStr		' -> '
 	HeapRelease		dx:ax, bx
@@ -190,7 +193,7 @@ Status_DXAX:
 SECTION_BSS
 
 Ptrs:
-	resq MAX_PTRS
+	resq MAX_PTRS + 1
 
 SECTION_MEMORY
 

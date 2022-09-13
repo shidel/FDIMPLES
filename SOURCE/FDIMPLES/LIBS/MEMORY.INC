@@ -86,8 +86,16 @@ SECTION_HEAP
 	ja	%%Configure_Heap
 
 	; Not enough memory then die
+	mov	al, 0x08 ; same as DOS ERROR 8, out of memory
+	jmp	OUT_OF_MEMORY_AL
 OUT_OF_MEMORY:
-	Die 	0xca, 'insufficient memory'
+	mov	al, 0xcb ; same as PASCAL error 203 - heap overflow
+OUT_OF_MEMORY_AL:
+	Die 	al, 'insufficient memory'
+%ifdef Valid_Pointer_Check
+INVALID_POINTER:
+	Die	0xcc, 'invalid pointer operation' ; same as PASCAL error 204
+%endif
 
 CALC_HEAP_SETTINGS:
 	; figure out segment of HEAP
@@ -120,12 +128,12 @@ STORE_HEAP_SETTINGS:
 	xor	ax, ax
 	mov	[HEAP_CONTROL.TOP], ax
 	mov	[HEAP_CONTROL.BOTTOM], ax
-	mov	[HEAP_CONTROL.AVAIL], ax
-	mov	[HEAP_CONTROL.AVAIL + 2], ax
+	mov	[HEAP_CONTROL.FIRST], ax
+	mov	[HEAP_CONTROL.FIRST + 2], ax
 	mov	[HEAP_CONTROL.USED], ax
 	mov	[HEAP_CONTROL.USED + 2], ax
-	mov	[HEAP_CONTROL.MAX], ax
-	mov	[HEAP_CONTROL.MAX + 2], ax
+	mov	[HEAP_CONTROL.FREEBLK], ax
+	mov	[HEAP_CONTROL.FREEBLK + 2], ax
 	ret
 
 %%Configure_Heap:
@@ -153,6 +161,29 @@ STORE_HEAP_SETTINGS:
 	%else
 		%undef STACK_OVERFLOW_TESTING
 	%endif
+%endmacro
+
+%imacro ValidatePointer 1
+%ifdef Valid_Pointer_Check
+	isregpair %1
+	%ifnidni %1, dx:ax
+		pushm dx, ax
+	%endif
+	%ifdef REGISTER_PAIR_HIGH
+		movndef dx, REGISTER_PAIR_HIGH, ax, REGISTER_PAIR_LOW
+	%else
+		mov dx, [%1 + 2]
+		mov ax, [%1]
+	%endif
+	test	dx, dx
+	jz	INVALID_POINTER
+	mov	dx, - HEAP_BLOCK_SIZE
+	test	ax, dx
+	jnz	INVALID_POINTER
+	%ifnidni %1, dx:ax
+		popm dx, ax
+	%endif
+%endif
 %endmacro
 ; -----------------------------------------------------------------------------
 %else

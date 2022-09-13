@@ -1055,10 +1055,16 @@ DebugRegisters_PROC:
 		DebugChar    ':'
 		DebugHexWord %2
 	%else
-		RegisterPair %1
-		DebugHexWord REGISTER_PAIR_HIGH
-		DebugChar    ':'
-		DebugHexWord REGISTER_PAIR_LOW
+		isregpair %1
+		%ifdef REGISTER_PAIR_HIGH
+			DebugHexWord REGISTER_PAIR_HIGH
+			DebugChar    ':'
+			DebugHexWord REGISTER_PAIR_LOW
+		%else
+			DebugHexWord [%1 + 2]
+			DebugChar    ':'
+			DebugHexWord [%1]
+		%endif
 	%endif
 %endmacro
 

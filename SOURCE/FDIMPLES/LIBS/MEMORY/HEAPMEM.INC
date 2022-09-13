@@ -46,7 +46,7 @@ HEAP_CONTROL:
 	resd 1
 .TOP:	; Pointer to first free block above allocated space
 	resd 1
-.AVAIL:	; Pointer to next free block
+.FIRST:	; Pointer to first free block
 	resd 1
 .PEAK:	; Max amount of used heap during program execution
 	resd 1
@@ -54,7 +54,7 @@ HEAP_CONTROL:
 	resd 1
 .FREE:	; Total amount of heap memory free space
 	resd 1
-.MAX:	; Largest free block inside heap
+.FREEBLK:	; Largest free block inside heap
 	resd 1
 .FREETOP: ; Largest free block on top  of heap
 	resd 1
@@ -64,6 +64,40 @@ HEAP_MEMORY_BEGIN: ; All of the heap is past here. Starts at next paragraph.
 
 __?SECT?__
 
+%endmacro
+
+%macro DebugHeapPtrs_INTERNAL 0
+
+SECTION_PROC
+
+DebugHeapPtrs_PROC:
+	DebugText	'LIMIT: '
+	DebugPointer	HEAP_CONTROL.TOP
+	DebugText	'  TOP:    '
+	DebugPointer	HEAP_CONTROL.TOP
+	DebugText	'  FREE TOP: 0x'
+	DebugHexWord	[HEAP_CONTROL.FREETOP + 2]
+	DebugHexWord	[HEAP_CONTROL.FREETOP]
+	DebugCRLF
+	DebugText	'BASE:  '
+	DebugPointer	cs,HEAP_MEMORY_BEGIN
+	DebugText	'  BOTTOM: '
+	DebugPointer	HEAP_CONTROL.BOTTOM
+	DebugText	'  FREE BLK: 0x'
+	DebugHexWord	[HEAP_CONTROL.FREEBLK + 2]
+	DebugHexWord	[HEAP_CONTROL.FREEBLK]
+	DebugText	'  FIRST: '
+	DebugPointer	HEAP_CONTROL.FIRST
+	DebugCRLF
+	ret
+
+__?SECT?__
+
+%endmacro
+
+%imacro DebugHeapPtrs 0
+	PROC_REQUIRE DebugHeapPtrs
+	call 	DebugHeapPtrs_PROC
 %endmacro
 
 %imacro RESET_HEAP 0
@@ -89,9 +123,9 @@ SECTION_PROC
 
 HeapMaxAvail_PROC:
 	loddax		HEAP_CONTROL.FREETOP
-	cmpdax		HEAP_CONTROL.MAX
+	cmpdax		HEAP_CONTROL.FREEBLK
 	ja		%%NotLargerInside
-	loddax		HEAP_CONTROL.MAX
+	loddax		HEAP_CONTROL.FREEBLK
 %%NotLargerInside:
 	ret
 
@@ -129,9 +163,10 @@ __?SECT?__
 SECTION_PROC
 
 HeapAlloc_PROC:
-	call		HeapAdjustSize
+	; in cx is size, out dx:ax is pointer
+	call		BlockAdjustSize
 
-	loddax		HEAP_CONTROL.MAX
+	loddax		HEAP_CONTROL.FREEBLK
 	cmpdax		cx
 	jb		%%NoReuseBlock
 	; Find Block inside heap
@@ -164,7 +199,15 @@ HeapAlloc_PROC:
 	resegptr	dx:ax
 	ret
 
-HeapAdjustSize:
+HeapRelease_PROC:
+	; in cx is size, out dx:ax is null pointer
+	ValidatePointer dx:ax
+	call		BlockAdjustSize
+	ret
+
+BlockAdjustSize:
+	; in cx is requested bytes, out cx is bytes required that is rounded up
+	; by HEAP_BLOCK_SIZE. )
 	pushm		dx, ax
 	mov		ax, - HEAP_BLOCK_SIZE
 	mov		dx, cx
@@ -207,13 +250,29 @@ __?SECT?__
 %imacro HeapRelease 2
 	PROC_REQUIRE HeapMemory
 	RegisterPair	%1
-	movndef		REGISTER_PAIR_LOW,  [HEAP_CONTROL.PEAK]
-	movndef		REGISTER_PAIR_HIGH, [HEAP_CONTROL.PEAK + 2]
+	%ifnidni %2, cx
+		RegsPreserve	cx
+		mov	cx, %2
+	%endif
+	RegisterPair	%1
+	%ifnidni %1, dx:ax
+		RegsPreserve	dx, ax
+	%endif
+	call		HeapRelease_PROC
+
+	movndef		REGISTER_PAIR_LOW,  ax,	REGISTER_PAIR_HIGH, dx
+	%ifnidni %1, dx:ax
+		RegsRestore	dx, ax
+	%endif
+	%ifnidni %2, cx
+		RegsRestore	cx
+	%endif
 %endmacro
 
 
 ; *****************************************************************************
 %else
+	PROC_PROVIDE DebugHeapPtrs
 	PROC_PROVIDE HeapMaxAvail
 	PROC_PROVIDE HeapMemory
 %endif
