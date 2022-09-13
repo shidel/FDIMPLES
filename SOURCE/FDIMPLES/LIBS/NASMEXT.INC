@@ -538,7 +538,19 @@
 	regtype		%1
 	isregpair	%1
 	%ifdef REGISTER_PAIR_HIGH
-		cmp		dx, REGISTER_PAIR_HIGH
+		%if REGISTER_PAIR_HIGH = es
+			push ax
+			mov  ax, es
+			cmp  dx, ax
+			pop  ax
+		%elif REGISTER_PAIR_HIGH = ds
+			push ax
+			mov  ax, ds
+			cmp  dx, ax
+			pop  ax
+		%else
+			cmp		dx, REGISTER_PAIR_HIGH
+		%endif
 		jne		%%Done
 		cmp		ax, REGISTER_PAIR_LOW
 	%elif REGISTER_TYPE_BITS = 0
@@ -596,6 +608,142 @@
 %imacro movds 1
 	push	%1
 	pop	ds
+%endmacro
+
+%imacro testes 1
+	%ifidni 1, ax
+		push bx
+		mov  bx, es
+		test bx, ax
+		pop  bx
+	%elifidni %1, es
+		push ax
+		mov  ax, es
+		test ax, ax
+		pop  ax
+	%else
+		push ax
+		mov  ax, es
+		%ifnidni %1, bx
+			push bx
+			mov  bx, %1
+		%endif
+		test ax, bx
+		%ifnidni %1, bx
+			pop  bx
+		%endif
+		pop  ax
+	%endif
+%endmacro
+
+%imacro testds 1
+	%ifidni 1, ax
+		push bx
+		mov  bx, ds
+		test bx, ax
+		pop  bx
+	%elifidni %1, ds
+		push ax
+		mov  ax, ds
+		test ax, ax
+		pop  ax
+	%else
+		push ax
+		mov  ax, ds
+		%ifnidni %1, bx
+			push bx
+			mov  bx, %1
+		%endif
+		test ax, bx
+		%ifnidni %1, bx
+			pop  bx
+		%endif
+		pop  ax
+	%endif
+%endmacro
+
+%imacro cmpes 1
+	%ifidni 1, ax
+		push bx
+		mov  bx, es
+		cmp bx, ax
+		pop  bx
+	%elifidni %1, es
+		push ax
+		mov  ax, es
+		cmp ax, ax
+		pop  ax
+	%else
+		push ax
+		mov  ax, es
+		%ifnidni %1, bx
+			push bx
+			mov  bx, %1
+		%endif
+		cmp ax, bx
+		%ifnidni %1, bx
+			pop  bx
+		%endif
+		pop  ax
+	%endif
+%endmacro
+
+%imacro cmpds 1
+	%ifidni 1, ax
+		push bx
+		mov  bx, ds
+		cmp bx, ax
+		pop  bx
+	%elifidni %1, ds
+		push ax
+		mov  ax, ds
+		cmp ax, ax
+		pop  ax
+	%else
+		push ax
+		mov  ax, ds
+		%ifnidni %1, bx
+			push bx
+			mov  bx, %1
+		%endif
+		cmp ax, bx
+		%ifnidni %1, bx
+			pop  bx
+		%endif
+		pop  ax
+	%endif
+%endmacro
+
+%imacro xchges 1
+	%ifidni %1, ds
+		push ax
+		push ds
+		mov  ax, es
+		push ax
+		pop  ds
+		pop  es
+		pop  ax
+	%else
+		push %1
+		mov  %1, es
+		pop  es
+	%endif
+%endmacro
+
+%imacro xchgds 1
+	%ifidni %1, es
+		push ax
+		push es
+		mov  ax, ds
+		push ax
+		pop  es
+		pop  ds
+		pop  ax
+	%else
+		push %1
+		mov  %1, ds
+		pop  ds
+	%endif
 %endmacro
 ; -----------------------------------------------------------------------------
 %imacro TempBuffer 1

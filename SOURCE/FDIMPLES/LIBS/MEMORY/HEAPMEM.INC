@@ -196,13 +196,68 @@ HeapAlloc_PROC:
 	stodax		HEAP_CONTROL.PEAK
 %%NoPeakChange:
 	popm		dx,ax
+	; Adjust pointer SEG:OFS to lowest OFS from a SEG
 	resegptr	dx:ax
 	ret
 
 HeapRelease_PROC:
+	; Assumption no pointers in heap can live at segment 0.
 	; in cx is size, out dx:ax is null pointer
+	pushm		es,di,bx,si
 	ValidatePointer dx:ax
 	call		BlockAdjustSize
+	xor		bx, bx
+	mov		si, bx				; Prev free block null
+	les		di, [HEAP_CONTROL.FIRST]	; load first free block
+%%FindHeapSlot:
+	; Search chain for previous and next blocks
+	cmpdax		es:di
+	ja		%%FindSlotFound
+	mov		bx, es
+	mov		si, di
+	les		di, [es:di]
+	jmp		%%FindHeapSlot
+%%FindSlotFound:
+	; bx:si = prev block or null
+	; dx:ax = block to free, cx = block size
+	; es:di = next block or null
+	DebugChar	'P'
+	DebugPointer	bx:si
+	DebugChar	',','N'
+	DebugPointer	es:di
+	DebugChar	'>'
+
+	cld
+	; store next block pointer and block size in block to free
+	xchges		dx
+	xchg		di, ax			; swap es:di and dx:ax
+	push		di
+	stodax					; save next block pointer
+	storeg		cx			; save block size
+	pop		di			; es:di is block to free
+
+	xchges		bx
+	xchg		si, di			; swap es:di and bx:si
+	testes		es			; is previous block NULL ?
+	jz		%%IsFirstBlock		; then don't set a pointer
+	DebugText	'NF,'
+	mov		[es:di], si
+	mov		[es:di + 2], bx		; save block ptr in previous
+						; es:di points to first block
+	jmp		%%FindChainEnd
+%%IsFirstBlock:
+	DebugText	'FB,'
+	mov		[HEAP_CONTROL.FIRST+ 2], bx
+	mov		[HEAP_CONTROL.FIRST], si
+
+%%FindChainEnd:
+
+
+%%HeapFreeDone:
+	DebugChar	'!', ' '
+	xor		dx, dx
+	xor		ax, ax
+	popm		es,di,bx,si
 	ret
 
 BlockAdjustSize:
@@ -268,8 +323,6 @@ __?SECT?__
 		RegsRestore	cx
 	%endif
 %endmacro
-
-
 ; *****************************************************************************
 %else
 	PROC_PROVIDE DebugHeapPtrs

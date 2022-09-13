@@ -110,6 +110,7 @@ StepOne:
 	call			AllocBlock
 	pop			cx
 	loop			StepOne
+	DebugHeapPtrs
 
 StepTwo:
 	loddax
@@ -141,18 +142,18 @@ AllocBlock:
 	popm			dx, ax, bx
 	call			Ptr_Status
 	StdOutCRLF
-	DebugHeapPtrs
 	ret
 
 FreeBlock:
 	call			Ptr_Status
-	StdOutStr		' -> '
+	StdOutStr		' ? '
 	HeapRelease		dx:ax, bx
 	call			MemoryStatus
 	StdOutCRLF
 	ret
 
 Ptr_Status:
+	push			dx
 	push			ax
 	StdOutHexWord		dx
 	StdOutChar		':'
@@ -160,6 +161,7 @@ Ptr_Status:
 	StdOutHexWord		ax
 	StdOutChar		'+'
 	StdOutHexWord		bx
+	pop			dx
 	ret
 
 MemoryStatus:
