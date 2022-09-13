@@ -666,12 +666,12 @@
 	%ifidni 1, ax
 		push bx
 		mov  bx, es
-		cmp bx, ax
+		cmp  bx, ax
 		pop  bx
 	%elifidni %1, es
 		push ax
 		mov  ax, es
-		cmp ax, ax
+		cmp  ax, ax
 		pop  ax
 	%else
 		push ax
@@ -692,12 +692,12 @@
 	%ifidni 1, ax
 		push bx
 		mov  bx, ds
-		cmp bx, ax
+		cmp  bx, ax
 		pop  bx
 	%elifidni %1, ds
 		push ax
 		mov  ax, ds
-		cmp ax, ax
+		cmp  ax, ax
 		pop  ax
 	%else
 		push ax
@@ -1124,46 +1124,27 @@ DebugCRLF_PROC:
 
 %imacro DebugText 1
 
-%ifndef DebugText_DEFINED
-	%define  DebugText_DEFINED
-	jmp	%%Over
-DebugText_PROC:
 	pushf
-	cld
-	pushm 		ds, ax, dx
-	push 		cs
-	pop		ds
+	pushm 		ax, dx, si
+	mov		si, %%str
 	mov		ah, 0x02
 %%Display:
-	lodsb
-	test		al, al
+	mov		dl, [cs:si]
+	inc		si
+	test		dl, dl
 	jz		%%Done
-	mov		dl, al
 	int		0x21
 	jmp		%%Display
 %%Done:
-	popm		ds, ax, dx
+	popm		ax, dx, si
 	popf
-	ret
+	jmp		%%Over
 
-%endif
-
-SECTION_DATA
-
-	%ifstr %1
-
-	%%str:
-		db		%1
-		db		0
-	%endif
-
-__?SECT?__
+%%str:
+	db		%1
+	db		0
 
 %%Over:
-	push		si
-	mov		si, %%str
-	call		DebugText_PROC
-	pop		si
 %endmacro
 
 %imacro DebugRegisters 0-*

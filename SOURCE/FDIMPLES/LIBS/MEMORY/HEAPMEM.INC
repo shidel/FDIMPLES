@@ -211,8 +211,14 @@ HeapRelease_PROC:
 	les		di, [HEAP_CONTROL.FIRST]	; load first free block
 %%FindHeapSlot:
 	; Search chain for previous and next blocks
+	DebugChar	' ', '?', ' '
+	DebugPointer	bx:si
+	DebugChar	'/'
+	DebugPointer	es:di
+	testes		es
+	jz		%%FindSlotFound
 	cmpdax		es:di
-	ja		%%FindSlotFound
+	jb		%%FindSlotFound
 	mov		bx, es
 	mov		si, di
 	les		di, [es:di]
@@ -221,7 +227,7 @@ HeapRelease_PROC:
 	; bx:si = prev block or null
 	; dx:ax = block to free, cx = block size
 	; es:di = next block or null
-	DebugChar	'P'
+	DebugChar	' ', '=', ' ', 'P'
 	DebugPointer	bx:si
 	DebugChar	',','N'
 	DebugPointer	es:di
@@ -232,21 +238,40 @@ HeapRelease_PROC:
 	xchges		dx
 	xchg		di, ax			; swap es:di and dx:ax
 	push		di
+
+	DebugText	'(BLK,'
+	DebugPointer	es:di
+	DebugChar	'='
+	DebugPointer	bx:si
+	DebugChar	')', '['
 	stodax					; save next block pointer
+	DebugPointer	es:di
+	DebugChar	'='
+	DebugHexWord	cx
+	DebugChar	']'
 	storeg		cx			; save block size
 	pop		di			; es:di is block to free
+	DebugCRLF
 
 	xchges		bx
 	xchg		si, di			; swap es:di and bx:si
 	testes		es			; is previous block NULL ?
 	jz		%%IsFirstBlock		; then don't set a pointer
-	DebugText	'NF,'
+	DebugText	'NF,('
+	DebugPointer	es:di
+	DebugChar	'='
+	DebugPointer	bx:si
+	DebugChar	')',' '
+
+
 	mov		[es:di], si
 	mov		[es:di + 2], bx		; save block ptr in previous
 						; es:di points to first block
 	jmp		%%FindChainEnd
 %%IsFirstBlock:
-	DebugText	'FB,'
+	DebugText	'FB,('
+	DebugPointer	bx:si
+	DebugChar	')'
 	mov		[HEAP_CONTROL.FIRST+ 2], bx
 	mov		[HEAP_CONTROL.FIRST], si
 

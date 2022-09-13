@@ -149,7 +149,7 @@ FreeBlock:
 	StdOutStr		' ? '
 	HeapRelease		dx:ax, bx
 	call			MemoryStatus
-	StdOutCRLF
+	StdOutCRLF		2
 	ret
 
 Ptr_Status:
