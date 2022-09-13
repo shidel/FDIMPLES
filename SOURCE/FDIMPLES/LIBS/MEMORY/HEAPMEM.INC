@@ -56,7 +56,7 @@ HEAP_CONTROL:
 	resd 1
 .FREEBLK:	; Largest free block inside heap
 	resd 1
-.FREETOP: ; Largest free block on top  of heap
+.FREETOP: ; Largest free block on top of heap
 	resd 1
 
 HEAP_MEMORY_BEGIN: ; All of the heap is past here. Starts at next paragraph.
@@ -266,10 +266,13 @@ HeapRelease_PROC:
 	DebugPointer	bx:si
 	DebugChar	')',' '
 
-
 	mov		[es:di], si
 	mov		[es:di + 2], bx		; save block ptr in previous
 						; es:di points to first block
+	loddax		HEAP_CONTROL.FREEBLK
+	cmpdax		cx
+	jae		%%FindChainEnd
+	mov		[HEAP_CONTROL.FREEBLK], cx ; HIGH must be zero already
 	jmp		%%FindChainEnd
 %%IsFirstBlock:
 	DebugText	'FB,('
@@ -279,6 +282,13 @@ HeapRelease_PROC:
 	mov		[HEAP_CONTROL.FIRST], si
 
 %%FindChainEnd:
+
+	loddax		HEAP_CONTROL.USED
+	subdax		cx
+	stodax		HEAP_CONTROL.USED
+	loddax		HEAP_CONTROL.FREE
+	adddax		cx
+	stodax		HEAP_CONTROL.FREE
 
 
 %%HeapFreeDone:

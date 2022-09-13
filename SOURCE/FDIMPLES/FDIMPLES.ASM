@@ -41,7 +41,7 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
-%undef Preserve_Registers	; disable preserving registers in macros
+; %undef Preserve_Registers	; disable preserving registers in macros
 ; %undef DOS_BUG_FIXES		; keep some fixes for various DOS and BIOS bugs
 %undef DOSCRT_Range_Check	; disable out of bounds coordinate checking
 ; %undef Stack_Overflow_Check

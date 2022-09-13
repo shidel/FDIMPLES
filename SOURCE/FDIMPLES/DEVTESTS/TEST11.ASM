@@ -68,11 +68,13 @@ SECTION .text
 %idefine MAX_PTRS 20 ;  4096
 
 	xor 	ax, ax
-	mov	cx, MAX_PTRS * 3
+	mov	cx, (MAX_PTRS + 1) * 3
 	cld
 	mov	di, Ptrs
 	mov	si, di
+	push	di
 	rep 	stosw
+	pop	di
 
 Main:
 	push		cs
@@ -97,33 +99,8 @@ Main:
 	StdOutCRLF
 
 	mov	cx, MAX_PTRS
-	call AllocSome
-	mov	cx, MAX_PTRS
-	call FreeSome
-	mov	cx, MAX_PTRS
-	call AllocSome
-	mov	cx, MAX_PTRS
-	call FreeSome
-
-Finished:
-	StdOutCRLF
-	StdOutStr		'Peak Memory Used: '
-	HeapPeakUsed		dx:ax
-	StdOutUIntDWord		dx:ax
-	StdOutCRLF
-	StdOutHexWord		sp
-	StdOutCRLF
-	Terminate		0 ; Automatically includes used LIB functions
-
-AllocSome:
-	mov			si, Ptrs
+StepOne:
 	mov			bx, MAX_PTRS + 1
-AllocLoop:
-	push			bx
-	mov			di, si
-	loddax
-	test			dx, dx
-	jnz			AllocNext
 	sub			bx, cx
 	add			bx, bx
 	add			bx, bx
@@ -134,20 +111,12 @@ AllocLoop:
 	push			cx
 	call			AllocBlock
 	pop			cx
-AllocNext:
-	pop			bx
-	loop			AllocLoop
+	loop			StepOne
 	DebugCRLF
 	DebugHeapPtrs
-	ret
-
-FreeSome:
-	mov			si, Ptrs
-FreeLoop:
-	mov			di, si
+	mov	cx, MAX_PTRS
+StepTwo:
 	push			cx
-	test			cx, 1
-	jnz			NextPtr
 	DebugCRLF
 	DebugChar		'#'
 	DebugHexWord		cx
@@ -157,12 +126,22 @@ FreeLoop:
 	test 			dx, dx
 	jz			NextPtr
 	call			FreeBlock
-	stodax
 	DebugHeapPtrs
 NextPtr:
 	pop			cx
-	loop			FreeLoop
-	ret
+	loop			StepTwo
+
+StepThree:
+	StdOutCRLF
+	StdOutStr		'Peak Memory Used: '
+	HeapPeakUsed		dx:ax
+	StdOutUIntDWord		dx:ax
+	StdOutCRLF
+	StdOutHexWord		sp
+	StdOutCRLF
+
+Finished:
+	Terminate		0 ; Automatically includes used LIB functions
 
 AllocBlock:
 	HeapAlloc		dx:ax, bx
