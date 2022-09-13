@@ -98,8 +98,23 @@ Main:
 	StdOutCRLF
 	StdOutCRLF
 
-	mov	cx, MAX_PTRS
-StepOne:
+	mov		cx, 10
+	call 		AllocSome
+	call 		FreeSome
+
+Finished:
+	StdOutCRLF
+	StdOutStr		'Peak Memory Used: '
+	HeapPeakUsed		dx:ax
+	StdOutUIntDWord		dx:ax
+	StdOutCRLF
+	StdOutHexWord		sp
+	StdOutCRLF
+	Terminate		0 ; Automatically includes used LIB functions
+
+AllocSome:
+	push			cx
+AllocLoop:
 	mov			bx, MAX_PTRS + 1
 	sub			bx, cx
 	add			bx, bx
@@ -111,11 +126,15 @@ StepOne:
 	push			cx
 	call			AllocBlock
 	pop			cx
-	loop			StepOne
+	loop			AllocLoop
 	DebugCRLF
 	DebugHeapPtrs
-	mov	cx, MAX_PTRS
-StepTwo:
+	pop			cx
+	ret
+
+FreeSome:
+	push			cx
+FreeLoop:
 	push			cx
 	DebugCRLF
 	DebugChar		'#'
@@ -129,19 +148,9 @@ StepTwo:
 	DebugHeapPtrs
 NextPtr:
 	pop			cx
-	loop			StepTwo
-
-StepThree:
-	StdOutCRLF
-	StdOutStr		'Peak Memory Used: '
-	HeapPeakUsed		dx:ax
-	StdOutUIntDWord		dx:ax
-	StdOutCRLF
-	StdOutHexWord		sp
-	StdOutCRLF
-
-Finished:
-	Terminate		0 ; Automatically includes used LIB functions
+	loop			FreeLoop
+	pop			cx
+	ret
 
 AllocBlock:
 	HeapAlloc		dx:ax, bx
