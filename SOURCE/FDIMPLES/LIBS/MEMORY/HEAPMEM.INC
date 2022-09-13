@@ -211,7 +211,8 @@ HeapRelease_PROC:
 	les		di, [HEAP_CONTROL.FIRST]	; load first free block
 %%FindHeapSlot:
 	; Search chain for previous and next blocks
-	DebugChar	' ', '?', ' '
+	DebugCRLF
+	DebugText	' ? '
 	DebugPointer	bx:si
 	DebugChar	'/'
 	DebugPointer	es:di
@@ -227,11 +228,13 @@ HeapRelease_PROC:
 	; bx:si = prev block or null
 	; dx:ax = block to free, cx = block size
 	; es:di = next block or null
-	DebugChar	' ', '=', ' ', 'P'
+	DebugCRLF
+	DebugText	' = P'
 	DebugPointer	bx:si
 	DebugChar	',','N'
 	DebugPointer	es:di
-	DebugChar	'>'
+	DebugCRLF
+	DebugText	' > '
 
 	cld
 	; store next block pointer and block size in block to free
