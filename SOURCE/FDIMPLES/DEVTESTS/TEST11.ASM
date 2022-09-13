@@ -101,11 +101,11 @@ Main:
 	mov	cx, MAX_PTRS
 StepOne:
 	mov			bx, 1
-	; mov			bx, cx
-	; add			bx, cx
-	;add			bx, cx
-	;add			bx, cx
-	;add			bx, cx
+	mov			bx, cx
+	add			bx, cx
+	add			bx, cx
+	add			bx, cx
+	add			bx, cx
 	push			cx
 	call			AllocBlock
 	pop			cx
