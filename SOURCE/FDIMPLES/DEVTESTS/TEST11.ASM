@@ -145,7 +145,6 @@ AllocBlock:
 	ret
 
 FreeBlock:
-	inc			ax
 	call			Ptr_Status
 	StdOutStr		' -> '
 	HeapRelease		dx:ax, bx

@@ -93,6 +93,15 @@ OUT_OF_MEMORY:
 OUT_OF_MEMORY_AL:
 	Die 	al, 'insufficient memory'
 %ifdef Valid_Pointer_Check
+VALIDATE_POINTER_PROC:
+	push	dx
+	test	dx, dx
+	jz	INVALID_POINTER
+	mov	dx, - HEAP_BLOCK_SIZE - 1 ; basically, not HEAP_BLOCK_SIZE bits
+	test	ax, dx
+	jnz	INVALID_POINTER
+	pop	dx
+	ret
 INVALID_POINTER:
 	Die	0xcc, 'invalid pointer operation' ; same as PASCAL error 204
 %endif
@@ -175,11 +184,7 @@ STORE_HEAP_SETTINGS:
 		mov dx, [%1 + 2]
 		mov ax, [%1]
 	%endif
-	test	dx, dx
-	jz	INVALID_POINTER
-	mov	dx, - HEAP_BLOCK_SIZE
-	test	ax, dx
-	jnz	INVALID_POINTER
+	call	VALIDATE_POINTER_PROC
 	%ifnidni %1, dx:ax
 		popm dx, ax
 	%endif
