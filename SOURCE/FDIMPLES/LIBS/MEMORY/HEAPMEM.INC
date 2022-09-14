@@ -212,11 +212,13 @@ HeapRelease_PROC:
 	les		di, [HEAP_CONTROL.FIRST]	; load first free block
 %%FindHeapSlot:
 	; Search chain for previous and next blocks
-	DebugCRLF
-	DebugText	' ? '
-	DebugPointer	bx:si
-	DebugChar	'/'
-	DebugPointer	es:di
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugCRLF
+		DebugText	' ? '
+		DebugPointer	bx:si
+		DebugChar	'/'
+		DebugPointer	es:di
+	%endif
 	testes		es
 	jz		%%FindSlotFound
 	cmpdax		es:di
@@ -229,13 +231,15 @@ HeapRelease_PROC:
 	; bx:si = prev block or null
 	; dx:ax = block to free, cx = block size
 	; es:di = next block or null
-	DebugCRLF
-	DebugText	' = '
-	DebugPointer	bx:si
-	DebugChar	','
-	DebugPointer	es:di
-	DebugCRLF
-	DebugText	' > '
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugCRLF
+		DebugText	' = '
+		DebugPointer	bx:si
+		DebugChar	','
+		DebugPointer	es:di
+		DebugCRLF
+		DebugText	' > '
+	%endif
 
 	cld
 	; store next block pointer and block size in block to free
@@ -243,13 +247,15 @@ HeapRelease_PROC:
 	xchg		di, ax			; swap es:di and dx:ax
 	push		di
 
-	DebugText	'(BLK, '
-	DebugPointer	es:di
-	DebugChar	'/'
-	DebugHexWord	cx
-	DebugChar	'>'
-	DebugPointer	dx:ax
-	DebugChar	')'
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugText	'(BLK, '
+		DebugPointer	es:di
+		DebugChar	'/'
+		DebugHexWord	cx
+		DebugChar	'>'
+		DebugPointer	dx:ax
+		DebugChar	')'
+	%endif
 	stodax					; save next block pointer
 	storeg		cx			; save block size LOW word
 	push		cx
@@ -257,27 +263,41 @@ HeapRelease_PROC:
 	storeg		cx
 	pop		cx			; set block size HIGH word
 	pop		di			; es:di is block to free
-	DebugCRLF
+
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugCRLF
+	%endif
 
 	xchges		bx
 	xchg		si, di			; swap es:di and bx:si
 	testes		es			; is previous block NULL ?
 	jz		%%IsFirstBlock		; then don't set a pointer
 
-	DebugChar	'{'
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugChar	'{'
+	%endif
+
 	mov		dx, es
 	mov		ax, di
-	DebugPointer	dx:ax
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugPointer	dx:ax
+	%endif
 	adddaxp		es:di + 4		; add prev block size to pointer
-	DebugChar	'^'
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugChar	'^'
+	%endif
 	call 		%%FixPointer
-	DebugPointer	dx:ax
-	DebugChar	'}'
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugPointer	dx:ax
+		DebugChar	'}'
+	%endif
 	cmp		bx, dx
 	jne		%%NoCombinePrior
 	cmp		si, ax
 	jne		%%NoCombinePrior
-	DebugText	'CP+'
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugText	'CP+'
+	%endif
 	xchges		dx
 	xchg		di, ax
 	mov		si, [es:di]
@@ -294,20 +314,24 @@ HeapRelease_PROC:
 	stodax 		HEAP_CONTROL.FREEBLK
 
 %%NoCombinePrior:
-	DebugText	'NF('
-	DebugPointer	es:di
-	DebugChar	'='
-	DebugPointer	bx:si
-	DebugChar	')',' '
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugText	'NF('
+		DebugPointer	es:di
+		DebugChar	'='
+		DebugPointer	bx:si
+		DebugChar	')',' '
+	%endif
 
 	mov		[es:di], si
 	mov		[es:di + 2], bx		; save block ptr in previous
 						; es:di points to first block
 	jmp		%%NotFirstBlock
 %%IsFirstBlock:
-	DebugText	'FB('
-	DebugPointer	bx:si
-	DebugChar	')'
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugText	'FB('
+		DebugPointer	bx:si
+		DebugChar	')'
+	%endif
 	mov		[HEAP_CONTROL.FIRST+ 2], bx
 	mov		[HEAP_CONTROL.FIRST], si
 %%NotFirstBlock:
@@ -328,7 +352,9 @@ HeapRelease_PROC:
 
 
 %%HeapFreeDone:
-	DebugChar	'!', ' '
+	%ifdef HEAP_CONTROL_DEBUG
+		DebugChar	'!', ' '
+	%endif
 	xor		dx, dx
 	xor		ax, ax
 	popm		es,di,bx,si

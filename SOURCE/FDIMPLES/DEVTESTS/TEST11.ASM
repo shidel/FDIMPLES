@@ -53,6 +53,10 @@ SECTION .text
 %undef Video_VGA
 %undef Video_VESA
 
+; %define HEAP_CONTROL_DEBUG ; Should never use except for HEAP development
+			   ; debugging and testing of the HEAP controlling code
+			   ; itself. Not for debugging a program.
+
 %include "DOSLIBS.INC"		; One INC to include them all. Some INCS have
 				; initialization routines. Some calls for those
 				; routines gets inserted automatically. For
@@ -108,13 +112,22 @@ Main:
 
 	mov		cx, MAX_PTRS
 	mov		bx, MAX_PTRS + 1
-	sub		bx, cx
-	call 		AllocSome
-	mov		cx, MAX_PTRS / 2
-	call 		FreeSome
-	mov		cx, MAX_PTRS
-	call 		AllocSome
-	call 		FreeSome
+	;sub		bx, cx
+	;call 		AllocSome
+	;mov		cx, MAX_PTRS / 2
+	;call 		FreeSome
+	;mov		cx, MAX_PTRS
+	;call 		AllocSome
+	;call 		FreeSome
+
+	mov	cx, MAX_PTRS
+	call	AllocSome
+	mov	cx, MAX_PTRS / 4
+	call	FreeTop
+	call	FreeBottom
+	mov	cx, MAX_PTRS
+	call	AllocSome
+	call	FreeBottom
 
 Finished:
 	StdOutCRLF
@@ -129,6 +142,8 @@ Finished:
 
 AllocSome:
 	pushm			cx
+	mov			si, cx
+	mov			cx, MAX_PTRS
 	mov			di, Ptrs
 AllocLoop:
 	mov			ax, [cs:di + 2]
@@ -139,8 +154,12 @@ AllocLoop:
 	pushm			cx, bx
 	call			AllocBlock
 	popm			cx, bx
+	dec			si
 AllocNext:
+	test			si, si
+	jz			.DoneEarly
 	loop			AllocLoop
+.DoneEarly:
 	DebugCRLF
 	DebugHeapPtrs
 	pop			cx
@@ -151,9 +170,7 @@ AllocSkip:
 
 FreeSomeStats:
 	DebugCRLF
-	DebugText		'[#'
-	DebugHexWord		cx
-	DebugChar		','
+	DebugText		'[FREE:'
 	DebugPointer		dx:ax
 	DebugChar		'.'
 	DebugHexWord		bx
@@ -161,55 +178,81 @@ FreeSomeStats:
 	DebugCRLF
 	ret
 
-FreeSome:
+FreeBottom:
+	DebugCRLF
+	DebugText		'FREE BOTTOM:'
 	pushm			cx, bx
 	mov			si, Ptrs
+	push			cx
+	mov			cx, MAX_PTRS
+	pop			bx
 FreeLoop:
 	mov			di, si
 	push			cx
+	push			bx
 	loddax
 	lodreg			bx
-	call			FreeSomeStats
 	mov			si, di
 	test 			dx, dx
 	jz			.NextPtr
+	call			FreeSomeStats
 	call			FreeBlock
 	xor			dx, dx
 	mov			[cs:si + 0], dx
 	mov			[cs:si + 2], dx
 	call			ShowHeapPtrs
+	pop			bx
+	dec			bx
+	push			bx
 .NextPtr:
+	pop			bx
 	pop			cx
 	add			si, 6
+	cmp			bx, 0
+	je			.FinishEarly
 	loop			FreeLoop
+.FinishEarly:
 	call			MemoryStatus
 	DebugCRLF
 	popm			cx, bx
 	ret
 
-FreeSomeAlt:
+FreeTop:
+	DebugCRLF
+	DebugText		'FREE TOP:'
 	pushm			cx, bx
-	mov			bx, (MAX_PTRS * 6)
+	push			cx
+	mov			cx, MAX_PTRS
+	mov			bx, (MAX_PTRS - 1) * 6
 	mov			si, Ptrs
 	add			si, bx
+	pop			bx
 .FreeLoop:
 	mov			di, si
 	push			cx
+	push			bx
 	loddax
 	lodreg			bx
-	call			FreeSomeStats
 	mov			si, di
 	test 			dx, dx
 	jz			.NextPtr
+	call			FreeSomeStats
 	call			FreeBlock
 	xor			dx, dx
 	mov			[cs:si + 0], dx
 	mov			[cs:si + 2], dx
 	call			ShowHeapPtrs
+	pop			bx
+	dec			bx
+	push			bx
 .NextPtr:
+	pop			bx
 	pop			cx
 	sub			si, 6
+	cmp			bx, 0
+	je			.FinishEarly
 	loop			.FreeLoop
+.FinishEarly:
 	call			MemoryStatus
 	DebugCRLF
 	popm			cx, bx
