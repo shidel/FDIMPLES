@@ -170,7 +170,7 @@ HeapAlloc_PROC:
 	cmpdax		cx
 	jb		%%NoReuseBlock
 	; Find Block inside heap
-	ret
+	; ret
 %%NoReuseBlock:
 	; Try block on top of heap
 	loddax		HEAP_CONTROL.FREETOP

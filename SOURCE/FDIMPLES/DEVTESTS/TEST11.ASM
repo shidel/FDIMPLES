@@ -70,6 +70,8 @@ SECTION .text
 
 %idefine MAX_PTRS 20 ;  4096
 
+	movds   cs
+	moves	ds
 	xor 	ax, ax
 	mov	cx, (MAX_PTRS + 1) * 3
 	cld
@@ -104,7 +106,13 @@ Main:
 	StdOutCRLF
 	StdOutCRLF
 
-	mov		cx, 15
+	mov		cx, MAX_PTRS
+	mov		bx, MAX_PTRS + 1
+	sub		bx, cx
+	call 		AllocSome
+	mov		cx, MAX_PTRS / 2
+	call 		FreeSome
+	mov		cx, MAX_PTRS
 	call 		AllocSome
 	call 		FreeSome
 
@@ -120,45 +128,95 @@ Finished:
 	Terminate		0 ; Automatically includes used LIB functions
 
 AllocSome:
-	push			cx
+	pushm			cx
+	mov			di, Ptrs
 AllocLoop:
-	mov			bx, MAX_PTRS + 1
-	sub			bx, cx
-	add			bx, bx
-	add			bx, bx
-	add			bx, bx
-	add			bx, bx
-	add			bx, bx
-	add			bx, bx
-	push			cx
+	mov			ax, [cs:di + 2]
+	test			ax, ax
+	jnz			AllocSkip
+
+	add			bx, 0x10
+	pushm			cx, bx
 	call			AllocBlock
-	pop			cx
+	popm			cx, bx
+AllocNext:
 	loop			AllocLoop
 	DebugCRLF
 	DebugHeapPtrs
 	pop			cx
 	ret
+AllocSkip:
+	add			di, 6
+	jmp			AllocNext
+
+FreeSomeStats:
+	DebugCRLF
+	DebugText		'[#'
+	DebugHexWord		cx
+	DebugChar		','
+	DebugPointer		dx:ax
+	DebugChar		'.'
+	DebugHexWord		bx
+	DebugChar		']'
+	DebugCRLF
+	ret
 
 FreeSome:
-	push			cx
+	pushm			cx, bx
+	mov			si, Ptrs
 FreeLoop:
+	mov			di, si
 	push			cx
-	DebugCRLF
-	DebugChar		'#'
-	DebugHexWord		cx
-	DebugCRLF
 	loddax
 	lodreg			bx
+	call			FreeSomeStats
+	mov			si, di
 	test 			dx, dx
-	jz			NextPtr
+	jz			.NextPtr
 	call			FreeBlock
-	DebugHeapPtrs
-NextPtr:
+	xor			dx, dx
+	mov			[cs:si + 0], dx
+	mov			[cs:si + 2], dx
+	call			ShowHeapPtrs
+.NextPtr:
 	pop			cx
+	add			si, 6
 	loop			FreeLoop
 	call			MemoryStatus
 	DebugCRLF
+	popm			cx, bx
+	ret
+
+FreeSomeAlt:
+	pushm			cx, bx
+	mov			bx, (MAX_PTRS * 6)
+	mov			si, Ptrs
+	add			si, bx
+.FreeLoop:
+	mov			di, si
+	push			cx
+	loddax
+	lodreg			bx
+	call			FreeSomeStats
+	mov			si, di
+	test 			dx, dx
+	jz			.NextPtr
+	call			FreeBlock
+	xor			dx, dx
+	mov			[cs:si + 0], dx
+	mov			[cs:si + 2], dx
+	call			ShowHeapPtrs
+.NextPtr:
 	pop			cx
+	sub			si, 6
+	loop			.FreeLoop
+	call			MemoryStatus
+	DebugCRLF
+	popm			cx, bx
+	ret
+
+ShowHeapPtrs:
+	DebugHeapPtrs
 	ret
 
 AllocBlock:
