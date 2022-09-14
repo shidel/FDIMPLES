@@ -39,9 +39,13 @@
 ; OUTPUT:
 ; 	None: Does not return
 ; -----------------------------------------------------------------------------
-%imacro Terminate 1-*
+%imacro Terminate 0-*
 
-	Die %{1:-1}
+	%if %0 = 0
+		Die 0
+	%else
+		Die %{1:-1}
+	%endif
 
 	%define  DO_NOT_INITIALIZE_LIBS
 	%include 'DOSLIBS.INC'

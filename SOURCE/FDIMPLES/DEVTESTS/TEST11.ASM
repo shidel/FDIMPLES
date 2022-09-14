@@ -60,10 +60,13 @@ SECTION .text
 				; are not needed, you can save some bytes by
 				; including only the required LIBS directly.
 
-	Memory			2, 16	; Stack 4k, Minimum Heap 16k
+	InitStack		1	; Stack 4k
+ 	InitHeap		16	; Minimum Heap 16k
 
+	DebugText		'SP='
 	StdOutHexWord		sp
 	StdOutCRLF
+
 
 %idefine MAX_PTRS 20 ;  4096
 
@@ -86,6 +89,7 @@ Main:
 	mov		ax, [cs:0x0002]
 	StdOutHexWord	ax
 	StdOutCRLF
+
 	StdOutStr	'Program Memory: '
 	sub		ax, dx
 	mov		cx, 16
@@ -110,6 +114,7 @@ Finished:
 	HeapPeakUsed		dx:ax
 	StdOutUIntDWord		dx:ax
 	StdOutCRLF
+	DebugText		'SP='
 	StdOutHexWord		sp
 	StdOutCRLF
 	Terminate		0 ; Automatically includes used LIB functions

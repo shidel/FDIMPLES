@@ -401,6 +401,74 @@ __?SECT?__
 		RegsRestore	cx
 	%endif
 %endmacro
+; -----------------------------------------------------------------------------
+%imacro InitHeap 1
+	%ifdef InitHeap_DECLARED
+		%error Memory heap and requirements can only be initialized once.
+	%endif
+	%define InitHeap_DECLARED
+
+	PROC_REQUIRE Die_OutOfMemory
+
+SECTION_PROC
+
+CALC_HEAP_SETTINGS:
+	; figure out segment of HEAP
+	mov	ax, HEAP_MEMORY_BEGIN ; Why not / 16 + 1 as a constant...
+	mov	cl, 4
+	shr	ax, cl
+	inc	ax
+	push	cs
+	pop	cx
+	add	ax, cx
+
+	; check max seg avail to program against requirements
+	mov	cx, [cs:0x0002]
+	dec	cx
+	ret
+
+STORE_HEAP_SETTINGS:
+	mov	[HEAP_CONTROL.TOP + 2], ax
+	mov	[HEAP_CONTROL.BOTTOM + 2], ax
+	push 	cx
+	xchg	ax, cx
+	sub	ax, cx
+	mov	cx, 16
+	mul	cx
+	mov	[HEAP_CONTROL.FREE], ax
+	mov	[HEAP_CONTROL.FREE + 2], dx
+	mov	[HEAP_CONTROL.FREETOP], ax
+	mov	[HEAP_CONTROL.FREETOP + 2], dx
+	pop	cx
+	xor	ax, ax
+	mov	[HEAP_CONTROL.TOP], ax
+	mov	[HEAP_CONTROL.BOTTOM], ax
+	mov	[HEAP_CONTROL.FIRST], ax
+	mov	[HEAP_CONTROL.FIRST + 2], ax
+	mov	[HEAP_CONTROL.USED], ax
+	mov	[HEAP_CONTROL.USED + 2], ax
+	mov	[HEAP_CONTROL.FREEBLK], ax
+	mov	[HEAP_CONTROL.FREEBLK + 2], ax
+	ret
+
+__?SECT?__
+
+	call	CALC_HEAP_SETTINGS
+
+	; figure out seg required for min heap
+	mov	bx, %1 * 1024 / 16
+	add 	bx, ax
+	cmp	cx, bx
+	jbe	INSUFFICIENT_MEMORY
+	call 	STORE_HEAP_SETTINGS
+	mov	[HEAP_CONTROL.LIMIT + 2], cx
+	mov	[HEAP_CONTROL.LIMIT], ax
+	mov	[HEAP_CONTROL.PEAK], ax
+	mov	[HEAP_CONTROL.PEAK + 2], ax
+	mov	[HEAP_CONTROL.FAIL], ax
+	mov	[HEAP_CONTROL.FAIL + 2], ax
+
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE DebugHeapPtrs

@@ -66,7 +66,7 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 
 SECTION_CODE			; Already here. Going to reference it anyhow.
 
-	Memory			4, 100	; Stack 4k, Minimum Heap 100k
+	InitStack		4	; Stack 4k,
 
 	; jmp			ProbeModes
 	call			Initialize
@@ -83,10 +83,10 @@ Finished:
 		StackPeak		ax
 		WriteUIntWord		ax
 		WriteCRLF
-		WriteStr		'Peak heap usage: '
-		HeapPeakUsed		dx:ax
-		WriteUIntDWord		dx:ax
-		WriteCRLF
+		; WriteStr		'Peak heap usage: '
+		; HeapPeakUsed		dx:ax
+		; WriteUIntDWord		dx:ax
+		; WriteCRLF
 	%endif
 
 	Terminate		0	; Also includes needed LIB function code
@@ -394,4 +394,4 @@ XY_DataArea:		resw 2
 MODE_PROBING:		resw 0x100
 
 SECTION_STACK
-SECTION_HEAP
+; SECTION_HEAP

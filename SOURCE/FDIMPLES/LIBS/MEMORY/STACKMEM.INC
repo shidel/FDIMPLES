@@ -137,7 +137,45 @@ __?SECT?__
 		pop	ax
 	%endif
 %endmacro
+; -----------------------------------------------------------------------------
+%imacro InitStack 1
+	%ifdef InitStack_DECLARED
+		%error Memory stack and requirements can only be initialized once.
+	%endif
+	%define InitStack_DECLARED
 
+	%define STACK_BYTE_SIZE %1 * 1024
+
+	PROC_REQUIRE Die_OutOfMemory
+
+	; figure out seg required to make sure stack will fit
+	mov	ax, STACK_MEMORY_END
+	mov	cl, 4
+	shr	ax, cl
+	inc	ax
+	push	cs
+	pop	bx
+	add 	ax, bx
+	cmp	[cs:0x0002], ax
+	jbe	INSUFFICIENT_MEMORY
+
+	mov	sp, STACK_MEMORY_END
+
+	%ifdef Stack_Overflow_Check
+		%define STACK_OVERFLOW_TESTING
+		push	cs
+		pop	ax
+		xor	ax, STACK_OVERFLOW_DATA
+		mov	[STACK_OVERFLOW_DATA], ax
+		not	ax
+		mov	[STACK_OVERFLOW_DATA + 2], ax
+		mov	ax, STACK_MEMORY_END
+		mov	[STACK_MEMORY_PEAK], ax
+	%else
+		%undef STACK_OVERFLOW_TESTING
+	%endif
+
+%endmacro
 ; *****************************************************************************
 %else
 	PROC_PROVIDE	StackCheck
