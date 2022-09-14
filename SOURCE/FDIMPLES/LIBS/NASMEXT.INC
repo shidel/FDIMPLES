@@ -408,6 +408,28 @@
 	%endif
 %endmacro
 
+%imacro adddaxp	1
+	push		cx
+	add		ax, [%1]
+	pushf
+	add		dx, [%1 + 2]
+	jc		%%Overflow
+	popf
+	jnc		%%Done
+	inc		dx
+	jmp		%%Done
+%%Overflow:
+	pop		cx
+	pushf
+	test		cx, CARRYFLAG_BIT
+	jz		%%NoInc
+	inc		dx
+%%NoInc:
+	popf
+%%Done:
+	pop		cx
+%endmacro
+
 %imacro adddax 	1
 ; Adds to register pair DX:AX by a 8/16 bit register, different register pair
 ; or a dword in memory (ds:%1).
@@ -434,25 +456,7 @@
 	%%Done:
 		pop		cx
 	%elif REGISTER_TYPE_BITS = 0
-		push		cx
-		add		ax, [%1]
-		pushf
-		add		dx, [%1 + 2]
-		jc		%%Overflow
-		popf
-		jnc		%%Done
-		inc		dx
-		jmp		%%Done
-	%%Overflow:
-		pop		cx
-		pushf
-		test		cx, CARRYFLAG_BIT
-		jz		%%NoInc
-		inc		dx
-	%%NoInc:
-		popf
-	%%Done:
-		pop		cx
+		adddaxp %1
 	%elif REGISTER_TYPE_BITS = 16
 		add		ax, %1
 		jnc		%%Done
@@ -468,6 +472,28 @@
 
 	%endif
 
+%endmacro
+
+%imacro subdaxp	1
+	push		cx
+	sub		ax, [%1]
+	pushf
+	sub		dx, [%1 + 2]
+	jc		%%Overflow
+	popf
+	jnc		%%Done
+	dec		dx
+	jmp		%%Done
+%%Overflow:
+	pop		cx
+	pushf
+	test		cx, CARRYFLAG_BIT
+	jz		%%NoDec
+	dec		dx
+%%NoDec:
+	popf
+%%Done:
+	pop		cx
 %endmacro
 
 %imacro subdax 	1
@@ -496,25 +522,7 @@
 	%%Done:
 		pop		cx
 	%elif REGISTER_TYPE_BITS = 0
-		push		cx
-		sub		ax, [%1]
-		pushf
-		sub		dx, [%1 + 2]
-		jc		%%Overflow
-		popf
-		jnc		%%Done
-		dec		dx
-		jmp		%%Done
-	%%Overflow:
-		pop		cx
-		pushf
-		test		cx, CARRYFLAG_BIT
-		jz		%%NoDec
-		dec		dx
-	%%NoDec:
-		popf
-	%%Done:
-		pop		cx
+		subdaxp %1
 	%elif REGISTER_TYPE_BITS = 16
 		sub		ax, %1
 		jnc		%%Done

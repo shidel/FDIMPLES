@@ -96,9 +96,11 @@ Main:
 	StdOutStr	'Heap Offset: cs:0x'
 	StdOutHexWord	HEAP_MEMORY_BEGIN
 	StdOutCRLF
+	call		MemoryStatus
+	StdOutCRLF
 	StdOutCRLF
 
-	mov		cx, 10
+	mov		cx, 15
 	call 		AllocSome
 	call 		FreeSome
 
@@ -149,6 +151,8 @@ FreeLoop:
 NextPtr:
 	pop			cx
 	loop			FreeLoop
+	call			MemoryStatus
+	DebugCRLF
 	pop			cx
 	ret
 
