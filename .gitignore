@@ -1,6 +1,5 @@
-# ingore normal build output path and 
-
-/BIN/*
+# ingore normal build output path and compiled binaries
+*.COM
 /SOURCE/FDIMPLES/LIBS
 /SOURCE/FDIMPLES/DEVTESTS
 
