@@ -66,7 +66,8 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 
 SECTION_CODE			; Already here. Going to reference it anyhow.
 
-	InitStack		4	; Stack 4k,
+	InitStack		4	; Stack 4k
+	InitHeap		64	; Heap 64k minimum
 
 	; jmp			ProbeModes
 	call			Initialize
@@ -82,11 +83,13 @@ Finished:
 		WriteStr		'Peak stack usage: '
 		StackPeak		ax
 		WriteUIntWord		ax
+		WriteStr		' bytes'
 		WriteCRLF
-		; WriteStr		'Peak heap usage: '
-		; HeapPeakUsed		dx:ax
-		; WriteUIntDWord		dx:ax
-		; WriteCRLF
+		WriteStr		'Peak heap usage: '
+		HeapPeakUsed		dx:ax
+		WriteUIntDWord		dx:ax
+		WriteStr		' bytes'
+		WriteCRLF
 	%endif
 
 	Terminate		0	; Also includes needed LIB function code
@@ -145,8 +148,11 @@ DrawMainWindow:
 	jne			.NoStatusBar
 	mov			dl, al
 	Window			[XY_StatusBar], [XY_StatusBar + 2]
-	TextAttr		[Theme_StatusBarAttr]
+	; TextAttr		[Theme_StatusBarAttr]
+	TextAttr		[Theme_ErrorBarAttr]
 	ClrScr
+	RelativeX		+1
+	WriteStr		'Package media not found!'
 	Window			max
 .NoStatusBar:
 	Window			max
@@ -365,7 +371,8 @@ Theme_ProgLongName:	db 0x70
 Theme_ProgShortName:	db 0x78
 Theme_ProgVersion:	db 0x74
 Theme_WindowBoxAttr:	db 0x17
-Theme_StatusBarAttr:	db 0x47
+Theme_StatusBarAttr:	db 0x17
+Theme_ErrorBarAttr:	db 0x4e
 
 ; Some other default data
 MinimumGroupAreaSize:	dw 0x0712
@@ -394,4 +401,4 @@ XY_DataArea:		resw 2
 MODE_PROBING:		resw 0x100
 
 SECTION_STACK
-; SECTION_HEAP
+SECTION_HEAP
