@@ -16,12 +16,13 @@ Goal:
 
 Requirements:
 
-	FreeDOS, DosBox or other DOS based operating system.
+	[FreeDOS](http://freedos.org/), [DOSBox](https://www.dosbox.com/) or
+	other DOS based operating system.
 
 Minimum Build Requirements:
 
-	NASM 2.15.05 for DOS, or later
-	UPX 3.96 for DOS, or later
+	[NASM](https://nasm.us/) 2.15.05 or later required
+	[UPX](https://upx.github.io/) 3.96 or later recommended
 
-	DosKit LIBS (https://gitlab.com/DOSx86/DosKit/-/tree/master/DEVEL/DOSKIT/LIBS)
+	[DosKit LIBS](https://gitlab.com/DOSx86/DosKit/-/tree/master/DEVEL/DOSKIT/LIBS)
 	(At some point, will be included directly for easy building from source)
