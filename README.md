@@ -1,4 +1,4 @@
-# FreeDOS Installer (FDI) - My Package List Editor Software
+FreeDOS Installer (FDI) - My Package List Editor Software
 
 BSD 3-Clause License
 Copyright (c) 2022, Jerome Shidel
@@ -22,3 +22,6 @@ Minimum Build Requirements:
 
 	NASM 2.15.05 for DOS, or later
 	UPX 3.96 for DOS, or later
+
+	DosKit LIBS (https://gitlab.com/DOSx86/DosKit/-/tree/master/DEVEL/DOSKIT/LIBS)
+	(At some point, will be included directly for easy building from source)
