@@ -37,14 +37,14 @@ cpu 8086			; Limit to 8086 instruction set
 
 org 0x100			; Making a COM file.
 
-SECTION .text			; Not required. It's the default. Used anyhow.
+SECTION .text			; Not required. It's the default. Use it anyway.
 
 %include "FEATURES.INC"		; Default DEFINES & options for library macros
 
 ; %undef Preserve_Registers	; disable preserving registers in macros
 ; %undef DOS_BUG_FIXES		; keep some fixes for various DOS and BIOS bugs
 %undef DOSCRT_Range_Check	; disable out of bounds coordinate checking
-; %undef Stack_Overflow_Check
+; %undef Stack_Overflow_Check	; don't worry. it will be fine.
 %undef Support_BIOS_Timer	; disable attempts to use int15 timer
 ; %undef Support_BIOS_Video	; keep BIOS video support
 ; %undef Support_Direct_Video	; keep Direct video addressing
@@ -64,7 +64,8 @@ SECTION .text			; Not required. It's the default. Used anyhow.
 				; prevent accidentally using a macro that you
 				; did may have prevented from being initialized.
 
-SECTION_CODE			; Already here. Going to reference it anyhow.
+SECTION_CODE			; Already here. Going to reference it just
+				; because I can. :-)
 
 	InitStack		4	; Stack 4k
 	InitHeap		64	; Heap 64k minimum
@@ -172,8 +173,9 @@ DrawMainWindow:
 	ret
 
 CalculateScreenPositions:
+; Needs called at startup and when or if resolution is changed.
+
 	moves			cs ; Set ES to CS for hard-coded program strings
-; Needs called at startup and when/if resolution is changed.
 	Window			max
 	WindMin			ax
 	WindMax			dx
@@ -254,6 +256,7 @@ CalculateScreenPositions:
 
 Initialize:
 ; Performs the initialization of the program at startup.
+
 	mov			ax, [MinimumGroupAreaSize]
 	mov			[Size_GroupArea], ax
 
@@ -280,6 +283,7 @@ Initialize:
 ProbeModes:
 ; At some point after stack handling is added, will do this there instead of
 ; wasting bytes in the BSS.
+
 	mov			cx, 0x7f
 	mov			di, MODE_PROBING
 	mov			si, di
