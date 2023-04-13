@@ -320,9 +320,9 @@ begin
     window(1,1,Lo(ScreenMax) + 1, Hi(ScreenMax) + 1);
 (*    CheckCursor := True; *)
     CheckScroll := True;
-    ClrScr;
     NormalCursor;
     GotoXY(1,1);
+    ClrScr;
 end;
 
 {$IFDEF DEBUG}
@@ -1172,11 +1172,11 @@ begin
             Inc(X);
         end;
         if X > FileListMax then begin
-        	S := NLS(nlsTooManyFiles);
-        	if S = '' then S := TooManyFiles;
-        	S := '[' + S + ']';
-        	AddLine(Package, S, true);
-        	C := -1;
+            S := NLS(nlsTooManyFiles);
+            if S = '' then S := TooManyFiles;
+            S := '[' + S + ']';
+            AddLine(Package, S, true);
+            C := -1;
         end;
     until (C = -1) or Keypressed;
     Close(F);
@@ -1215,9 +1215,9 @@ begin
     if not (DirExists(S + 'PKG-INFO') or  DirExists(S + 'PKG_INFO')) then Exit;
     if not FileExists(TailDelim(S + 'BASE') + 'INDEX.LST') then Exit;
     FInfo := '';
-	if DirExists(S + 'PKG-INFO') then FInfo := TailDelim(S + 'PKG-INFO');
-	if DirExists(S + 'PKG_INFO') then FInfo := TailDelim(S + 'PKG_INFO');
-	if FInfo = '' then Exit;
+    if DirExists(S + 'PKG-INFO') then FInfo := TailDelim(S + 'PKG-INFO');
+    if DirExists(S + 'PKG_INFO') then FInfo := TailDelim(S + 'PKG_INFO');
+    if FInfo = '' then Exit;
     FMedia := S;
     IsMediaDrive := True;
 end;
@@ -1227,10 +1227,10 @@ var
   F : text;
   T : String;
 begin
-	if CfgFMedia <> '' then begin
-		ReadCfg := CfgFmedia;
-		Exit;
-	end;
+    if CfgFMedia <> '' then begin
+        ReadCfg := CfgFmedia;
+        Exit;
+    end;
     ReadCfg := '';
     if not FileExists(TailDelim(GetExePath) + GetExeBase + '.DAT') then exit;
     assign(F, TailDelim(GetExePath) + GetExeBase + '.DAT');
@@ -1240,23 +1240,23 @@ begin
         ReadLn(F, T);
         T := UCase(Trim(T));
         if T <> '' then begin
-			ReadCfg := T;
-			CfgFMedia := T;
-		end;
+            ReadCfg := T;
+            CfgFMedia := T;
+        end;
     end;
     Close(F);
 end;
 
 function TestMediaDrive(Drive : String) : boolean;
 begin
-	TestMediaDrive := True;
-	if Length(Drive) > 0 then begin
-		if (ReadCfg <> '') and IsMediaDrive(Drive[1] + ':' + ReadCfg) then Exit;
-		if IsMediaDrive(Drive[1] + ':\') then Exit;
-		if IsMediaDrive(Drive[1] + ':\PACKAGES') then Exit;
-		if IsMediaDrive(Drive[1] + ':\FDSETUP\PACKAGES') then Exit;
-	end;
-	TestMediaDrive := False;
+    TestMediaDrive := True;
+    if Length(Drive) > 0 then begin
+        if (ReadCfg <> '') and IsMediaDrive(Drive[1] + ':' + ReadCfg) then Exit;
+        if IsMediaDrive(Drive[1] + ':\') then Exit;
+        if IsMediaDrive(Drive[1] + ':\PACKAGES') then Exit;
+        if IsMediaDrive(Drive[1] + ':\FDSETUP\PACKAGES') then Exit;
+    end;
+    TestMediaDrive := False;
 end;
 
 procedure VerifyGroupState;
@@ -1356,7 +1356,7 @@ begin
         if FMEDIA = '' then TestMediaDrive(Copy(T,1,2) + M);
         if FMEDIA = '' then TestMediaDrive(T);
         for CS := 0 to 24 do
-        	if FMEDIA = '' then TestMediaDrive(Chr(CS + 67));
+            if FMEDIA = '' then TestMediaDrive(Chr(CS + 67));
     end else begin
     if FMedia = '' then
         FMedia := Dir('\');
@@ -1369,8 +1369,8 @@ begin
     end;
 
 {
-	WriteLn (FMedia, ',', FInfo);
-	Halt(1);
+    WriteLn (FMedia, ',', FInfo);
+    Halt(1);
 }
 
     ReadDefaults;
@@ -1794,8 +1794,8 @@ end;
 
 procedure StatusPhaseZero;
 var
-	OLN : integer;
-	OIS : String;
+    OLN : integer;
+    OIS : String;
 begin
     if Lo(ScreenMax) >= 79 then begin
         if MaxAvail < MemWarn then TextAttr := Theme.StatusHot;
@@ -2902,8 +2902,8 @@ var
     I : integer;
     Attempt : boolean;
 begin
-	FMedia := '';
-	FInfo := '';
+    FMedia := '';
+    FInfo := '';
     {$IFDEF DEBUG}
     Assign(LOGFILE, 'FDIMPLES.LOG');
     Rewrite(LOGFILE);
@@ -2965,17 +2965,17 @@ begin
         else if S = SwitchChar + 'UPDATE' then
             AutoUpdate := True
         else if (Pos(':', ParamStr(I)) + Pos('\', ParamStr(I)) > 0) then begin
-			if Length(ParamStr(I)) > 3 then
-				IsMediaDrive(FileExpand(ParamStr(I)))
-			else
-				TestMediaDrive(FileExpand(ParamStr(I)));
-			if FMedia = '' then begin
-		        WriteLn(NLS(nlsPackageMediaNotFound));
-				Halt(100);
-			end;
+            if Length(ParamStr(I)) > 3 then
+                IsMediaDrive(FileExpand(ParamStr(I)))
+            else
+                TestMediaDrive(FileExpand(ParamStr(I)));
+            if FMedia = '' then begin
+                WriteLn(NLS(nlsPackageMediaNotFound));
+                Halt(100);
+            end;
         end else begin
-			WriteLn(NLS(nlsInvalidParam) + ' "' + ParamStr(I) + '"');
-			Halt(100);
+            WriteLn(NLS(nlsInvalidParam) + ' "' + ParamStr(I) + '"');
+            Halt(100);
         end;
         inc(I);
     end;
@@ -2990,6 +2990,8 @@ begin
       FileExists(TailDelim(PackageInfo) + 'command.txt'));
     ReadKey;
 }
+    TextBackground(Theme.Back);
+    ClrScr;
     if AutoUpdate then UpdateToggle(True);
     StartUp := False;
     CheckScroll := False;
