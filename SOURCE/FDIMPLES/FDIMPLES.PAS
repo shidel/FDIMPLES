@@ -48,7 +48,7 @@
 
 {$I QCRT.DEF}
 
-{$DEFINE USEBAT}
+{ DEFINE USEBAT}
 { DEFINE USEFAKE}
 
 program Test;
