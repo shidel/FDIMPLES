@@ -942,7 +942,7 @@ begin
     P.EnvSeg := 0;
     P.CmdLn := @P.Params;
     P.Params := Params + #$0d;
-    P.Params[0] := Chr(Ord(P.Params[0]) - 1);
+    Dec(P.Params[0]);
     DoExec ($00, Command, P); { Load and Exec }
     (*
     DoExec ($03, Command[1], PSP); { Load Only }
