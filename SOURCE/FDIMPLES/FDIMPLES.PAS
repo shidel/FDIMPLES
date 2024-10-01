@@ -1213,7 +1213,10 @@ begin
     S := TailDelim(S);
     if not DirExists(S) then Exit;
     if not (DirExists(S + 'PKG-INFO') or  DirExists(S + 'PKG_INFO')) then Exit;
-    if not FileExists(TailDelim(S + 'BASE') + 'INDEX.LST') then Exit;
+    if not FileExists(TailDelim(S + 'BASE') + 'INDEX.LST') then begin
+        if not FileExists(TailDelim(S + 'DEVEL') + 'INDEX.LST') then 
+            Exit;
+    end;
     FInfo := '';
     if DirExists(S + 'PKG-INFO') then FInfo := TailDelim(S + 'PKG-INFO');
     if DirExists(S + 'PKG_INFO') then FInfo := TailDelim(S + 'PKG_INFO');
