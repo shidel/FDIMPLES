@@ -304,7 +304,7 @@ begin
             1,2 : WriteLn(PreText, 'support for multiple online repositories?');
             3,4 : WriteLn(PreText, 'searching?');
             5   : WriteLn(PreText, 'better performance?');
-            6,7 : WriteLn(PreText, 'mouse integeration?');
+            6,7 : WriteLn(PreText, 'mouse integration?');
         end;
         WriteLn;
     end;
@@ -1214,7 +1214,7 @@ begin
     if not DirExists(S) then Exit;
     if not (DirExists(S + 'PKG-INFO') or  DirExists(S + 'PKG_INFO')) then Exit;
     if not FileExists(TailDelim(S + 'BASE') + 'INDEX.LST') then begin
-        if not FileExists(TailDelim(S + 'DEVEL') + 'INDEX.LST') then 
+        if not FileExists(TailDelim(S + 'DEVEL') + 'INDEX.LST') then
             Exit;
     end;
     FInfo := '';
