@@ -2662,7 +2662,7 @@ begin
         TextBackground(Theme.Back);
         if M = 0 then HelpWriteLn(NLS(nlsNoChanges)) else begin
             HelpWriteLn('');
-            HelpWriteLn(IntStr(M) + PluralNLS(M, nlsTotalChanges) + '.');
+            HelpWriteLn(IntStr(M) + ' ' + PluralNLS(M, nlsTotalChanges) + '.');
         end;
         HelpWriteLn('');
         ClearEvent(E);
